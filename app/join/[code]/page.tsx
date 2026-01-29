@@ -284,6 +284,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         );
     };
 
+
     const formatLatinText = (text: string) => {
         const parts = text.split(/(\d+\s)/g);
         return (
@@ -310,6 +311,58 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     }
                     return <span key={index}>{part}</span>;
                 })}
+            </div>
+        );
+    };
+
+    const formatStyledText = (text: string, type: 'LATIN' | 'MEANING') => {
+        const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+
+        return (
+            <div className="space-y-3">
+                {lines.map((line, index) => (
+                    <div
+                        key={index}
+                        className={`
+                        relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md
+                        ${type === 'LATIN'
+                                ? 'bg-white border-gray-200 text-gray-800 font-serif text-lg italic'
+                                : 'bg-emerald-50 border-emerald-100 text-emerald-900 font-sans text-base'}
+                    `}
+                    >
+                        <div className={`
+                        flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm
+                        ${type === 'LATIN'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-emerald-200 text-emerald-800'}
+                    `}>
+                            {index + 1}
+                        </div>
+
+                        <p className="leading-relaxed mt-1">
+                            {line.trim()}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    const formatMeaningText = (text: string) => {
+        const lines = text.split(/[-•\n]/).filter(line => line.trim().length > 0);
+
+        return (
+            <div className="space-y-4">
+                {lines.map((line, index) => (
+                    <div key={index} className="flex items-start group">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            {index + 1}
+                        </div>
+                        <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
+                            {line.trim()}
+                        </p>
+                    </div>
+                ))}
             </div>
         );
     };
@@ -485,14 +538,31 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                     {readingModalContent.cevsenData.map((bab, index) => (
                                         <div key={index} className="mb-10 pb-8 border-b-2 border-gray-100 last:border-0">
                                             <div className="flex justify-center mb-6">
-                                                <span className="bg-blue-100 text-blue-800 px-6 py-2 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide">
+                                                <span className="bg-blue-100 text-blue-800 px-6 py-2 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide uppercase text-sm">
                                                     {readingModalContent.codeKey === "CEVSEN" ? `${bab.babNumber}. BAB` : `${bab.babNumber}. Grup`}
                                                 </span>
                                             </div>
-                                            {activeTab === 'ARABIC' && (<div className="text-right font-serif text-3xl" dir="rtl">{formatArabicText(bab.arabic)}</div>)}
-                                            {activeTab === 'LATIN' && (<div>{formatLatinText(bab.transcript)}</div>)}
-                                            {activeTab === 'MEANING' && readingModalContent.codeKey !== "BEDIR" && (
-                                                <div className="text-lg leading-relaxed space-y-4 bg-gray-50 p-4 rounded-lg"><p>{bab.meaning}</p></div>
+
+                                            {activeTab === 'ARABIC' && (
+                                                <div className="text-right font-serif text-3xl" dir="rtl">
+                                                    {formatArabicText(bab.arabic)}
+                                                </div>
+                                            )}
+
+                                            {activeTab === 'LATIN' && (
+                                                <div className="text-left font-serif text-xl">
+                                                    {formatLatinText(bab.transcript)}
+                                                </div>
+                                            )}
+
+                                            {activeTab === 'MEANING' && (
+                                                <div className="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-2xl border-l-8 border-emerald-500 shadow-inner">
+                                                    <div className="flex items-center mb-4 text-emerald-700">
+                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                                        <span className="font-bold text-xs uppercase tracking-widest">Türkçe Meali</span>
+                                                    </div>
+                                                    {formatMeaningText(bab.meaning)}
+                                                </div>
                                             )}
                                         </div>
                                     ))}
@@ -500,14 +570,52 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                             )}
 
                             {readingModalContent.type === "SALAVAT" && readingModalContent.salavatData && (
-                                <div className="flex flex-col items-center">
-                                    <div className="w-full">
-                                        {activeTab === 'ARABIC' && (<div className="text-center font-serif text-3xl leading-[4rem]" dir="rtl">{readingModalContent.salavatData.arabic}</div>)}
-                                        {activeTab === 'LATIN' && (<div className="text-center font-serif text-2xl leading-loose italic text-gray-800">{readingModalContent.salavatData.transcript}</div>)}
-                                        {activeTab === 'MEANING' && (<div className="text-lg leading-relaxed bg-blue-50 p-6 rounded-xl border border-blue-100 text-center">{readingModalContent.salavatData.meaning}</div>)}
+                                <div className="flex flex-col items-center w-full h-full">
+
+                                    <div className="w-full flex-1 overflow-y-auto p-2">
+
+                                        {activeTab === 'ARABIC' && (
+                                            <>
+                                                {(readingModalContent.salavatData.arabic || "").startsWith("IMAGE_MODE") ? (
+                                                    <div className="flex flex-col items-center gap-4 bg-gray-100 p-2 rounded-lg">
+                                                        {(readingModalContent.salavatData.arabic || "")
+                                                            .split(":::")[1] 
+                                                            ?.split(",")     
+                                                            .map((imgSrc, index) => (
+                                                                <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
+                                                                    <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-[10px] px-2 py-1 rounded z-10">
+                                                                        Sayfa {index + 1}
+                                                                    </div>
+                                                                    <img
+                                                                        src={imgSrc ? imgSrc.trim() : ""}
+                                                                        alt={`Sayfa ${index + 1}`}
+                                                                        className="w-full h-auto"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center font-serif text-3xl leading-[4.5rem] py-4" dir="rtl">
+                                                        {readingModalContent.salavatData.arabic}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                        {activeTab === 'LATIN' && (
+                                            <div className="p-2">
+                                                {formatStyledText(readingModalContent.salavatData.transcript, 'LATIN')}
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'MEANING' && (
+                                            <div className="p-2">
+                                                {formatStyledText(readingModalContent.salavatData.meaning, 'MEANING')}
+                                            </div>
+                                        )}
                                     </div>
+
                                     {readingModalContent.assignmentId && (
-                                        <div className="mt-10 pt-10 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4">
+                                        <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
                                             <p className="text-gray-500 text-sm mb-2 font-semibold">OKUDUKÇA TIKLAYINIZ</p>
                                             <Zikirmatik
                                                 currentCount={localCounts[readingModalContent.assignmentId] || 0}
