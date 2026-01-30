@@ -579,8 +579,8 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                 {(readingModalContent.salavatData.arabic || "").startsWith("IMAGE_MODE") ? (
                                                     <div className="flex flex-col items-center gap-4 bg-gray-100 p-2 rounded-lg">
                                                         {(readingModalContent.salavatData.arabic || "")
-                                                            .split(":::")[1] 
-                                                            ?.split(",")     
+                                                            .split(":::")[1]
+                                                            ?.split(",")
                                                             .map((imgSrc, index) => (
                                                                 <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
                                                                     <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-[10px] px-2 py-1 rounded z-10">
@@ -608,8 +608,28 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                         )}
 
                                         {activeTab === 'MEANING' && (
-                                            <div className="p-2">
-                                                {formatStyledText(readingModalContent.salavatData.meaning, 'MEANING')}
+                                            <div className="p-2 w-full">
+                                                {(readingModalContent.salavatData.meaning || "").startsWith("IMAGE_MODE") ? (
+                                                    <div className="flex flex-col items-center gap-4 bg-gray-100 p-2 rounded-lg">
+                                                        {(readingModalContent.salavatData.meaning || "")
+                                                            .split(":::")[1]
+                                                            ?.split(",")
+                                                            .map((imgSrc, index) => (
+                                                                <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
+                                                                    <div className="absolute top-2 left-2 bg-emerald-600 text-white text-[10px] px-2 py-1 rounded z-10 shadow">
+                                                                        Meal Sayfa {index + 1}
+                                                                    </div>
+                                                                    <img
+                                                                        src={imgSrc.trim()}
+                                                                        alt={`Meal Sayfa ${index + 1}`}
+                                                                        className="w-full h-auto"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                    </div>
+                                                ) : (
+                                                    formatStyledText(readingModalContent.salavatData.meaning, 'MEANING')
+                                                )}
                                             </div>
                                         )}
                                     </div>
