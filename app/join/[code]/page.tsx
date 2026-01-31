@@ -1,16 +1,21 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { DistributionSession, Assignment, Resource } from "@/types";
+import { use, useEffect, useState, useCallback } from "react";
+import { DistributionSession, Assignment } from "@/types";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 const Zikirmatik = ({
     currentCount,
     onDecrement,
-    isModal = false
+    isModal = false,
+    t
 }: {
     currentCount: number,
     onDecrement: () => void,
-    isModal?: boolean
+    isModal?: boolean,
+    t: (key: string) => string
 }) => {
     return (
         <div className={`flex flex-col items-center ${isModal ? 'mt-8' : 'mt-3'}`}>
@@ -29,13 +34,17 @@ const Zikirmatik = ({
                 <span className={`${isModal ? 'text-4xl' : 'text-3xl'} font-bold font-mono`}>
                     {currentCount}
                 </span>
-                <span className="text-xs font-light">{currentCount === 0 ? "BİTTİ" : "AZALT"}</span>
+                <span className="text-xs font-light">
+                    {/* BURASI DEĞİŞTİ: */}
+                    {currentCount === 0 ? t('completed') : t('decrease')}
+                </span>
             </button>
             {currentCount > 0 && (
-                <p className="text-xs text-gray-500 mt-2">Kalan Sayı</p>
+                <p className="text-xs text-gray-500 mt-2">{t('remaining')}</p>
             )}
             {currentCount === 0 && (
-                <p className="text-xs text-green-600 font-bold mt-2">Allah kabul etsin!</p>
+                // BURASI DEĞİŞTİ:
+                <p className="text-xs text-green-600 font-bold mt-2">{t('allahAccept')}</p>
             )}
         </div>
     );
@@ -44,13 +53,13 @@ const Zikirmatik = ({
 export default function JoinPage({ params }: { params: Promise<{ code: string }> }) {
 
     const { code } = use(params);
+    const { t } = useLanguage();
 
     const [session, setSession] = useState<DistributionSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [userName, setUserName] = useState("");
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
 
     const [localCounts, setLocalCounts] = useState<Record<number, number>>({});
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -78,11 +87,8 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
     const [activeTab, setActiveTab] = useState<ViewMode>('ARABIC');
 
-    useEffect(() => {
-        fetchSession();
-    }, [code]);
-
-    const fetchSession = async () => {
+    // fetchSession fonksiyonunu useCallback ile sarmaladık (Hata Çözümü)
+    const fetchSession = useCallback(async () => {
         try {
             const res = await fetch(`${apiUrl}/api/distribution/get/${code}?t=${Date.now()}`, {
                 cache: "no-store"
@@ -104,11 +110,19 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             });
 
         } catch (err) {
-            setError("Hata: Geçersiz kod veya sunucu kapalı.");
+            // err değişkenini kullanmadığımız için konsola yazdırıp hatayı susturuyoruz
+            console.error(err);
+            // ESKİSİ: setError("Hata: Geçersiz kod veya sunucu kapalı.");
+            // YENİSİ:
+            setError(t('errorInvalidCode'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [apiUrl, code, t]); // Bağımlılıkları ekledik
+
+    useEffect(() => {
+        fetchSession();
+    }, [fetchSession]);
 
     const decrementCount = (assignmentId: number) => {
         setLocalCounts(prev => {
@@ -127,7 +141,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
     const handleTakePart = async (assignmentId: number) => {
         if (!userName) {
-            alert("Lütfen önce yukarıya isminizi yazın.");
+            alert(t('alertEnterName'));
             return;
         }
 
@@ -165,12 +179,12 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                 }
             }
 
-            alert("Harika! Bu bölümü okumayı üstlendiniz.");
+            alert(t('alertTakenSuccess'));
             fetchSession();
 
         } catch (err) {
             console.error(err);
-            alert("Bir hata oluştu.");
+            alert(t('errorOccurred'));
             fetchSession();
         }
     };
@@ -379,7 +393,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                             </div>
                             <div className="text-left">
                                 <h2 className="text-lg font-bold text-gray-800">{resourceName}</h2>
-                                <span className="text-xs text-gray-500">{assignments.length} Kişi / Parça</span>
+                                <span className="text-xs text-gray-500">{assignments.length} {t('person')} / {t('part')}</span>
                             </div>
                         </div>
                         <div className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
@@ -394,20 +408,36 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                     <div key={item.id} className={`p-4 rounded-lg border flex flex-col justify-between transition-all ${item.isTaken ? "bg-gray-100 border-gray-300 opacity-90" : "bg-white border-blue-200 hover:shadow-md"}`}>
                                         <div className="mb-3">
                                             <div className="flex justify-between items-center mb-1">
-                                                <span className="font-bold text-gray-800">{item.participantNumber}. Kişi</span>
+                                                <span className="font-bold text-gray-800">{item.participantNumber}. {t('person')}</span>
                                                 {item.isTaken && item.assignedToName && (<span className="text-xs bg-green-600 text-white px-2 py-1 rounded font-bold">{item.assignedToName}</span>)}
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                                {item.resource.type === "JOINT" ? "Hedef:" : item.resource.translations?.[0]?.unitName + ":"}
+
+                                                {/* --- GÜNCELLENEN KISIM --- */}
+                                                {/* 1. JOINT ise 'Hedef' yaz */}
+                                                {/* 2. PAGED ise 'Sayfa' yaz (t('page')) */}
+                                                {/* 3. COUNTABLE ise 'Adet' yaz (t('pieces')) <-- YENİ EKLENEN */}
+                                                {/* 4. Hiçbiri değilse veritabanındaki isme bak */}
+
+                                                {item.resource.type === "JOINT"
+                                                    ? `${t('target')}:`
+                                                    : (
+                                                        item.resource.type === "PAGED" ? t('page') :
+                                                            item.resource.type === "COUNTABLE" ? t('pieces') :
+                                                                (item.resource.translations?.[0]?.unitName || t('part'))
+                                                    ) + ":"
+                                                }
+                                                {/* ------------------------- */}
+
                                                 {item.resource.type === "JOINT" ? (
-                                                    <span className="ml-1 font-bold">{item.endUnit} Adet</span>
+                                                    <span className="ml-1 font-bold">{item.endUnit} {t('pieces')}</span>
                                                 ) : (
                                                     <span> {item.startUnit} - {item.endUnit}</span>
                                                 )}
 
                                                 {item.resource.type === "COUNTABLE" && (
                                                     <span className="ml-2 font-bold text-blue-600">
-                                                        (Toplam: {item.endUnit - item.startUnit + 1})
+                                                        ({t('total')}: {item.endUnit - item.startUnit + 1})
                                                     </span>
                                                 )}
                                             </div>
@@ -420,29 +450,32 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                             <Zikirmatik
                                                                 currentCount={localCounts[item.id] || 0}
                                                                 onDecrement={() => decrementCount(item.id)}
+                                                                t={t as unknown as (key: string) => string}
                                                             />
                                                             <button onClick={() => handleOpenReading(item)} className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800">
-                                                                Metni Oku
+                                                                {t('takeRead')} ({t('readText')})
                                                             </button>
                                                         </div>
                                                     ) : (
                                                         item.resource.type === "LIST_BASED" ? (
                                                             <button onClick={() => handleOpenReading(item)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
-                                                                OKU
+                                                                {t('takeRead')}
                                                             </button>
                                                         ) : (
                                                             item.resource.type === "PAGED" ? (
                                                                 <button onClick={() => handleOpenQuran(item.startUnit)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
-                                                                    OKU (Siteye Git)
+                                                                    {t('takeRead')} ({t('goToSite')})
                                                                 </button>
                                                             ) : (
-                                                                <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner">DOLU</button>
+                                                                <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner">{t('full')}</button>
                                                             )
                                                         )
                                                     )}
                                                 </>
                                             ) : (
-                                                <button onClick={() => handleTakePart(item.id)} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-sm font-bold transition transform hover:scale-[1.02]">SEÇ & OKU</button>
+                                                <button onClick={() => handleTakePart(item.id)} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-sm font-bold transition transform hover:scale-[1.02]">
+                                                    {t('selectAndRead')}
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -455,7 +488,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         });
     };
 
-    if (loading) return <div className="p-10 text-center font-bold text-gray-600">Yükleniyor...</div>;
+    if (loading) return <div className="p-10 text-center font-bold text-gray-600">{t('loading')}</div>;
     if (error) return <div className="p-10 text-center text-red-500 font-bold">{error}</div>;
     if (!session) return null;
 
@@ -466,12 +499,14 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             <div className="max-w-4xl mx-auto">
 
                 <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-blue-800 mb-2">Okuma Halkası</h1>
-                    <p className="text-gray-600">Lütfen adınızı girip okumak istediğiniz kaynağa tıklayınız.</p>
+                    <h1 className="text-3xl font-bold text-blue-800 mb-2">{t('joinTitle')}</h1>
+                    {/* "Lütfen adınızı girip..." yazısı değişti */}
+                    <p className="text-gray-600">{t('joinIntro')}</p>
                     <div className="mt-4 flex justify-center">
                         <input
                             type="text"
-                            placeholder="Adınız"
+                            // "Adınız" placeholder değişti
+                            placeholder={t('yourName')}
                             className="border-2 border-blue-200 p-3 rounded-lg text-black w-full max-w-sm text-center focus:border-blue-500 outline-none transition"
                             value={userName}
                             onChange={(e) => setUserName(e.target.value)}
@@ -483,7 +518,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     <div className="mb-8">
                         <h2 className="text-xl font-bold text-gray-700 border-b border-gray-300 pb-2 mb-4 flex items-center">
                             <svg className="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
-                            Paylaşılan Kaynaklar
+                            {t('distributedResources')}
                         </h2>
                         {renderGroupList(distributed)}
                     </div>
@@ -493,7 +528,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     <div>
                         <h2 className="text-xl font-bold text-gray-700 border-b border-gray-300 pb-2 mb-4 flex items-center">
                             <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                            Bireysel Kaynaklar
+                            {t('individualResources')}
                         </h2>
                         {renderGroupList(individual)}
                     </div>
@@ -515,10 +550,16 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
                             {(readingModalContent.type === "CEVSEN" || readingModalContent.type === "SALAVAT") && (
                                 <div className="flex p-1 bg-blue-800/30 rounded-lg">
-                                    <button onClick={() => setActiveTab('ARABIC')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'ARABIC' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>Arapça</button>
-                                    <button onClick={() => setActiveTab('LATIN')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'LATIN' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>Okunuş</button>
+                                    <button onClick={() => setActiveTab('ARABIC')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'ARABIC' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>
+                                        {t('tabArabic')}
+                                    </button>
+                                    <button onClick={() => setActiveTab('LATIN')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'LATIN' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>
+                                        {t('tabLatin')}
+                                    </button>
                                     {readingModalContent.codeKey !== "BEDIR" && (
-                                        <button onClick={() => setActiveTab('MEANING')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'MEANING' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>Meal</button>
+                                        <button onClick={() => setActiveTab('MEANING')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'MEANING' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>
+                                            {t('tabMeaning')}
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -574,6 +615,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
                                     <div className="w-full flex-1 overflow-y-auto p-2">
 
+                                        {/* --- ARAPÇA KISMI --- */}
                                         {activeTab === 'ARABIC' && (
                                             <>
                                                 {(readingModalContent.salavatData.arabic || "").startsWith("IMAGE_MODE") ? (
@@ -584,11 +626,11 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                             .map((imgSrc, index) => (
                                                                 <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
                                                                     <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-[10px] px-2 py-1 rounded z-10">
-                                                                        Sayfa {index + 1}
+                                                                        {t('page')} {index + 1}
                                                                     </div>
                                                                     <img
                                                                         src={imgSrc ? imgSrc.trim() : ""}
-                                                                        alt={`Sayfa ${index + 1}`}
+                                                                        alt={`${t('page')} ${index + 1}`}
                                                                         className="w-full h-auto"
                                                                     />
                                                                 </div>
@@ -601,12 +643,35 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                 )}
                                             </>
                                         )}
+
+                                        {/* --- OKUNUŞ (LATIN) KISMI --- */}
                                         {activeTab === 'LATIN' && (
                                             <div className="p-2">
-                                                {formatStyledText(readingModalContent.salavatData.transcript, 'LATIN')}
+                                                {(readingModalContent.salavatData.transcript || "").startsWith("IMAGE_MODE") ? (
+                                                    <div className="flex flex-col items-center gap-4 bg-gray-100 p-2 rounded-lg">
+                                                        {(readingModalContent.salavatData.transcript || "")
+                                                            .split(":::")[1]
+                                                            ?.split(",")
+                                                            .map((imgSrc, index) => (
+                                                                <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
+                                                                    <div className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] px-2 py-1 rounded z-10 shadow">
+                                                                        {t('tabLatin')} - {index + 1}
+                                                                    </div>
+                                                                    <img
+                                                                        src={imgSrc.trim()}
+                                                                        alt={`${t('tabLatin')} ${index + 1}`}
+                                                                        className="w-full h-auto"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                    </div>
+                                                ) : (
+                                                    formatStyledText(readingModalContent.salavatData.transcript, 'LATIN')
+                                                )}
                                             </div>
                                         )}
 
+                                        {/* --- MEAL KISMI --- */}
                                         {activeTab === 'MEANING' && (
                                             <div className="p-2 w-full">
                                                 {(readingModalContent.salavatData.meaning || "").startsWith("IMAGE_MODE") ? (
@@ -617,11 +682,11 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                             .map((imgSrc, index) => (
                                                                 <div key={index} className="w-full bg-white shadow-md rounded relative overflow-hidden">
                                                                     <div className="absolute top-2 left-2 bg-emerald-600 text-white text-[10px] px-2 py-1 rounded z-10 shadow">
-                                                                        Meal Sayfa {index + 1}
+                                                                        {t('tabMeaning')} - {t('page')} {index + 1}
                                                                     </div>
                                                                     <img
                                                                         src={imgSrc.trim()}
-                                                                        alt={`Meal Sayfa ${index + 1}`}
+                                                                        alt={`${t('tabMeaning')} ${index + 1}`}
                                                                         className="w-full h-auto"
                                                                     />
                                                                 </div>
@@ -634,13 +699,16 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                         )}
                                     </div>
 
+                                    {/* --- ZİKİRMATİK --- */}
                                     {readingModalContent.assignmentId && (
                                         <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
-                                            <p className="text-gray-500 text-sm mb-2 font-semibold">OKUDUKÇA TIKLAYINIZ</p>
+                                            <p className="text-gray-500 text-sm mb-2 font-semibold">{t('clickToCount')}</p>
                                             <Zikirmatik
                                                 currentCount={localCounts[readingModalContent.assignmentId] || 0}
                                                 onDecrement={() => decrementCount(readingModalContent.assignmentId!)}
                                                 isModal={true}
+                                                // TypeScript/ESLint Hack (Doğru Kullanım)
+                                                t={t as unknown as (key: string) => string}
                                             />
                                         </div>
                                     )}
@@ -649,7 +717,9 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                         </div>
 
                         <div className="p-4 bg-gray-50 text-center border-t border-gray-200 shrink-0">
-                            <button onClick={() => setReadingModalContent(null)} className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold">Kapat</button>
+                            <button onClick={() => setReadingModalContent(null)} className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold">
+                                {t('cancel') || "Kapat"}
+                            </button>
                         </div>
                     </div>
                 </div>
