@@ -91,7 +91,7 @@ export default function AdminPage() {
         .map(id => resources.find(r => r.id.toString() === id))
         .filter(r => r && (r.type === "COUNTABLE" || r.type === "JOINT"));
 
-    // Liste Render Fonksiyonu
+    // Liste Render FonksiyonurenderGroupList
     const renderList = (list: Resource[]) => (
         <div className="space-y-2">
             {list.map((r) => (

@@ -58,7 +58,8 @@ const translations = {
         alertErrorPrefix: "Hata: ",
         errorInvalidCode: "Hata: Geçersiz kod veya sunucu kapalı.",
         decrease: "AZALT",
-        allahAccept: "Allah kabul etsin!"
+        allahAccept: "Allah kabul etsin!",
+        errorAlreadyTaken: "Bu parça maalesef başkası tarafından alınmış."
     },
     en: {
         title: "Spiritual Night",
@@ -116,7 +117,8 @@ const translations = {
         alertErrorPrefix: "Error: ",
         errorInvalidCode: "Error: Invalid code or server is down.",
         decrease: "DECREASE",
-        allahAccept: "May Allah accept it!"
+        allahAccept: "May Allah accept it!",
+        errorAlreadyTaken: "Unfortunately, this part has already been taken by someone else."
     }
 };
 

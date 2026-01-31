@@ -6,44 +6,52 @@ import { DistributionSession, Assignment } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 
 
+// Zikirmatik Bileşeni
 const Zikirmatik = ({
     currentCount,
     onDecrement,
     isModal = false,
-    t
+    t,
+    readOnly = false // <-- 1. YENİ ÖZELLİK
 }: {
     currentCount: number,
     onDecrement: () => void,
     isModal?: boolean,
-    t: (key: string) => string
+    t: (key: string) => string,
+    readOnly?: boolean // <-- 2. TİP TANIMI
 }) => {
     return (
         <div className={`flex flex-col items-center ${isModal ? 'mt-8' : 'mt-3'}`}>
             <button
-                onClick={onDecrement}
-                disabled={currentCount === 0}
+                // Eğer bittiyse veya başkasının parçasıysa (readOnly) tıklamayı engelle
+                onClick={readOnly ? undefined : onDecrement}
+                disabled={currentCount === 0 || readOnly}
                 className={`
                     rounded-full flex flex-col items-center justify-center 
-                    shadow-lg border-4 transition transform active:scale-95
+                    shadow-lg border-4 transition transform 
                     ${isModal ? 'w-32 h-32' : 'w-24 h-24'} 
+                    
+                    ${/* Tasarım Mantığı */ ""}
                     ${currentCount === 0
-                        ? 'bg-green-100 border-green-500 text-green-700 cursor-default'
-                        : 'bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer'}
+                        ? 'bg-green-100 border-green-500 text-green-700 cursor-default' // Bittiğinde
+                        : readOnly
+                            ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80' // Başkasınınsa (Gri)
+                            : 'bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer active:scale-95' // Benimse (Mavi)
+                    }
                 `}
             >
                 <span className={`${isModal ? 'text-4xl' : 'text-3xl'} font-bold font-mono`}>
                     {currentCount}
                 </span>
                 <span className="text-xs font-light">
-                    {/* BURASI DEĞİŞTİ: */}
-                    {currentCount === 0 ? t('completed') : t('decrease')}
+                    {/* Başkasının ise "AZALT" yazmasın, sadece sayı görünsün veya boş kalsın */}
+                    {currentCount === 0 ? t('completed') : (readOnly ? "" : t('decrease'))}
                 </span>
             </button>
             {currentCount > 0 && (
                 <p className="text-xs text-gray-500 mt-2">{t('remaining')}</p>
             )}
             {currentCount === 0 && (
-                // BURASI DEĞİŞTİ:
                 <p className="text-xs text-green-600 font-bold mt-2">{t('allahAccept')}</p>
             )}
         </div>
@@ -140,23 +148,37 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
     };
 
     const handleTakePart = async (assignmentId: number) => {
+        // 1. İsim Kontrolü
         if (!userName) {
             alert(t('alertEnterName'));
             return;
         }
 
         try {
+            // 2. API İsteği
             const res = await fetch(
                 `${apiUrl}/api/distribution/take/${assignmentId}?name=${userName}`
             );
 
+            // --- KRİTİK NOKTA: EN BAŞA KOYUYORUZ ---
+            // Eğer başkası almışsa (409), uyar, yenile ve DUR (return).
+            if (res.status === 409) {
+                alert(t('errorAlreadyTaken'));
+                fetchSession(); // Listeyi yenile ki gri olduğunu görsün
+                return; // <--- BU SATIR ÇOK ÖNEMLİ! Kodun devam etmesini engeller.
+            }
+            // ---------------------------------------
+
+            // 3. Diğer Hataların Kontrolü
             if (!res.ok) {
                 const text = await res.text();
-                alert("Durum: " + text);
+                const displayMsg = text.includes("{") ? t('errorOccurred') : text;
+                alert(t('alertStatus') + displayMsg);
                 fetchSession();
-                return;
+                return; // <--- Hata varsa dur
             }
 
+            // 4. BAŞARI SENARYOSU (Kod buraya geldiyse her şey yolundadır)
             if (session) {
                 const updatedAssignments = session.assignments.map(a =>
                     a.id === assignmentId
@@ -167,6 +189,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
                 const targetAssignment = session.assignments.find(a => a.id === assignmentId);
 
+                // Sayaçları güncelle
                 if (targetAssignment && (targetAssignment.resource.type === "COUNTABLE" || targetAssignment.resource.type === "JOINT")) {
                     setLocalCounts(prev => ({
                         ...prev,
@@ -174,9 +197,15 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     }));
                 }
 
+                // Sayfalı ise siteyi aç (Sadece hata yoksa çalışır)
                 if (targetAssignment && targetAssignment.resource.type === "PAGED") {
                     handleOpenQuran(targetAssignment.startUnit);
                 }
+
+                // Eğer metin bazlıysa ve otomatik açılmasını istiyorsan bu satırı ekleyebilirsin:
+                // if (targetAssignment && targetAssignment.resource.type === "LIST_BASED") {
+                //     handleOpenReading(targetAssignment);
+                // }
             }
 
             alert(t('alertTakenSuccess'));
@@ -413,12 +442,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                             </div>
                                             <div className="text-sm text-gray-600">
 
-                                                {/* --- GÜNCELLENEN KISIM --- */}
-                                                {/* 1. JOINT ise 'Hedef' yaz */}
-                                                {/* 2. PAGED ise 'Sayfa' yaz (t('page')) */}
-                                                {/* 3. COUNTABLE ise 'Adet' yaz (t('pieces')) <-- YENİ EKLENEN */}
-                                                {/* 4. Hiçbiri değilse veritabanındaki isme bak */}
-
                                                 {item.resource.type === "JOINT"
                                                     ? `${t('target')}:`
                                                     : (
@@ -427,7 +450,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                                 (item.resource.translations?.[0]?.unitName || t('part'))
                                                     ) + ":"
                                                 }
-                                                {/* ------------------------- */}
 
                                                 {item.resource.type === "JOINT" ? (
                                                     <span className="ml-1 font-bold">{item.endUnit} {t('pieces')}</span>
@@ -447,32 +469,64 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                 <>
                                                     {item.resource.type === "COUNTABLE" || item.resource.type === "JOINT" ? (
                                                         <div className="w-full flex flex-col items-center">
+                                                            {/* ZİKİRMATİK (Zaten korumalı) */}
                                                             <Zikirmatik
                                                                 currentCount={localCounts[item.id] || 0}
                                                                 onDecrement={() => decrementCount(item.id)}
                                                                 t={t as unknown as (key: string) => string}
+                                                                readOnly={!userName || item.assignedToName !== userName}
                                                             />
-                                                            <button onClick={() => handleOpenReading(item)} className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800">
-                                                                {t('takeRead')} ({t('readText')})
-                                                            </button>
+
+                                                            {/* --- DÜZELTİLEN KISIM --- */}
+                                                            {/* Sadece görevi alan kişi (ve ismi giren kişi) metni okuyabilsin */}
+                                                            {item.assignedToName === userName && (
+                                                                <button onClick={() => handleOpenReading(item)} className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800">
+                                                                    {t('takeRead')} ({t('readText')})
+                                                                </button>
+                                                            )}
+                                                            {/* ------------------------ */}
                                                         </div>
                                                     ) : (
+                                                        /* --- DÜZELTİLEN KISIM BAŞLIYOR --- */
                                                         item.resource.type === "LIST_BASED" ? (
-                                                            <button onClick={() => handleOpenReading(item)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
-                                                                {t('takeRead')}
-                                                            </button>
-                                                        ) : (
-                                                            item.resource.type === "PAGED" ? (
-                                                                <button onClick={() => handleOpenQuran(item.startUnit)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
-                                                                    {t('takeRead')} ({t('goToSite')})
+                                                            // TÜR: LİSTE TABANLI (YASİN, FETİH vb.)
+                                                            item.assignedToName === userName ? (
+                                                                // Alan kişi BEN isem -> YEŞİL BUTON (OKU)
+                                                                <button onClick={() => handleOpenReading(item)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
+                                                                    {t('takeRead')}
                                                                 </button>
                                                             ) : (
-                                                                <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner">{t('full')}</button>
+                                                                // Alan kişi başkası ise -> GRİ BUTON (DOLU)
+                                                                <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
+                                                                    {t('full')}
+                                                                </button>
+                                                            )
+                                                        ) : (
+                                                            item.resource.type === "PAGED" ? (
+                                                                // TÜR: SAYFALI (KURAN)
+                                                                item.assignedToName === userName ? (
+                                                                    // Alan kişi BEN isem -> YEŞİL BUTON (SİTEYE GİT)
+                                                                    <button onClick={() => handleOpenQuran(item.startUnit)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
+                                                                        {t('takeRead')} ({t('goToSite')})
+                                                                    </button>
+                                                                ) : (
+                                                                    // Alan kişi başkası ise -> GRİ BUTON (DOLU)
+                                                                    <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
+                                                                        {t('full')}
+                                                                    </button>
+                                                                )
+                                                            ) : (
+                                                                // BİLİNMEYEN TÜR -> DOLU
+                                                                <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
+                                                                    {t('full')}
+                                                                </button>
                                                             )
                                                         )
+                                                        /* --- DÜZELTİLEN KISIM BİTTİ --- */
                                                     )}
                                                 </>
                                             ) : (
+                                                // ALINMAMIŞSA -> SEÇ & OKU BUTONU
                                                 <button onClick={() => handleTakePart(item.id)} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-sm font-bold transition transform hover:scale-[1.02]">
                                                     {t('selectAndRead')}
                                                 </button>
@@ -703,13 +757,25 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                     {readingModalContent.assignmentId && (
                                         <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
                                             <p className="text-gray-500 text-sm mb-2 font-semibold">{t('clickToCount')}</p>
-                                            <Zikirmatik
-                                                currentCount={localCounts[readingModalContent.assignmentId] || 0}
-                                                onDecrement={() => decrementCount(readingModalContent.assignmentId!)}
-                                                isModal={true}
-                                                // TypeScript/ESLint Hack (Doğru Kullanım)
-                                                t={t as unknown as (key: string) => string}
-                                            />
+
+                                            {/* Modaldaki Zikirmatik için sahibini bulmamız lazım */}
+                                            {(() => {
+                                                // 1. Önce bu görevin kime ait olduğunu bulalım
+                                                const currentAssignment = session?.assignments.find(a => a.id === readingModalContent.assignmentId);
+                                                // 2. İsim eşleşiyor mu kontrol edelim
+                                                const isOwner = currentAssignment && currentAssignment.assignedToName === userName;
+
+                                                return (
+                                                    <Zikirmatik
+                                                        currentCount={localCounts[readingModalContent.assignmentId] || 0}
+                                                        onDecrement={() => decrementCount(readingModalContent.assignmentId!)}
+                                                        isModal={true}
+                                                        t={t as unknown as (key: string) => string}
+                                                        // --- BURAYI EKLE ---
+                                                        readOnly={!isOwner}
+                                                    />
+                                                );
+                                            })()}
                                         </div>
                                     )}
                                 </div>
