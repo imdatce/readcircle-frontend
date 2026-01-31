@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { use, useEffect, useState, useCallback } from "react";
@@ -6,24 +5,22 @@ import { DistributionSession, Assignment } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 
 
-// Zikirmatik Bileşeni
 const Zikirmatik = ({
     currentCount,
     onDecrement,
     isModal = false,
     t,
-    readOnly = false // <-- 1. YENİ ÖZELLİK
+    readOnly = false
 }: {
     currentCount: number,
     onDecrement: () => void,
     isModal?: boolean,
     t: (key: string) => string,
-    readOnly?: boolean // <-- 2. TİP TANIMI
+    readOnly?: boolean
 }) => {
     return (
         <div className={`flex flex-col items-center ${isModal ? 'mt-8' : 'mt-3'}`}>
             <button
-                // Eğer bittiyse veya başkasının parçasıysa (readOnly) tıklamayı engelle
                 onClick={readOnly ? undefined : onDecrement}
                 disabled={currentCount === 0 || readOnly}
                 className={`
@@ -31,12 +28,11 @@ const Zikirmatik = ({
                     shadow-lg border-4 transition transform 
                     ${isModal ? 'w-32 h-32' : 'w-24 h-24'} 
                     
-                    ${/* Tasarım Mantığı */ ""}
                     ${currentCount === 0
-                        ? 'bg-green-100 border-green-500 text-green-700 cursor-default' // Bittiğinde
+                        ? 'bg-green-100 border-green-500 text-green-700 cursor-default'
                         : readOnly
-                            ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80' // Başkasınınsa (Gri)
-                            : 'bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer active:scale-95' // Benimse (Mavi)
+                            ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80'
+                            : 'bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer active:scale-95'
                     }
                 `}
             >
@@ -44,7 +40,6 @@ const Zikirmatik = ({
                     {currentCount}
                 </span>
                 <span className="text-xs font-light">
-                    {/* Başkasının ise "AZALT" yazmasın, sadece sayı görünsün veya boş kalsın */}
                     {currentCount === 0 ? t('completed') : (readOnly ? "" : t('decrease'))}
                 </span>
             </button>
@@ -95,51 +90,79 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
     const [activeTab, setActiveTab] = useState<ViewMode>('ARABIC');
 
-    // fetchSession fonksiyonunu useCallback ile sarmaladık (Hata Çözümü)
     const fetchSession = useCallback(async () => {
         try {
             const res = await fetch(`${apiUrl}/api/distribution/get/${code}?t=${Date.now()}`, {
                 cache: "no-store"
             });
-            if (!res.ok) throw new Error("Paylaşım bulunamadı");
+            if (!res.ok) throw new Error("Veri çekilemedi");
+
             const data: DistributionSession = await res.json();
             setSession(data);
 
             setLocalCounts(prev => {
                 const newCounts = { ...prev };
                 let hasChange = false;
+
                 data.assignments.forEach(a => {
-                    if ((a.resource.type === "COUNTABLE" || a.resource.type === "JOINT") && newCounts[a.id] === undefined) {
-                        newCounts[a.id] = a.endUnit - a.startUnit + 1;
-                        hasChange = true;
+                    if (a.resource.type === "COUNTABLE" || a.resource.type === "JOINT") {
+                        const defaultTotal = a.endUnit - a.startUnit + 1;
+
+                        const backendCount = (a as unknown as { currentCount?: number | null }).currentCount;
+
+                        const isMyAssignment = a.assignedToName === userName;
+
+                        const iHaveLocalData = newCounts[a.id] !== undefined;
+                        if (isMyAssignment && iHaveLocalData) {
+                            return;
+                        }
+
+                        let valueToSet = defaultTotal;
+                        if (backendCount !== undefined && backendCount !== null) {
+                            valueToSet = backendCount;
+                        }
+
+                        if (newCounts[a.id] !== valueToSet) {
+                            newCounts[a.id] = valueToSet;
+                            hasChange = true;
+                        }
                     }
                 });
+
                 return hasChange ? newCounts : prev;
             });
 
         } catch (err) {
-            // err değişkenini kullanmadığımız için konsola yazdırıp hatayı susturuyoruz
             console.error(err);
-            // ESKİSİ: setError("Hata: Geçersiz kod veya sunucu kapalı.");
-            // YENİSİ:
-            setError(t('errorInvalidCode'));
         } finally {
             setLoading(false);
         }
-    }, [apiUrl, code, t]); // Bağımlılıkları ekledik
+    }, [apiUrl, code, userName]);
 
     useEffect(() => {
         fetchSession();
     }, [fetchSession]);
 
-    const decrementCount = (assignmentId: number) => {
-        setLocalCounts(prev => {
-            const current = prev[assignmentId];
-            if (current !== undefined && current > 0) {
-                return { ...prev, [assignmentId]: current - 1 };
-            }
-            return prev;
-        });
+    const decrementCount = async (assignmentId: number) => {
+        const currentCount = localCounts[assignmentId];
+
+        if (currentCount === undefined || currentCount <= 0) return;
+
+        const newCount = currentCount - 1;
+
+        setLocalCounts(prev => ({
+            ...prev,
+            [assignmentId]: newCount
+        }));
+
+        try {
+            await fetch(`${apiUrl}/api/distribution/update-progress/${assignmentId}?count=${newCount}`, {
+                method: 'POST',
+                cache: 'no-store'
+            });
+        } catch (e) {
+            console.error("İlerleme kaydedilemedi", e);
+        }
     };
 
     const handleOpenQuran = (pageNumber: number) => {
@@ -155,61 +178,32 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         }
 
         try {
-            // 2. API İsteği
+            // 2. API İsteği (Parçayı Al)
             const res = await fetch(
                 `${apiUrl}/api/distribution/take/${assignmentId}?name=${userName}`
             );
 
-            // --- KRİTİK NOKTA: EN BAŞA KOYUYORUZ ---
-            // Eğer başkası almışsa (409), uyar, yenile ve DUR (return).
+            // Başkası almışsa uyar
             if (res.status === 409) {
                 alert(t('errorAlreadyTaken'));
-                fetchSession(); // Listeyi yenile ki gri olduğunu görsün
-                return; // <--- BU SATIR ÇOK ÖNEMLİ! Kodun devam etmesini engeller.
+                fetchSession();
+                return;
             }
-            // ---------------------------------------
 
-            // 3. Diğer Hataların Kontrolü
             if (!res.ok) {
                 const text = await res.text();
                 const displayMsg = text.includes("{") ? t('errorOccurred') : text;
                 alert(t('alertStatus') + displayMsg);
                 fetchSession();
-                return; // <--- Hata varsa dur
+                return;
             }
 
-            // 4. BAŞARI SENARYOSU (Kod buraya geldiyse her şey yolundadır)
-            if (session) {
-                const updatedAssignments = session.assignments.map(a =>
-                    a.id === assignmentId
-                        ? { ...a, isTaken: true, assignedToName: userName }
-                        : a
-                );
-                setSession({ ...session, assignments: updatedAssignments });
+            // 3. BAŞARI SENARYOSU
+            // Sadece listeyi güncelle ve başarı mesajı ver.
+            // YÖNLENDİRME KODLARINI (handleOpenQuran vb.) BURADAN SİLDİK.
 
-                const targetAssignment = session.assignments.find(a => a.id === assignmentId);
-
-                // Sayaçları güncelle
-                if (targetAssignment && (targetAssignment.resource.type === "COUNTABLE" || targetAssignment.resource.type === "JOINT")) {
-                    setLocalCounts(prev => ({
-                        ...prev,
-                        [assignmentId]: targetAssignment.endUnit - targetAssignment.startUnit + 1
-                    }));
-                }
-
-                // Sayfalı ise siteyi aç (Sadece hata yoksa çalışır)
-                if (targetAssignment && targetAssignment.resource.type === "PAGED") {
-                    handleOpenQuran(targetAssignment.startUnit);
-                }
-
-                // Eğer metin bazlıysa ve otomatik açılmasını istiyorsan bu satırı ekleyebilirsin:
-                // if (targetAssignment && targetAssignment.resource.type === "LIST_BASED") {
-                //     handleOpenReading(targetAssignment);
-                // }
-            }
-
-            alert(t('alertTakenSuccess'));
-            fetchSession();
+            alert(t('alertTakenSuccess')); // "Parça başarıyla alındı"
+            fetchSession(); // Listeyi yenile ki buton "OKU"ya dönüşsün
 
         } catch (err) {
             console.error(err);
@@ -469,7 +463,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                 <>
                                                     {item.resource.type === "COUNTABLE" || item.resource.type === "JOINT" ? (
                                                         <div className="w-full flex flex-col items-center">
-                                                            {/* ZİKİRMATİK (Zaten korumalı) */}
                                                             <Zikirmatik
                                                                 currentCount={localCounts[item.id] || 0}
                                                                 onDecrement={() => decrementCount(item.id)}
@@ -477,58 +470,45 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                                 readOnly={!userName || item.assignedToName !== userName}
                                                             />
 
-                                                            {/* --- DÜZELTİLEN KISIM --- */}
-                                                            {/* Sadece görevi alan kişi (ve ismi giren kişi) metni okuyabilsin */}
                                                             {item.assignedToName === userName && (
                                                                 <button onClick={() => handleOpenReading(item)} className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800">
                                                                     {t('takeRead')} ({t('readText')})
                                                                 </button>
                                                             )}
-                                                            {/* ------------------------ */}
                                                         </div>
                                                     ) : (
-                                                        /* --- DÜZELTİLEN KISIM BAŞLIYOR --- */
                                                         item.resource.type === "LIST_BASED" ? (
-                                                            // TÜR: LİSTE TABANLI (YASİN, FETİH vb.)
                                                             item.assignedToName === userName ? (
-                                                                // Alan kişi BEN isem -> YEŞİL BUTON (OKU)
                                                                 <button onClick={() => handleOpenReading(item)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
                                                                     {t('takeRead')}
                                                                 </button>
                                                             ) : (
-                                                                // Alan kişi başkası ise -> GRİ BUTON (DOLU)
                                                                 <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
                                                                     {t('full')}
                                                                 </button>
                                                             )
                                                         ) : (
                                                             item.resource.type === "PAGED" ? (
-                                                                // TÜR: SAYFALI (KURAN)
                                                                 item.assignedToName === userName ? (
-                                                                    // Alan kişi BEN isem -> YEŞİL BUTON (SİTEYE GİT)
                                                                     <button onClick={() => handleOpenQuran(item.startUnit)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
                                                                         {t('takeRead')} ({t('goToSite')})
                                                                     </button>
                                                                 ) : (
-                                                                    // Alan kişi başkası ise -> GRİ BUTON (DOLU)
                                                                     <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
                                                                         {t('full')}
                                                                     </button>
                                                                 )
                                                             ) : (
-                                                                // BİLİNMEYEN TÜR -> DOLU
                                                                 <button disabled className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400">
                                                                     {t('full')}
                                                                 </button>
                                                             )
                                                         )
-                                                        /* --- DÜZELTİLEN KISIM BİTTİ --- */
                                                     )}
                                                 </>
                                             ) : (
-                                                // ALINMAMIŞSA -> SEÇ & OKU BUTONU
                                                 <button onClick={() => handleTakePart(item.id)} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-sm font-bold transition transform hover:scale-[1.02]">
-                                                    {t('selectAndRead')}
+                                                    {t('select')}
                                                 </button>
                                             )}
                                         </div>
@@ -554,12 +534,10 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
                 <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
                     <h1 className="text-3xl font-bold text-blue-800 mb-2">{t('joinTitle')}</h1>
-                    {/* "Lütfen adınızı girip..." yazısı değişti */}
                     <p className="text-gray-600">{t('joinIntro')}</p>
                     <div className="mt-4 flex justify-center">
                         <input
                             type="text"
-                            // "Adınız" placeholder değişti
                             placeholder={t('yourName')}
                             className="border-2 border-blue-200 p-3 rounded-lg text-black w-full max-w-sm text-center focus:border-blue-500 outline-none transition"
                             value={userName}
@@ -668,8 +646,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                 <div className="flex flex-col items-center w-full h-full">
 
                                     <div className="w-full flex-1 overflow-y-auto p-2">
-
-                                        {/* --- ARAPÇA KISMI --- */}
                                         {activeTab === 'ARABIC' && (
                                             <>
                                                 {(readingModalContent.salavatData.arabic || "").startsWith("IMAGE_MODE") ? (
@@ -698,7 +674,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                             </>
                                         )}
 
-                                        {/* --- OKUNUŞ (LATIN) KISMI --- */}
                                         {activeTab === 'LATIN' && (
                                             <div className="p-2">
                                                 {(readingModalContent.salavatData.transcript || "").startsWith("IMAGE_MODE") ? (
@@ -725,7 +700,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                             </div>
                                         )}
 
-                                        {/* --- MEAL KISMI --- */}
                                         {activeTab === 'MEANING' && (
                                             <div className="p-2 w-full">
                                                 {(readingModalContent.salavatData.meaning || "").startsWith("IMAGE_MODE") ? (
@@ -753,16 +727,12 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                         )}
                                     </div>
 
-                                    {/* --- ZİKİRMATİK --- */}
                                     {readingModalContent.assignmentId && (
                                         <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
                                             <p className="text-gray-500 text-sm mb-2 font-semibold">{t('clickToCount')}</p>
 
-                                            {/* Modaldaki Zikirmatik için sahibini bulmamız lazım */}
                                             {(() => {
-                                                // 1. Önce bu görevin kime ait olduğunu bulalım
                                                 const currentAssignment = session?.assignments.find(a => a.id === readingModalContent.assignmentId);
-                                                // 2. İsim eşleşiyor mu kontrol edelim
                                                 const isOwner = currentAssignment && currentAssignment.assignedToName === userName;
 
                                                 return (
@@ -771,7 +741,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                         onDecrement={() => decrementCount(readingModalContent.assignmentId!)}
                                                         isModal={true}
                                                         t={t as unknown as (key: string) => string}
-                                                        // --- BURAYI EKLE ---
                                                         readOnly={!isOwner}
                                                     />
                                                 );

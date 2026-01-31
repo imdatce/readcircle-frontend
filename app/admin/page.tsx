@@ -2,8 +2,6 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import { useState, useEffect } from "react";
-// Resource tipini types dosyasından veya manuel tanımlayabiliriz.
-// Eğer types dosyan yoksa bu interface'i burada tutabilirsin:
 interface Resource {
     id: number;
     codeKey: string;
@@ -15,14 +13,14 @@ interface Resource {
 export default function AdminPage() {
     const { t } = useLanguage();
     const [resources, setResources] = useState<Resource[]>([]);
+
     const [selectedResources, setSelectedResources] = useState<string[]>([]);
     const [participants, setParticipants] = useState<number>(10);
-
-    // API URL'i env'den alıyoruz, yoksa boş string
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-
     const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
     const [createdLink, setCreatedLink] = useState<string>("");
+    const [createdCode, setCreatedCode] = useState<string>("");
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
     useEffect(() => {
         if (!apiUrl) return;
@@ -32,8 +30,35 @@ export default function AdminPage() {
             .catch((err) => console.error(err));
     }, [apiUrl]);
 
+    useEffect(() => {
+        const savedData = sessionStorage.getItem("adminState");
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                if (parsed.selectedResources) setSelectedResources(parsed.selectedResources);
+                if (parsed.participants) setParticipants(parsed.participants);
+                if (parsed.customTotals) setCustomTotals(parsed.customTotals);
+                if (parsed.createdLink) setCreatedLink(parsed.createdLink);
+                if (parsed.createdCode) setCreatedCode(parsed.createdCode);
+            } catch (e) {
+                console.error("Hafıza okuma hatası", e);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        const dataToSave = {
+            selectedResources,
+            participants,
+            customTotals,
+            createdLink,
+            createdCode
+        };
+        sessionStorage.setItem("adminState", JSON.stringify(dataToSave));
+    }, [selectedResources, participants, customTotals, createdLink, createdCode]);
+
+
     const handleCheckboxChange = (id: string) => {
-        setCreatedLink("");
         if (selectedResources.includes(id)) {
             setSelectedResources(selectedResources.filter((rId) => rId !== id));
             const newTotals = { ...customTotals };
@@ -64,8 +89,11 @@ export default function AdminPage() {
             const res = await fetch(`${apiUrl}/api/distribution/create?${params.toString()}`);
             if (!res.ok) throw new Error("Hata");
             const data = await res.json();
-            // window.location.origin, tarayıcıda bulunduğun adresi alır (localhost veya site.com)
-            setCreatedLink(`${window.location.origin}/join/${data.code}`);
+
+            const link = `${window.location.origin}/join/${data.code}`;
+            setCreatedCode(data.code);
+            setCreatedLink(link);
+
         } catch (err) {
             alert(t('errorOccurred') || "Hata oluştu.");
         }
@@ -77,13 +105,14 @@ export default function AdminPage() {
             const res = await fetch(`${apiUrl}/api/distribution/init`);
             const text = await res.text();
             alert(text);
+
+            sessionStorage.removeItem("adminState");
+
             window.location.reload();
         } catch (e) {
             alert("Hata");
         }
     }
-
-    // Filtrelemeler
     const distributedResources = resources.filter(r => r.type !== "JOINT");
     const individualResources = resources.filter(r => r.type === "JOINT");
 
@@ -91,7 +120,6 @@ export default function AdminPage() {
         .map(id => resources.find(r => r.id.toString() === id))
         .filter(r => r && (r.type === "COUNTABLE" || r.type === "JOINT"));
 
-    // Liste Render FonksiyonurenderGroupList
     const renderList = (list: Resource[]) => (
         <div className="space-y-2">
             {list.map((r) => (
@@ -117,13 +145,11 @@ export default function AdminPage() {
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full relative">
 
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
-                    <h1 className="text-2xl font-bold text-gray-800">{t('adminTitle')}</h1>
                     <button onClick={handleResetData} className="text-xs text-red-500 underline hover:text-red-700">
                         {t('refresh')}
                     </button>
                 </div>
 
-                {/* PAYLAŞILAN KAYNAKLAR */}
                 {distributedResources.length > 0 && (
                     <div className="mb-6">
                         <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wide mb-2 flex items-center">
@@ -136,7 +162,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* BİREYSEL KAYNAKLAR */}
                 {individualResources.length > 0 && (
                     <div className="mb-6">
                         <h3 className="text-sm font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center">
@@ -149,7 +174,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* HEDEF SAYI GİRİŞLERİ */}
                 {selectedResourcesWithInput.length > 0 && (
                     <div className="mb-6 animate-in fade-in slide-in-from-top-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                         <p className="block text-amber-800 font-bold mb-3 text-sm border-b border-amber-200 pb-2">
@@ -181,7 +205,6 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* KATILIMCI SAYISI */}
                 <div className="mb-6">
                     <label className="block text-gray-700 font-bold mb-2">
                         {t('participantCount') || "Kaç Kişi Okuyacak?"}
@@ -196,7 +219,6 @@ export default function AdminPage() {
                     />
                 </div>
 
-                {/* OLUŞTUR BUTONU */}
                 <button
                     onClick={handleCreate}
                     className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-bold shadow-md active:scale-[0.98]"
@@ -204,21 +226,31 @@ export default function AdminPage() {
                     {t('createDistribution') || "DAĞITIMI OLUŞTUR"}
                 </button>
 
-                {/* SONUÇ LİNKİ */}
                 {createdLink && (
                     <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded text-center">
                         <p className="text-green-800 font-bold mb-2">
                             {t('linkCreated') || "Link Oluşturuldu:"}
                         </p>
-                        <a href={createdLink} target="_blank" className="text-blue-600 underline text-sm break-all font-mono">
+                        <a href={createdLink} target="_blank" className="text-blue-600 underline text-sm break-all font-mono block mb-3">
                             {createdLink}
                         </a>
-                        <button
-                            onClick={() => navigator.clipboard.writeText(createdLink)}
-                            className="block mx-auto mt-3 text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-100 text-black transition"
-                        >
-                            {t('copy') || "Kopyala"}
-                        </button>
+
+                        <div className="flex justify-center gap-3">
+                            <button
+                                onClick={() => navigator.clipboard.writeText(createdLink)}
+                                className="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100 text-black text-sm font-bold transition shadow-sm"
+                            >
+                                {t('copy') || "Kopyala"}
+                            </button>
+
+                            <a
+                                href={`/admin/monitor?code=${createdCode}`}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold transition shadow-sm flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                {t('trackButton') || "Takip Et"}
+                            </a>
+                        </div>
                     </div>
                 )}
             </div>

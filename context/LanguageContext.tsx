@@ -1,11 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
+type Language = 'tr' | 'en';
+
+interface LanguageContextType {
+    language: Language;
+    setLanguage: (lang: Language) => void;
+    t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 const translations = {
     tr: {
         title: "Manevi Gece",
-        subtitle: "Kuran ve Kaynak Dağıtım Platformu",
+        subtitle: "Kaynak Dağıtım Platformu",
         adminButton: "Admin olarak giriş yap!",
         loading: "Yükleniyor...",
 
@@ -27,16 +36,12 @@ const translations = {
         enterCode: "Dağıtım Kodunu Giriniz",
         joinButton: "Katıl",
         takeRead: "OKU",
-        cancel: "İPTAL ET",
+        cancel: "KAPAT",
         completed: "TAMAMLANDI",
         remaining: "Kalan",
-
-        // --- SEKMELER ---
         tabArabic: "Arapça",
         tabLatin: "Okunuş",
         tabMeaning: "Meal",
-
-        // --- UYARILAR ---
         successReset: "Sıfırlandı!",
         successDelete: "Silindi!",
         clickToCount: "OKUDUKÇA TIKLAYINIZ",
@@ -59,11 +64,24 @@ const translations = {
         errorInvalidCode: "Hata: Geçersiz kod veya sunucu kapalı.",
         decrease: "AZALT",
         allahAccept: "Allah kabul etsin!",
-        errorAlreadyTaken: "Bu parça maalesef başkası tarafından alınmış."
+        errorAlreadyTaken: "Bu parça maalesef başkası tarafından alınmış.",
+        monitorTitle: "Dağıtım Takibi",
+        monitorSubtitle: "Bir kod girerek kimin ne aldığını kontrol edin.",
+        trackButton: "Durumu Göster",
+        statusEmpty: "BOŞTA",
+        statusTaken: "ALINDI",
+        assignedTo: "Alan Kişi",
+        resource: "Kaynak / Parça",
+        progress: "İlerleme / Hedef",
+        backToAdmin: "Admin Paneline Dön",
+        occupancy: "DOLULUK",
+        statusHeader: "Durum", 
+        targetLabel: "HEDEF",
+        select: "SEÇ", 
     },
     en: {
         title: "Spiritual Night",
-        subtitle: "Quran and Resource Distribution Platform",
+        subtitle: "Resource Distribution Platform",
         adminButton: "Login as Admin!",
         loading: "Loading...",
 
@@ -81,7 +99,6 @@ const translations = {
         errorOccurred: "An error occurred.",
         refresh: "Load / Reset Data",
 
-        // --- READ / JOIN PAGE ---
         joinTitle: "Join the Circle",
         enterCode: "Enter Distribution Code",
         joinButton: "Join",
@@ -89,13 +106,10 @@ const translations = {
         cancel: "CANCEL",
         completed: "COMPLETED",
         remaining: "Remaining",
-
-        // --- TABS ---
         tabArabic: "Arabic",
         tabLatin: "Transliteration",
         tabMeaning: "Translation",
 
-        // --- ALERTS ---
         successReset: "Reset successful!",
         successDelete: "Deleted!",
         clickToCount: "CLICK AS YOU READ",
@@ -118,43 +132,56 @@ const translations = {
         errorInvalidCode: "Error: Invalid code or server is down.",
         decrease: "DECREASE",
         allahAccept: "May Allah accept it!",
-        errorAlreadyTaken: "Unfortunately, this part has already been taken by someone else."
+        errorAlreadyTaken: "Unfortunately, this part has already been taken by someone else.",
+        monitorTitle: "Distribution Monitor",
+        monitorSubtitle: "Enter a code to check who took what.",
+        trackButton: "Show Status",
+        statusEmpty: "AVAILABLE",
+        statusTaken: "TAKEN",
+        assignedTo: "Assigned To",
+        resource: "Resource / Part",
+        progress: "Progress / Target",
+        backToAdmin: "Back to Dashboard",
+        occupancy: "OCCUPANCY",
+        statusHeader: "Status",
+        targetLabel: "TARGET",
+        select: "SELECT",
     }
 };
+export function LanguageProvider({ children }: { children: ReactNode }) {
+    const [language, setLanguageState] = useState<Language>('tr');
+    useEffect(() => {
+        const savedLanguage = localStorage.getItem('appLanguage') as Language;
 
-type Language = 'tr' | 'en';
+        if (savedLanguage && (savedLanguage === 'tr' || savedLanguage === 'en')) {
+            if (savedLanguage !== language) {
+                setLanguageState(savedLanguage);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); 
 
-interface LanguageContextType {
-    language: Language;
-    toggleLanguage: () => void;
-    t: (key: keyof typeof translations['tr']) => string;
-}
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-    const [language, setLanguage] = useState<Language>('tr');
-
-    const toggleLanguage = () => {
-        setLanguage((prev) => (prev === 'tr' ? 'en' : 'tr'));
+    const setLanguage = (lang: Language) => {
+        setLanguageState(lang);
+        localStorage.setItem('appLanguage', lang); 
     };
 
-    // Çeviri fonksiyonu
-    const t = (key: keyof typeof translations['tr']) => {
-        return translations[language][key] || key;
+    const t = (key: string): string => {
+        const translation = translations[language][key as keyof typeof translations['tr']];
+        return translation || key;
     };
 
     return (
-        <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+        <LanguageContext.Provider value={{ language, setLanguage, t }}>
             {children}
         </LanguageContext.Provider>
     );
-};
+}
 
-export const useLanguage = () => {
+export function useLanguage() {
     const context = useContext(LanguageContext);
-    if (!context) {
+    if (context === undefined) {
         throw new Error('useLanguage must be used within a LanguageProvider');
     }
     return context;
-};
+}

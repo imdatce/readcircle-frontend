@@ -1,21 +1,14 @@
-"use client"; // Layout içinde buton etkileşimi olacağı için
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
+import { LanguageProvider } from "@/context/LanguageContext";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher"
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Buton Bileşeni (Layout dosyasının içinde tanımlayabiliriz)
-const LanguageSwitcher = () => {
-  const { language, toggleLanguage } = useLanguage();
-  return (
-    <button
-      onClick={toggleLanguage}
-      className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-2 bg-white text-gray-800 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 transition-all font-bold text-sm"
-    >
-      {language === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR'}
-    </button>
-  );
+export const metadata: Metadata = {
+  title: "Read Circle",
+  description: "Distribution Platform",
 };
 
 export default function RootLayout({
@@ -24,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body className={inter.className}>
         <LanguageProvider>
           {children}
