@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 
 function MonitorContent() {
     const { t } = useLanguage();
-    const searchParams = useSearchParams(); 
+    const searchParams = useSearchParams();
 
     const [code, setCode] = useState("");
     const [session, setSession] = useState<DistributionSession | null>(null);
@@ -38,10 +38,10 @@ function MonitorContent() {
     };
 
     useEffect(() => {
-        const urlCode = searchParams.get('code'); 
+        const urlCode = searchParams.get('code');
         if (urlCode) {
             setCode(urlCode);
-            fetchData(urlCode); 
+            fetchData(urlCode);
         }
     }, [searchParams]);
 
@@ -81,8 +81,15 @@ function MonitorContent() {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800">{t('monitorTitle')}</h1>
                 </div>
-                <Link href="/admin" className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition font-medium">
-                    ← {t('backToAdmin')}
+
+                <Link
+                    href="/"
+                    className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="hidden sm:inline">{t('backHome') || "Ana Sayfa"}</span>
                 </Link>
             </div>
 

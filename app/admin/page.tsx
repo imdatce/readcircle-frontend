@@ -1,7 +1,9 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 interface Resource {
     id: number;
     codeKey: string;
@@ -12,6 +14,7 @@ interface Resource {
 
 export default function AdminPage() {
     const { t } = useLanguage();
+    const { user } = useAuth();
     const [resources, setResources] = useState<Resource[]>([]);
 
     const [selectedResources, setSelectedResources] = useState<string[]>([]);
@@ -70,11 +73,18 @@ export default function AdminPage() {
     };
 
     const handleCreate = async () => {
+        if (!user) {
+            alert(t('loginRequired') || "Lütfen önce giriş yapınız.");
+            return;
+        }
+
         if (selectedResources.length === 0) return alert(t('alertSelectResource') || "Lütfen seçim yapınız.");
 
         const params = new URLSearchParams();
         params.append("resourceIds", selectedResources.join(","));
         params.append("participants", participants.toString());
+
+        params.append("creatorName", user);
 
         const totalsString = Object.entries(customTotals)
             .map(([id, val]) => val ? `${id}:${val}` : null)
@@ -93,6 +103,8 @@ export default function AdminPage() {
             const link = `${window.location.origin}/join/${data.code}`;
             setCreatedCode(data.code);
             setCreatedLink(link);
+
+            sessionStorage.removeItem("adminState");
 
         } catch (err) {
             alert(t('errorOccurred') || "Hata oluştu.");
@@ -144,10 +156,21 @@ export default function AdminPage() {
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full relative">
 
+                <Link
+                    href="/"
+                    className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="hidden sm:inline">{t('backHome') || "Ana Sayfa"}</span>
+                </Link>
+
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
                     <button onClick={handleResetData} className="text-xs text-red-500 underline hover:text-red-700">
                         {t('refresh')}
                     </button>
+                    {user && <span className="text-xs text-blue-600 font-bold">👤 {user}</span>}
                 </div>
 
                 {distributedResources.length > 0 && (
@@ -221,9 +244,10 @@ export default function AdminPage() {
 
                 <button
                     onClick={handleCreate}
-                    className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-bold shadow-md active:scale-[0.98]"
+                    disabled={!user}
+                    className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-bold shadow-md active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                    {t('createDistribution') || "DAĞITIMI OLUŞTUR"}
+                    {user ? (t('createDistribution') || "DAĞITIMI OLUŞTUR") : (t('loginRequired') || "Lütfen Giriş Yapın")}
                 </button>
 
                 {createdLink && (

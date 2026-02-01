@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import LanguageSwitcher from "@/app/components/LanguageSwitcher"
+import { AuthProvider } from '@/context/AuthContext';
+import LogoutButton from "@/app/components/LogoutButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,8 +22,11 @@ export default function RootLayout({
     <html lang="tr">
       <body className={inter.className}>
         <LanguageProvider>
-          {children}
-          <LanguageSwitcher />
+          <AuthProvider>
+            {children}
+            <LanguageSwitcher />
+            <LogoutButton />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

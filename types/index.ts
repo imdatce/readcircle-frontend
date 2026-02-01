@@ -9,26 +9,53 @@ export interface ResourceTranslation {
 export interface Resource {
   id: number;
   codeKey: string;
-  type: "PAGED" | "LIST_BASED" | "COUNTABLE" | "JOINT"; 
+  type: "PAGED" | "LIST_BASED" | "COUNTABLE" | "JOINT";
   totalUnits: number;
   translations: ResourceTranslation[];
 }
 
+export interface SessionSummary {
+    id: number;
+    code: string;
+    description: string;
+    creatorName?: string; 
+}
+
+export interface CevsenBab {
+    babNumber: number;
+    arabic: string;
+    transcript: string;
+    meaning: string;
+}
+
 export interface Assignment {
   id: number;
+  resource: Resource;
   participantNumber: number;
   startUnit: number;
   endUnit: number;
   isTaken: boolean;
   assignedToName: string | null;
-  resource: Resource; 
+  currentCount?: number | null;
 }
-
 export interface DistributionSession {
   id: number;
   uniqueCode: string;
   totalParticipants: number;
   createdAt: string;
-  resources: Resource[]; 
+  resources: Resource[];
   assignments: Assignment[];
+}
+export interface SessionSummary {
+  id: number;
+  code: string;
+  description: string;
+  creatorName?: string;
+}
+
+export interface AuthContextType {
+    user: string | null;
+    token: string | null;
+    login: (username: string, token: string) => void;
+    logout: () => void;
 }
