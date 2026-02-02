@@ -13,10 +13,9 @@ export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
-
+  const { logout } = useAuth();
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
   const [createdSessions, setCreatedSessions] = useState<SessionSummary[]>([]);
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -84,7 +83,8 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-gray-800">{t('createDistTitle')}</h3>
                 </div>
                 <p className="text-gray-500 mb-4 text-sm">{t('createDistDesc')}</p>
-                <button className="w-full py-2 bg-blue-600 text-white rounded-lg font-bold shadow group-hover:bg-blue-700 transition">{t('createButton')}</button>
+                <button className="w-full py-2 text-white rounded-lg font-bold shadow bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 transition"> {t('createButton')}
+                </button>
               </div>
 
               <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all group transform hover:-translate-y-1">
@@ -96,13 +96,15 @@ export default function Home() {
                 </div>
                 <form onSubmit={handleJoin} className="flex gap-2">
                   <input type="text" placeholder={t('joinInputPlaceholder')} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none transition bg-gray-50" value={code} onChange={(e) => setCode(e.target.value)} />
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700 transition">{t('joinButton')}</button>
+                  <button
+                    className="px-4 py-2 text-white rounded-lg font-bold shadow bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 transition"> {t('joinButton')} </button>
                 </form>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mb-20">
 
+              {/* --- yonettigim --- */}
               <div>
                 <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
                   <span className="w-2 h-6 bg-blue-600 rounded-full inline-block"></span>
@@ -114,15 +116,17 @@ export default function Home() {
                 ) : createdSessions.length > 0 ? (
                   <div className="space-y-3">
                     {createdSessions.map((session) => (
-                      <div key={session.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md transition group">
+                      <div key={session.id} onClick={() => router.push(`/admin/monitor?code=${session.code}`)} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
                         <div>
                           <h4 className="font-bold text-gray-800">{session.description}</h4>
-                          <p className="text-xs text-gray-400 mt-1 font-mono">Kod: {session.code}</p>
+                          <div className="flex gap-2 text-xs mt-1">
+                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">Code: {session.code}</span>
+                          </div>
                         </div>
 
                         <Link
                           href={`/admin/monitor?code=${session.code}`}
-                          className="px-3 py-1.5 bg-green-50 text-green-700 text-sm font-bold rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition flex items-center gap-1"
+                          className="px-3 py-1.5 bg-green-50 text-blue-700 text-sm font-bold rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition flex items-center gap-1"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                           {t('trackButton')}
@@ -136,11 +140,11 @@ export default function Home() {
                   </div>
                 )}
               </div>
+              {/* --- katildigim --- */}
 
               <div>
                 <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
                   <span className="w-2 h-6 bg-green-600 rounded-full inline-block"></span>
-
                   {t('myCirclesTitle')}
                 </h3>
 
@@ -153,11 +157,11 @@ export default function Home() {
                         <div>
                           <h4 className="font-bold text-gray-800 group-hover:text-blue-700 transition">{session.description}</h4>
                           <div className="flex gap-2 text-xs mt-1">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">{session.code}</span>
-                            {session.creatorName && <span className="text-blue-500">👤 {session.creatorName}</span>}
+                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">Code: {session.code}</span>
+                            <span className="text-green-500">{t('creatorLabel')}:  </span>{session.creatorName && <span className="text-green-500">{session.creatorName}</span>}
                           </div>
                         </div>
-                        <div className="bg-blue-50 text-blue-600 p-2 rounded-full group-hover:bg-blue-600 group-hover:text-white transition">
+                        <div className="bg-blue-50 text-green-600 p-2 rounded-full group-hover:bg-green-600 group-hover:text-white transition">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                         </div>
                       </div>
@@ -169,8 +173,6 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
-
 
             </div>
 

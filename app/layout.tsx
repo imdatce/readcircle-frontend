@@ -23,9 +23,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <LanguageProvider>
           <AuthProvider>
+            <LogoutButton />
+
             {children}
             <LanguageSwitcher />
-            <LogoutButton />
           </AuthProvider>
         </LanguageProvider>
       </body>
