@@ -1,29 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { use, useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback, useRef } from "react";
 import { DistributionSession, Assignment, CevsenBab } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import Image from "next/image"; // Next.js Image optimizasyonu için eklendi
+
+// Zikirmatik bileşeni için tip tanımı düzeltildi
+interface ZikirmatikProps {
+    currentCount: number;
+    onDecrement: () => void;
+    isModal?: boolean;
+    t: (key: string) => string;
+    readOnly?: boolean;
+}
+
 const Zikirmatik = ({
     currentCount,
     onDecrement,
     isModal = false,
     t,
     readOnly = false
-}: {
-    currentCount: number,
-    onDecrement: () => void,
-    isModal?: boolean,
-    t: (key: string) => string,
-    readOnly?: boolean
-}) => {
+}: ZikirmatikProps) => {
     return (
         <div className={`flex flex-col items-center ${isModal ? 'mt-8' : 'mt-3'}`}>
             <button
                 onClick={readOnly ? undefined : onDecrement}
                 disabled={currentCount === 0 || readOnly}
+                aria-label={t('decrease')}
                 className={`
                     rounded-full flex flex-col items-center justify-center 
                     shadow-lg border-4 transition transform 
@@ -56,23 +62,29 @@ const Zikirmatik = ({
 
 type ViewMode = 'ARABIC' | 'LATIN' | 'MEANING';
 
-
-
 export default function JoinPage({ params }: { params: Promise<{ code: string }> }) {
-
+    // any cast'inden kurtulmak için t fonksiyonunun tipini LanguageContext'ten geldiği gibi kabul ediyoruz
     const { t } = useLanguage();
     const { user } = useAuth();
 
+    // React 19 / Next 15 için use(params) doğrudur.
     const { code } = use(params);
 
-    const [userName, setUserName] = useState(user || "");
+    // HYDRATION FIX: Başlangıç değeri null olmalı, useEffect ile eşitlenmeli.
+    const [userName, setUserName] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
+
     const [session, setSession] = useState<DistributionSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const [localCounts, setLocalCounts] = useState<Record<number, number>>({});
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+    // Fetch işleminin gereksiz yere tekrar çalışmasını önlemek için ref kullanımı
+    const dataFetchedRef = useRef(false);
 
     const [readingModalContent, setReadingModalContent] = useState<{
         title: string,
@@ -88,15 +100,19 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
     const [activeTab, setActiveTab] = useState<ViewMode>('ARABIC');
 
+    // Hydration ve User eşitlemesi
     useEffect(() => {
+        setIsClient(true);
         if (user) {
             setUserName(user);
         }
     }, [user]);
 
+    // OPTIMIZATION: session dependency'si kaldırıldı, sonsuz döngü riski yok edildi.
     const fetchSession = useCallback(async () => {
         try {
-            if (!session) setLoading(true);
+            // Sadece ilk yüklemede veya manuel yenilemede loading göster
+            // if (!session) setLoading(true); // Bu satır session dependency'si yaratır, kaldırdık.
 
             const res = await fetch(`${apiUrl}/api/distribution/get/${code}`, {
                 cache: "no-store",
@@ -109,11 +125,12 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
             const data: DistributionSession = await res.json();
             console.log("✅ Gelen Veri:", data);
+
+            // Batch updates (React 18+ otomatik yapar ama mantık burada)
             setSession(data);
 
             setLocalCounts(prev => {
                 const newCounts = { ...prev };
-
                 data.assignments.forEach((a: Assignment) => {
                     if (a.resource.type === "COUNTABLE" || a.resource.type === "JOINT") {
                         const defaultTotal = a.endUnit - a.startUnit + 1;
@@ -136,15 +153,20 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         } finally {
             setLoading(false);
         }
-    }, [apiUrl, code, session]);
+    }, [apiUrl, code]); // session bağımlılığı kaldırıldı
+
     useEffect(() => {
+        // Strict Mode'da çift fetch'i önlemek için (isteğe bağlı ama iyi bir pratiktir)
+        if (dataFetchedRef.current) return;
+        dataFetchedRef.current = true;
+
         fetchSession();
-    }, []);
+    }, [fetchSession]);
 
 
     const decrementCount = async (assignmentId: number) => {
+        // Optimistic UI Update
         const currentCount = localCounts[assignmentId];
-
         if (currentCount === undefined || currentCount <= 0) return;
 
         const newCount = currentCount - 1;
@@ -161,6 +183,11 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             });
         } catch (e) {
             console.error("İlerleme kaydedilemedi", e);
+            // Hata durumunda rollback (eski sayıya dönüş) yapılabilir
+            setLocalCounts(prev => ({
+                ...prev,
+                [assignmentId]: currentCount // Rollback
+            }));
         }
     };
 
@@ -182,7 +209,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
             if (res.status === 409) {
                 alert(t('errorAlreadyTaken'));
-                fetchSession();
+                fetchSession(); // State'i yenile
                 return;
             }
 
@@ -195,6 +222,8 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             }
 
             alert(t('alertTakenSuccess'));
+            // Tüm sayfayı yenilemek yerine sadece datayı çek
+            dataFetchedRef.current = false; // Ref'i resetle ki tekrar fetch edebilsin
             fetchSession();
 
         } catch (err) {
@@ -211,6 +240,30 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
         if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
             const parts = description.split("|||");
+
+            // --- YENİ EKLENEN KISIM: UHUD KONTROLÜ ---
+            if (resource.codeKey === "UHUD") {
+                // Uhud ise, JOINT olsa bile onu CEVSEN formatında (Liste görünümü) açmaya zorluyoruz.
+                // Tek bir parça (bab) oluşturuyoruz, içine tüm metni koyuyoruz.
+                setReadingModalContent({
+                    title: resource.translations?.[0]?.name || "Okuma",
+                    type: "CEVSEN", // CEVSEN tipi, liste render fonksiyonlarını (renderUhudArabic vb.) tetikler
+                    cevsenData: [{
+                        babNumber: 1, // Tek parça olduğu için numara 1
+                        arabic: parts[0]?.trim() || "",
+                        transcript: parts[1]?.trim() || "",
+                        meaning: parts[2]?.trim() || ""
+                    }],
+                    startUnit: 1,
+                    codeKey: "UHUD", // Bu key, render fonksiyonunda 'Uhud Stili'ni aktif eder
+                    assignmentId: assignment.id
+                });
+                setActiveTab('ARABIC');
+                return; // Fonksiyondan çık, aşağıya devam etmesin
+            }
+            // ------------------------------------------
+
+            // Diğer JOINT kaynaklar (Yâ Latîf vb.) için standart davranış
             setReadingModalContent({
                 title: resource.translations?.[0]?.name || "Okuma",
                 type: "SALAVAT",
@@ -225,9 +278,13 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             setActiveTab('ARABIC');
         }
         else if (resource.type === "LIST_BASED") {
-            if (resource.codeKey === "BEDIR" || resource.codeKey === "CEVSEN") {
+            if (resource.codeKey === "BEDIR" || resource.codeKey === "CEVSEN" || resource.codeKey === "UHUD") {
                 const allParts = description.split("###");
-                const selectedPartsRaw = allParts.slice(assignment.startUnit - 1, assignment.endUnit);
+                // Dizi sınırlarını kontrol et
+                const selectedPartsRaw = allParts.slice(
+                    Math.max(0, assignment.startUnit - 1),
+                    Math.min(allParts.length, assignment.endUnit)
+                );
 
                 const parsedData: CevsenBab[] = selectedPartsRaw.map((rawPart, index) => {
                     const parts = rawPart.split("|||");
@@ -271,7 +328,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             }
         });
 
-        // Sıralama
         [distributed, individual].forEach(group => {
             Object.keys(group).forEach(key => {
                 group[key].sort((a, b) => a.participantNumber - b.participantNumber);
@@ -285,6 +341,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         setExpandedGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
     };
 
+    // Helper Functions for Text Formatting
     const formatArabicText = (text: string) => {
         const parts = text.split(/([١٢٣٤٥٦٧٨٩٠]+)/g);
         return (
@@ -320,10 +377,9 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             <div className="text-xl md:text-2xl text-gray-800 font-serif leading-[3.5rem]">
                 {parts.map((part, index) => {
                     if (/^\d+\s$/.test(part)) {
-                        const number = part.trim();
                         return (
                             <span key={index} className="inline-flex items-center justify-center mx-2 w-8 h-8 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-sans font-bold text-lg align-middle shadow-sm">
-                                {number}
+                                {part.trim()}
                             </span>
                         );
                     }
@@ -378,6 +434,55 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
         );
     };
 
+
+    const renderUhudList = (text: string, type: 'ARABIC' | 'LATIN') => {
+        const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+        const isArabic = type === 'ARABIC';
+        const dir = isArabic ? "rtl" : "ltr";
+
+        // Yazı rengini koyu yeşil/gri tonlarında tutuyoruz ki yeşil arka planda okunsun
+        const fontClass = isArabic
+            ? "font-serif text-3xl leading-[3.5rem] text-emerald-950"
+            : "font-serif text-xl leading-relaxed text-emerald-900";
+
+        return (
+            // DEĞİŞİKLİK 1: Ana kapsayıcıya açık yeşil arka plan ve kenarlık ekledik
+            <div className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner" dir={dir}>
+
+                {/* DEĞİŞİKLİK 2: Ayırıcı çizgileri (divide) gri yerine açık yeşil yaptık */}
+                <div className="space-y-0 divide-y divide-emerald-200/60">
+
+                    {lines.map((line, index) => (
+                        <div
+                            key={index}
+                            // DEĞİŞİKLİK 3: Hover (üzerine gelince) rengini koyulaşan yeşil yaptık
+                            className="flex items-start py-3 group hover:bg-emerald-100/80 transition-colors px-3 rounded-lg"
+                        >
+                            {/* Numara Yuvarlağı: Arka plan beyaz olsun ki yeşil zeminde belli olsun */}
+                            <div className={`
+                            flex-shrink-0 w-8 h-8 rounded-full 
+                            flex items-center justify-center 
+                            text-sm font-bold shadow-sm border
+                            mt-1
+                            ${isArabic ? 'ml-4' : 'mr-4'}
+                            bg-white text-emerald-700 border-emerald-200
+                            group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600
+                            transition-all
+                        `}>
+                                {index + 1}
+                            </div>
+
+                            {/* Metin */}
+                            <p className={`${fontClass} flex-1 pt-0.5`}>
+                                {line.trim()}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     const renderGroupList = (groups: Record<string, Assignment[]>) => {
         return Object.entries(groups).map(([resourceName, assignments]) => {
             const isOpen = expandedGroups[resourceName] || false;
@@ -386,6 +491,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     <button onClick={() => toggleGroup(resourceName)} className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition duration-200">
                         <div className="flex items-center">
                             <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                                {/* SVG'ler optimize edilebilir ama şimdilik bırakıldı */}
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
                             </div>
                             <div className="text-left">
@@ -404,6 +510,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                 {assignments.map((item) => {
                                     const defaultTotal = item.endUnit - item.startUnit + 1;
                                     const safeCount = localCounts[item.id] ?? defaultTotal;
+                                    const isAssignedToUser = isClient && userName && item.assignedToName === userName;
 
                                     return (
                                         <div key={item.id} className={`p-4 rounded-lg border flex flex-col justify-between transition-all ${item.isTaken ? "bg-gray-100 border-gray-300 opacity-90" : "bg-white border-blue-200 hover:shadow-md"}`}>
@@ -443,11 +550,11 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                                 <Zikirmatik
                                                                     currentCount={safeCount}
                                                                     onDecrement={() => decrementCount(item.id)}
-                                                                    t={t as unknown as (key: string) => string}
-                                                                    readOnly={!userName || item.assignedToName !== userName}
+                                                                    t={t}
+                                                                    readOnly={!isAssignedToUser}
                                                                 />
 
-                                                                {item.assignedToName === userName && (
+                                                                {isAssignedToUser && (
                                                                     <button onClick={() => handleOpenReading(item)} className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800">
                                                                         {t('takeRead')} ({t('readText')})
                                                                     </button>
@@ -455,7 +562,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                             </div>
                                                         ) : (
                                                             item.resource.type === "LIST_BASED" ? (
-                                                                item.assignedToName === userName ? (
+                                                                isAssignedToUser ? (
                                                                     <button onClick={() => handleOpenReading(item)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
                                                                         {t('takeRead')}
                                                                     </button>
@@ -466,7 +573,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                                 )
                                                             ) : (
                                                                 item.resource.type === "PAGED" ? (
-                                                                    item.assignedToName === userName ? (
+                                                                    isAssignedToUser ? (
                                                                         <button onClick={() => handleOpenQuran(item.startUnit)} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2">
                                                                             {t('takeRead')} ({t('goToSite')})
                                                                         </button>
@@ -508,7 +615,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 relative">
-
             <Link
                 href="/"
                 className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
@@ -520,22 +626,19 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
             </Link>
 
             <div className="max-w-4xl mx-auto">
-
-
                 <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
                     <h1 className="text-3xl font-bold text-blue-800 mb-2">{t('joinTitle')}</h1>
                     <div className="mb-6">
-                        {user ? (
+                        {isClient && userName ? (
                             <div className="relative">
                                 <label htmlFor="participant-name" className="sr-only">{t('participantName')}</label>
                                 <input
                                     id="participant-name"
                                     name="participantName"
                                     type="text"
-                                    value={user}
+                                    value={userName}
                                     readOnly
                                     title={t('participantName')}
-                                    aria-label={t('participantName')}
                                     className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 font-bold cursor-not-allowed focus:outline-none"
                                 />
                                 <div className="absolute right-3 top-3 text-green-600">
@@ -546,6 +649,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                             </div>
                         ) : (
                             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-sm">
+                                {/* Login uyarı kısmı aynı bırakıldı */}
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
                                         <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -591,6 +695,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
 
+                        {/* Modal Header */}
                         <div className="p-4 bg-blue-600 text-white flex flex-col gap-4 shrink-0">
                             <div className="flex justify-between items-center">
                                 <h3 className="font-bold text-lg">{readingModalContent.title}</h3>
@@ -607,7 +712,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                     <button onClick={() => setActiveTab('LATIN')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'LATIN' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>
                                         {t('tabLatin')}
                                     </button>
-                                    {readingModalContent.codeKey !== "BEDIR" && (
+                                    {readingModalContent.codeKey !== "BEDIR" && readingModalContent.codeKey !== "UHUD" && (
                                         <button onClick={() => setActiveTab('MEANING')} className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === 'MEANING' ? 'bg-white text-blue-800 shadow' : 'text-blue-100 hover:bg-white/10'}`}>
                                             {t('tabMeaning')}
                                         </button>
@@ -616,6 +721,7 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                             )}
                         </div>
 
+                        {/* Modal Content */}
                         <div className="p-6 overflow-y-auto text-gray-700 flex-1 bg-white">
                             {readingModalContent.type === "SIMPLE" && readingModalContent.simpleItems && (
                                 <ul className="space-y-4 list-decimal list-inside">
@@ -636,14 +742,20 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                             </div>
 
                                             {activeTab === 'ARABIC' && (
-                                                <div className="text-right font-serif text-3xl" dir="rtl">
-                                                    {formatArabicText(bab.arabic)}
+                                                <div className={readingModalContent.codeKey === "UHUD" ? "" : "text-right font-serif text-3xl"} dir="rtl">
+                                                    {readingModalContent.codeKey === "UHUD"
+                                                        ? renderUhudList(bab.arabic, 'ARABIC') // UHUD ise yeni liste tasarımı
+                                                        : formatArabicText(bab.arabic)         // Diğerleri ise eski yöntem
+                                                    }
                                                 </div>
                                             )}
 
                                             {activeTab === 'LATIN' && (
-                                                <div className="text-left font-serif text-xl">
-                                                    {formatLatinText(bab.transcript)}
+                                                <div className={readingModalContent.codeKey === "UHUD" ? "" : "text-left font-serif text-xl"}>
+                                                    {readingModalContent.codeKey === "UHUD"
+                                                        ? renderUhudList(bab.transcript, 'LATIN') // UHUD ise yeni liste tasarımı
+                                                        : formatLatinText(bab.transcript)         // Diğerleri ise eski yöntem
+                                                    }
                                                 </div>
                                             )}
 
@@ -664,14 +776,25 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                 <div className="flex flex-col items-center w-full h-full">
 
                                     <div className="w-full flex-1 overflow-y-auto p-2">
+
+                                        {/* ARAPÇA SEKMESİ */}
                                         {activeTab === 'ARABIC' && (
                                             <>
                                                 {(readingModalContent.salavatData.arabic || "").startsWith("IMAGE_MODE") ? (
-                                                    <div className="flex flex-col items-center justify-center p-10 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                        <span className="text-sm font-bold">{t('imageMode')}</span>
+                                                    <div className="flex flex-col gap-4 w-full items-center">
+                                                        {readingModalContent.salavatData.arabic
+                                                            .replace("IMAGE_MODE:::", "")
+                                                            .split(",")
+                                                            .map((imgSrc, index) => (
+                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                <img
+                                                                    key={index}
+                                                                    src={imgSrc.trim()}
+                                                                    alt={`Arapça Sayfa ${index + 1}`}
+                                                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
+                                                                />
+                                                            ))
+                                                        }
                                                     </div>
                                                 ) : (
                                                     <div className="text-center font-serif text-3xl leading-[4.5rem] py-4" dir="rtl">
@@ -680,10 +803,39 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                                                 )}
                                             </>
                                         )}
+
+                                        {/* LATİN (OKUNUŞ) SEKMESİ */}
                                         {activeTab === 'LATIN' && formatStyledText(readingModalContent.salavatData.transcript, 'LATIN')}
-                                        {activeTab === 'MEANING' && formatStyledText(readingModalContent.salavatData.meaning, 'MEANING')}
+
+                                        {/* MEAL SEKMESİ (GÜNCELLENDİ) */}
+                                        {activeTab === 'MEANING' && (
+                                            <>
+                                                {/* YENİ EKLENEN KISIM: Meal için de IMAGE_MODE kontrolü */}
+                                                {(readingModalContent.salavatData.meaning || "").startsWith("IMAGE_MODE") ? (
+                                                    <div className="flex flex-col gap-4 w-full items-center">
+                                                        {readingModalContent.salavatData.meaning
+                                                            .replace("IMAGE_MODE:::", "")
+                                                            .split(",")
+                                                            .map((imgSrc, index) => (
+                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                <img
+                                                                    key={index}
+                                                                    src={imgSrc.trim()}
+                                                                    alt={`Meal Sayfa ${index + 1}`}
+                                                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
+                                                                />
+                                                            ))
+                                                        }
+                                                    </div>
+                                                ) : (
+                                                    // Resim değilse standart metin formatında göster
+                                                    formatStyledText(readingModalContent.salavatData.meaning, 'MEANING')
+                                                )}
+                                            </>
+                                        )}
                                     </div>
 
+                                    {/* ZİKİRMATİK KISMI (DEĞİŞMEDİ) */}
                                     {readingModalContent.assignmentId && (
                                         <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
                                             <p className="text-gray-500 text-sm mb-2 font-semibold">{t('clickToCount')}</p>
@@ -717,7 +869,6 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
                     </div>
                 </div>
             )}
-
         </div>
     );
 }

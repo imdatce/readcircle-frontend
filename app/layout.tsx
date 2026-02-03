@@ -20,6 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr">
+      
       <body className={inter.className}>
         <LanguageProvider>
           <AuthProvider>
