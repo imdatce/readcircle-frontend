@@ -15,17 +15,17 @@ export interface Resource {
 }
 
 export interface SessionSummary {
-    id: number;
-    code: string;
-    description: string;
-    creatorName?: string; 
+  id: number;
+  code: string;
+  description: string;
+  creatorName?: string;
 }
 
 export interface CevsenBab {
-    babNumber: number;
-    arabic: string;
-    transcript: string;
-    meaning: string;
+  babNumber: number;
+  arabic: string;
+  transcript: string;
+  meaning: string;
 }
 
 export interface Assignment {
@@ -54,8 +54,16 @@ export interface SessionSummary {
 }
 
 export interface AuthContextType {
-    user: string | null;
-    token: string | null;
-    login: (username: string, token: string) => void;
-    logout: () => void;
+  user: string | null;
+  token: string | null;
+  login: (username: string, token: string) => void;
+  logout: () => void;
+}
+
+export interface ZikirmatikProps {
+  currentCount: number;
+  onDecrement: () => void;
+  isModal?: boolean;
+  t: (key: string) => string;
+  readOnly?: boolean;
 }

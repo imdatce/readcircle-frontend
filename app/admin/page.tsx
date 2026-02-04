@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+
 interface Resource {
   id: number;
   codeKey: string;
@@ -14,9 +16,9 @@ interface Resource {
 
 export default function AdminPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
-  const [error, setError] = useState<string | null>(null);
+
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [participants, setParticipants] = useState<number>(10);
   const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
@@ -27,34 +29,30 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!apiUrl) return;
+    if (!token) return;
 
-    // DEĞİŞİKLİK 2: Fetch işlemini daha güvenli hale getiriyoruz
-    fetch(`${apiUrl}/api/distribution/resources`)
-      .then(async (res) => {
-        // Eğer sunucu 200 OK dönmezse (örn: 500 hatası), hatayı yakala
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Sunucu Hatası: ${res.status} - ${text}`);
-        }
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    fetch(`${apiUrl}/api/distribution/resources`, { headers })
+      .then((res) => {
+        if (!res.ok) throw new Error("Veri çekilemedi: " + res.status);
         return res.json();
       })
       .then((data) => {
-        // Gelen veri gerçekten bir LİSTE mi? Kontrol et.
         if (Array.isArray(data)) {
           setResources(data);
-          setError(null);
         } else {
           console.error("Beklenmeyen veri formatı:", data);
-          setResources([]); // Boş liste ata ki uygulama patlamasın
-          setError("Veri formatı hatalı.");
+          setResources([]);
         }
       })
       .catch((err) => {
-        console.error("Veri çekme hatası:", err);
-        setResources([]); // Hata durumunda listeyi temizle
-        setError("Veriler yüklenirken bir sorun oluştu.");
+        console.error("Fetch hatası:", err);
+        setResources([]);
       });
-  }, [apiUrl]);
+  }, [apiUrl, token]);
 
   useEffect(() => {
     const savedData = sessionStorage.getItem("adminState");
@@ -96,50 +94,55 @@ export default function AdminPage() {
   };
 
   const handleCreate = async () => {
-    if (!user) {
-      alert(t("loginRequired") || "Lütfen önce giriş yapınız.");
+    if (!user || !token) {
+      alert(t("loginRequired"));
       return;
     }
-
-    if (selectedResources.length === 0)
-      return alert(t("alertSelectResource") || "Lütfen seçim yapınız.");
-
-    const params = new URLSearchParams();
-    params.append("resourceIds", selectedResources.join(","));
-    params.append("participants", participants.toString());
-
-    params.append("creatorName", user);
-
-    const totalsString = Object.entries(customTotals)
-      .map(([id, val]) => (val ? `${id}:${val}` : null))
-      .filter(Boolean)
-      .join(",");
-
-    if (totalsString) {
-      params.append("customTotals", totalsString);
-    }
+    if (selectedResources.length === 0) return alert(t("alertSelectResource"));
 
     try {
-      const res = await fetch(
-        `${apiUrl}/api/distribution/create?${params.toString()}`,
-      );
-      if (!res.ok) throw new Error("Hata");
-      const data = await res.json();
+      const payload = {
+        resourceIds: selectedResources.map((id) => Number(id)),
+        participants: participants,
+        creatorName: user,
+        customTotals: customTotals,
+      };
 
+      const res = await fetch(`${apiUrl}/api/distribution/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Hata ${res.status}: ${errorText}`);
+      }
+
+      const data = await res.json();
       const link = `${window.location.origin}/join/${data.code}`;
       setCreatedCode(data.code);
       setCreatedLink(link);
-
       sessionStorage.removeItem("adminState");
-    } catch (err) {
-      alert(t("errorOccurred") || "Hata oluştu.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || t("errorOccurred"));
     }
   };
 
   const handleResetData = async () => {
     if (!confirm(t("confirmReset") || "Emin misiniz?")) return;
+    if (!token) return;
+
     try {
-      const res = await fetch(`${apiUrl}/api/distribution/init`);
+      const res = await fetch(`${apiUrl}/api/distribution/init`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const text = await res.text();
       alert(text);
 
@@ -150,14 +153,15 @@ export default function AdminPage() {
       alert("Hata");
     }
   };
-  const safeResources = Array.isArray(resources) ? resources : [];
 
+  const safeResources = Array.isArray(resources) ? resources : [];
   const distributedResources = safeResources.filter((r) => r.type !== "JOINT");
   const individualResources = safeResources.filter((r) => r.type === "JOINT");
 
   const selectedResourcesWithInput = selectedResources
     .map((id) => safeResources.find((r) => r.id.toString() === id))
     .filter((r) => r && (r.type === "COUNTABLE" || r.type === "JOINT"));
+
   const renderList = (list: Resource[]) => (
     <div className="space-y-2">
       {list.map((r) => (
@@ -226,19 +230,6 @@ export default function AdminPage() {
         {distributedResources.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wide mb-2 flex items-center">
-              <svg
-                className="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
-                />
-              </svg>
               {t("distributedResources") || "Paylaşılan Kaynaklar"}
             </h3>
             <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
@@ -250,19 +241,6 @@ export default function AdminPage() {
         {individualResources.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center">
-              <svg
-                className="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
               {t("individualResources") || "Bireysel Kaynaklar"}
             </h3>
             <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
