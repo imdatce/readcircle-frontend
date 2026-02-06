@@ -210,9 +210,6 @@ export default function AdminPage() {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span className="hidden sm:inline">
-            {t("backHome") || "Ana Sayfa"}
-          </span>
         </Link>
 
         <div className="flex justify-between items-center mb-6 border-b pb-4">

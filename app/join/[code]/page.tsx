@@ -624,7 +624,8 @@ export default function JoinPage({
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2 items-center w-full">
+                      <div className="flex flex-col gap-1 items-center w-full">
+                        {" "}
                         {item.isTaken ? (
                           <>
                             {item.resource.type === "COUNTABLE" ||
@@ -640,7 +641,7 @@ export default function JoinPage({
                                 {isAssignedToUser && (
                                   <button
                                     onClick={() => handleOpenReading(item)}
-                                    className="mt-4 text-blue-600 text-sm font-semibold underline hover:text-blue-800"
+                                    className="mt-2 text-blue-600 text-sm font-semibold underline hover:text-blue-800"
                                   >
                                     {t("takeRead")} ({t("readText")})
                                   </button>
@@ -700,12 +701,26 @@ export default function JoinPage({
                       </div>
 
                       {isAssignedToUser && (
-                        <div className="mt-3 w-full">
+                        <div className="mt-1 w-full">
                           <button
                             onClick={() => handleCancelPart(item.id)}
-                            className="mt-2 w-full text-xs text-red-500 hover:text-red-700 hover:bg-red-50 py-1 rounded transition border border-transparent hover:border-red-200"
+                            className="mt-1 w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95"
                           >
-                            Okumaktan Vazgeç (İptal)
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2.5}
+                              stroke="currentColor"
+                              className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18 18 6M6 6l12 12"
+                              />
+                            </svg>
+                            {t("cancelRead")}
                           </button>
                         </div>
                       )}

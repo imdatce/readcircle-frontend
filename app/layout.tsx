@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
-import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 import { AuthProvider } from "@/context/AuthContext";
-import LogoutButton from "@/app/components/LogoutButton";
+import Header from "./components/Header"; // Yeni Header
+import Footer from "./components/Footer"; // Yeni Footer
 
-const inter = Inter({ subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Read Circle",
@@ -15,19 +23,25 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="tr">
-      <body className={inter.className}>
-        <LanguageProvider>
-          <AuthProvider>
-            <LogoutButton />
-            {children}
-            <LanguageSwitcher />
-          </AuthProvider>
-        </LanguageProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
+      >
+        <AuthProvider>
+          <LanguageProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+
+              <main className="flex-grow w-full">{children}</main>
+
+              <Footer />
+            </div>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

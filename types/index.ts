@@ -67,3 +67,5 @@ export interface ZikirmatikProps {
   t: (key: string) => string;
   readOnly?: boolean;
 }
+
+export type Language = 'tr' | 'en' | 'ku';
