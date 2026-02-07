@@ -37,6 +37,7 @@ export interface Assignment {
   isTaken: boolean;
   assignedToName: string | null;
   currentCount?: number | null;
+  isCompleted?: boolean;
 }
 export interface DistributionSession {
   id: number;

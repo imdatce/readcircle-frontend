@@ -117,11 +117,11 @@ export default function JoinPage({
       });
 
       if (!res.ok) {
-        throw new Error(`Veri alınamadı. Hata Kodu: ${res.status}`);
+        throw new Error(`${t("errorFetchFailed")} ${res.status}`);
       }
 
       const data: DistributionSession = await res.json();
-      console.log("✅ Gelen Veri:", data);
+      console.log("✅ Data:", data);
 
       setSession(data);
 
@@ -144,11 +144,11 @@ export default function JoinPage({
       });
     } catch (err: any) {
       console.error("🔴 Error:", err);
-      setError(err.message || "Beklenmedik bir hata oluştu.");
+      setError(err.message || t("unexpectedError"));
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, code]);
+  }, [apiUrl, code, t]);
 
   useEffect(() => {
     if (dataFetchedRef.current) return;
@@ -177,7 +177,7 @@ export default function JoinPage({
         },
       );
     } catch (e) {
-      console.error("İlerleme kaydedilemedi", e);
+      console.error("Save progress failed", e);
       setLocalCounts((prev) => ({
         ...prev,
         [assignmentId]: currentCount,
@@ -226,7 +226,7 @@ export default function JoinPage({
   };
 
   const handleCancelPart = async (assignmentId: number) => {
-    if (!confirm("Bu parçayı okumaktan vazgeçmek istiyor musunuz?")) return;
+    if (!confirm(t("confirmCancel"))) return;
 
     let nameToUse = user;
     if (!nameToUse && userName) nameToUse = userName;
@@ -245,10 +245,37 @@ export default function JoinPage({
         dataFetchedRef.current = false;
         fetchSession();
       } else {
-        alert("İptal edilemedi.");
+        alert(t("cancelFailed"));
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleCompletePart = async (assignmentId: number) => {
+    let nameToUse = user;
+    if (!nameToUse && userName) nameToUse = userName;
+
+    if (!nameToUse) return;
+
+    if (!confirm(t("confirmComplete"))) return;
+
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/distribution/complete/${assignmentId}?name=${encodeURIComponent(nameToUse)}`,
+        { method: "POST" },
+      );
+
+      if (res.ok) {
+        dataFetchedRef.current = false;
+        fetchSession();
+      } else {
+        const msg = await res.text();
+        alert(t("errorPrefix") + msg);
+      }
+    } catch (e) {
+      console.error(e);
+      alert(t("connectionError"));
     }
   };
 
@@ -262,7 +289,7 @@ export default function JoinPage({
 
       if (resource.codeKey === "UHUD") {
         setReadingModalContent({
-          title: resource.translations?.[0]?.name || "Okuma",
+          title: resource.translations?.[0]?.name || t("readingTitle"),
           type: "CEVSEN",
           cevsenData: [
             {
@@ -281,7 +308,7 @@ export default function JoinPage({
       }
 
       setReadingModalContent({
-        title: resource.translations?.[0]?.name || "Okuma",
+        title: resource.translations?.[0]?.name || t("readingTitle"),
         type: "SALAVAT",
         salavatData: {
           arabic: parts[0]?.trim() || "",
@@ -312,13 +339,13 @@ export default function JoinPage({
               babNumber: assignment.startUnit + index,
               arabic: parts[0]?.trim() || "",
               transcript: parts[1]?.trim() || "",
-              meaning: parts[2]?.trim() || t("translationPending") || "...",
+              meaning: parts[2]?.trim() || t("translationPending"),
             };
           },
         );
 
         setReadingModalContent({
-          title: resource.translations?.[0]?.name || "Okuma",
+          title: resource.translations?.[0]?.name || t("readingTitle"),
           type: "CEVSEN",
           cevsenData: parsedData,
           startUnit: assignment.startUnit,
@@ -340,7 +367,7 @@ export default function JoinPage({
       const resourceName =
         assignment.resource?.translations?.[0]?.name ||
         assignment.resource?.codeKey ||
-        "Diğer";
+        t("otherResource");
       const type = assignment.resource.type;
 
       if (type === "JOINT") {
@@ -579,21 +606,57 @@ export default function JoinPage({
                   const safeCount = localCounts[item.id] ?? defaultTotal;
                   const isAssignedToUser =
                     isClient && userName && item.assignedToName === userName;
+                  const isCompleted = item.isCompleted || false;
+
                   return (
                     <div
                       key={item.id}
-                      className={`p-4 rounded-lg border flex flex-col justify-between transition-all ${item.isTaken ? "bg-gray-100 border-gray-300 opacity-90" : "bg-white border-blue-200 hover:shadow-md"}`}
+                      className={`
+                            relative p-5 rounded-xl border transition-all duration-300 shadow-sm
+                            ${
+                              isCompleted
+                                ? "bg-green-50 border-green-200 opacity-80"
+                                : item.isTaken
+                                  ? isAssignedToUser
+                                    ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100"
+                                    : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5]"
+                                  : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200"
+                            }
+                        `}
                     >
+                      <div className="absolute top-4 right-4">
+                        {isCompleted ? (
+                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3 w-3"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            {t("completed")}
+                          </span>
+                        ) : item.isTaken ? (
+                          <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
+                            {item.assignedToName}
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                            {t("statusEmpty")}
+                          </span>
+                        )}
+                      </div>
+
                       <div className="mb-3">
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-bold text-gray-800">
                             {item.participantNumber}. {t("person")}
                           </span>
-                          {item.isTaken && item.assignedToName && (
-                            <span className="text-xs bg-green-600 text-white px-2 py-1 rounded font-bold">
-                              {item.assignedToName}
-                            </span>
-                          )}
                         </div>
                         <div className="text-sm text-gray-600">
                           {item.resource.type === "JOINT"
@@ -699,12 +762,32 @@ export default function JoinPage({
                           </button>
                         )}
                       </div>
-
                       {isAssignedToUser && (
-                        <div className="mt-1 w-full">
+                        <div className="mt-3 w-full space-y-2">
+                          {!isCompleted && (
+                            <button
+                              onClick={() => handleCompletePart(item.id)}
+                              className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all active:scale-95 font-bold text-sm"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              {t("finished")}
+                            </button>
+                          )}
+
                           <button
                             onClick={() => handleCancelPart(item.id)}
-                            className="mt-1 w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95"
+                            className="w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -812,12 +895,11 @@ export default function JoinPage({
             ) : (
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
                 <p className="text-sm text-blue-700 font-bold mb-2">
-                  {t("joinIntro") ||
-                    "Lütfen adınızı girip okumak istediğiniz kaynağa tıklayınız."}
+                  {t("joinIntro")}
                 </p>
                 <input
                   type="text"
-                  placeholder={t("yourName") || "Adınız"}
+                  placeholder={t("yourName")}
                   value={userName || ""}
                   onChange={(e) => setUserName(e.target.value)}
                   className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -856,7 +938,7 @@ export default function JoinPage({
                 </h3>
                 <button
                   onClick={() => setReadingModalContent(null)}
-                  aria-label="Pencereyi Kapat"
+                  aria-label={t("closeWindow")}
                   className="text-white hover:bg-blue-700 p-1 rounded-full transition"
                 >
                   <svg
@@ -930,8 +1012,8 @@ export default function JoinPage({
                         <div className="flex justify-center mb-2">
                           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide uppercase text-xs">
                             {readingModalContent.codeKey === "CEVSEN"
-                              ? `${bab.babNumber}. BAB`
-                              : `${bab.babNumber}. Grup`}
+                              ? `${bab.babNumber}. ${t("chapter")}`
+                              : `${bab.babNumber}. ${t("group")}`}
                           </span>
                         </div>
 
@@ -976,7 +1058,7 @@ export default function JoinPage({
                           <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner">
                             <div className="flex items-center mb-2 text-emerald-700">
                               <span className="font-bold text-[10px] uppercase tracking-widest">
-                                Türkçe Meali
+                                {t("translationTitle")}
                               </span>
                             </div>
                             <div className="text-sm">
@@ -1007,7 +1089,7 @@ export default function JoinPage({
                                   <img
                                     key={index}
                                     src={imgSrc.trim()}
-                                    alt={`Arapça Sayfa ${index + 1}`}
+                                    alt={`${t("arabicPage")} ${index + 1}`}
                                     className="w-full h-auto rounded-lg shadow-md border border-gray-200"
                                   />
                                 ))}
@@ -1043,7 +1125,7 @@ export default function JoinPage({
                                   <img
                                     key={index}
                                     src={imgSrc.trim()}
-                                    alt={`Meal Sayfa ${index + 1}`}
+                                    alt={`${t("meaningPage")} ${index + 1}`}
                                     className="w-full h-auto rounded-lg shadow-md border border-gray-200"
                                   />
                                 ))}
@@ -1104,7 +1186,7 @@ export default function JoinPage({
                 onClick={() => setReadingModalContent(null)}
                 className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold"
               >
-                {t("cancel") || "Kapat"}
+                {t("close")}
               </button>
             </div>
           </div>
