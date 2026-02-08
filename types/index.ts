@@ -41,17 +41,11 @@ export interface Assignment {
 }
 export interface DistributionSession {
   id: number;
-  uniqueCode: string;
-  totalParticipants: number;
-  createdAt: string;
-  resources: Resource[];
-  assignments: Assignment[];
-}
-export interface SessionSummary {
-  id: number;
   code: string;
-  description: string;
+  description?: string;
   creatorName?: string;
+  participants: number;
+  assignments: Assignment[];
 }
 
 export interface AuthContextType {

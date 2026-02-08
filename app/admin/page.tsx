@@ -4,7 +4,6 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 interface Resource {
   id: number;
@@ -192,26 +191,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full relative">
-        <Link
-          href="/"
-          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-        </Link>
-
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <button
             onClick={handleResetData}

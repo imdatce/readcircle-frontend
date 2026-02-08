@@ -70,7 +70,14 @@ export default function JoinPage({
   const { t } = useLanguage();
   const { user } = useAuth();
 
+  const [fontLevel, setFontLevel] = useState(1);
   const { code } = use(params);
+
+  const fontSizes = {
+    ARABIC: ["text-2xl", "text-3xl", "text-4xl", "text-5xl", "text-6xl"],
+    LATIN: ["text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl"],
+    MEANING: ["text-base", "text-lg", "text-xl", "text-2xl", "text-3xl"],
+  };
 
   const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -121,7 +128,6 @@ export default function JoinPage({
       }
 
       const data: DistributionSession = await res.json();
-      console.log("✅ Data:", data);
 
       setSession(data);
 
@@ -394,8 +400,10 @@ export default function JoinPage({
 
   const formatArabicText = (text: string) => {
     const parts = text.split(/([١٢٣٤٥٦٧٨٩٠]+)/g);
+    const currentFontClass = fontSizes.ARABIC[fontLevel];
+
     return (
-      <div className="leading-[4.5rem]">
+      <div className={`leading-relaxed ${currentFontClass}`}>
         {parts.map((part, index) => {
           if (/^[١٢٣٤٥٦٧٨٩٠]+$/.test(part)) {
             return (
@@ -412,7 +420,9 @@ export default function JoinPage({
             return (
               <span key={index}>
                 {subParts[0]} <br />
-                <div className="mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold text-2xl shadow-inner text-center">
+                <div
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold shadow-inner text-center ${fontSizes.ARABIC[fontLevel]}`}
+                >
                   سُبْحَانَكَ {subParts[1]}
                 </div>
               </span>
@@ -426,8 +436,12 @@ export default function JoinPage({
 
   const formatLatinText = (text: string) => {
     const parts = text.split(/(\d+\s)/g);
+    const currentFontClass = fontSizes.LATIN[fontLevel];
+
     return (
-      <div className="text-xl md:text-2xl text-gray-800 font-serif leading-[3.5rem]">
+      <div
+        className={`${currentFontClass} text-gray-800 font-serif leading-relaxed`}
+      >
         {parts.map((part, index) => {
           if (/^\d+\s$/.test(part)) {
             return (
@@ -444,7 +458,9 @@ export default function JoinPage({
             return (
               <span key={index}>
                 {subParts[0]} <br />
-                <div className="mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold text-xl shadow-inner text-center font-sans">
+                <div
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold shadow-inner text-center font-sans ${currentFontClass}`}
+                >
                   Sübhâneke {subParts[1]}
                 </div>
               </span>
@@ -458,12 +474,17 @@ export default function JoinPage({
 
   const formatStyledText = (text: string, type: "LATIN" | "MEANING") => {
     const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    const sizeClass =
+      type === "LATIN"
+        ? fontSizes.LATIN[fontLevel]
+        : fontSizes.MEANING[fontLevel];
+
     return (
       <div className="space-y-3">
         {lines.map((line, index) => (
           <div
             key={index}
-            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${type === "LATIN" ? "bg-white border-gray-200 text-gray-800 font-serif text-lg italic" : "bg-emerald-50 border-emerald-100 text-emerald-900 font-sans text-base"}`}
+            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${type === "LATIN" ? `bg-white border-gray-200 text-gray-800 font-serif italic ${sizeClass}` : `bg-emerald-50 border-emerald-100 text-emerald-900 font-sans ${sizeClass}`}`}
           >
             <div
               className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${type === "LATIN" ? "bg-blue-100 text-blue-700" : "bg-emerald-200 text-emerald-800"}`}
@@ -479,6 +500,8 @@ export default function JoinPage({
 
   const formatMeaningText = (text: string) => {
     const lines = text.split(/[-•\n]/).filter((line) => line.trim().length > 0);
+    const sizeClass = fontSizes.MEANING[fontLevel];
+
     return (
       <div className="space-y-4">
         {lines.map((line, index) => (
@@ -486,7 +509,9 @@ export default function JoinPage({
             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
               {index + 1}
             </div>
-            <p className="text-gray-800 text-lg leading-relaxed font-medium italic">
+            <p
+              className={`text-gray-800 leading-relaxed font-medium italic ${sizeClass}`}
+            >
               {line.trim()}
             </p>
           </div>
@@ -500,9 +525,13 @@ export default function JoinPage({
     const isArabic = type === "ARABIC";
     const dir = isArabic ? "rtl" : "ltr";
 
+    const sizeClass = isArabic
+      ? fontSizes.ARABIC[fontLevel]
+      : fontSizes.LATIN[fontLevel];
+
     const fontClass = isArabic
-      ? "font-serif text-3xl leading-[3.5rem] text-emerald-950"
-      : "font-serif text-xl leading-relaxed text-emerald-900";
+      ? `font-serif leading-[3.5rem] text-emerald-950 ${sizeClass}`
+      : `font-serif leading-relaxed text-emerald-900 ${sizeClass}`;
 
     return (
       <div
@@ -529,7 +558,6 @@ export default function JoinPage({
               >
                 {index + 1}
               </div>
-
               <p className={`${fontClass} flex-1 pt-0.5`}>{line.trim()}</p>
             </div>
           ))}
@@ -857,7 +885,7 @@ export default function JoinPage({
 
       <div className="max-w-4xl mx-auto">
         <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-800 mb-2">
+          <h1 className="text-3xl font-bold text-red-800 mb-2">
             {t("joinTitle")}
           </h1>
           <div className="mb-6">
@@ -894,7 +922,7 @@ export default function JoinPage({
               </div>
             ) : (
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
-                <p className="text-sm text-blue-700 font-bold mb-2">
+                <p className="text-sm text-red-700 font-bold mb-2">
                   {t("joinIntro")}
                 </p>
                 <input
@@ -936,26 +964,51 @@ export default function JoinPage({
                 <h3 className="font-bold text-lg">
                   {readingModalContent.title}
                 </h3>
-                <button
-                  onClick={() => setReadingModalContent(null)}
-                  aria-label={t("closeWindow")}
-                  className="text-white hover:bg-blue-700 p-1 rounded-full transition"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
-                    stroke="currentColor"
-                    className="w-6 h-6"
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-blue-700/50 rounded-lg p-1 mr-2 border border-blue-500/30">
+                    <button
+                      onClick={() =>
+                        setFontLevel((prev) => Math.max(0, prev - 1))
+                      }
+                      disabled={fontLevel === 0}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded disabled:opacity-30 transition font-serif font-bold"
+                      aria-label="Küçült"
+                    >
+                      A-
+                    </button>
+                    <div className="w-px h-4 bg-blue-400/50 mx-1"></div>
+                    <button
+                      onClick={() =>
+                        setFontLevel((prev) => Math.min(4, prev + 1))
+                      }
+                      disabled={fontLevel === 4}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded disabled:opacity-30 transition font-serif font-bold text-xl"
+                      aria-label="Büyüt"
+                    >
+                      A+
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setReadingModalContent(null)}
+                    aria-label={t("closeWindow")}
+                    className="text-white hover:bg-blue-700 p-1 rounded-full transition"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18 18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2.5}
+                      stroke="currentColor"
+                      className="w-6 h-6"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18 18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {(readingModalContent.type === "CEVSEN" ||
@@ -974,7 +1027,8 @@ export default function JoinPage({
                     {t("tabLatin")}
                   </button>
                   {readingModalContent.codeKey !== "BEDIR" &&
-                    readingModalContent.codeKey !== "UHUD" && (
+                    readingModalContent.codeKey !== "UHUD" &&
+                    readingModalContent.codeKey !== "TEVHIDNAME" && (
                       <button
                         onClick={() => setActiveTab("MEANING")}
                         className={`flex-1 py-2 rounded-md text-sm font-bold transition ${activeTab === "MEANING" ? "bg-white text-blue-800 shadow" : "text-blue-100 hover:bg-white/10"}`}
@@ -1054,18 +1108,21 @@ export default function JoinPage({
                           </div>
                         )}
 
-                        {activeTab === "MEANING" && (
-                          <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner">
-                            <div className="flex items-center mb-2 text-emerald-700">
-                              <span className="font-bold text-[10px] uppercase tracking-widest">
-                                {t("translationTitle")}
-                              </span>
+                        {activeTab === "MEANING" &&
+                          !["BEDIR", "UHUD", "TEVHIDNAME"].includes(
+                            readingModalContent.codeKey || "",
+                          ) && (
+                            <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner">
+                              <div className="flex items-center mb-2 text-emerald-700">
+                                <span className="font-bold text-[10px] uppercase tracking-widest">
+                                  {t("translationTitle")}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                {formatMeaningText(bab.meaning)}
+                              </div>
                             </div>
-                            <div className="text-sm">
-                              {formatMeaningText(bab.meaning)}
-                            </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     ))}
                   </div>

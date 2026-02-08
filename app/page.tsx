@@ -12,11 +12,13 @@ export default function Home() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { logout } = useAuth();
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
   const [createdSessions, setCreatedSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
   useEffect(() => {
     if (user && token) {
       fetchAllData();
@@ -36,17 +38,13 @@ export default function Home() {
 
       const resJoined = await fetch(
         `${apiUrl}/api/distribution/my-sessions?name=${user}`,
-        {
-          headers: headers,
-        },
+        { headers: headers },
       );
       if (resJoined.ok) setMySessions(await resJoined.json());
 
       const resCreated = await fetch(
         `${apiUrl}/api/distribution/my-created-sessions?name=${user}`,
-        {
-          headers: headers,
-        },
+        { headers: headers },
       );
       if (resCreated.ok) setCreatedSessions(await resCreated.json());
     } catch (error) {
@@ -70,6 +68,93 @@ export default function Home() {
 
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleDeleteSession = async (
+    e: React.MouseEvent,
+    sessionCode: string,
+  ) => {
+    e.stopPropagation();
+    if (!confirm(t("confirmDeleteSession"))) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(
+        `${apiUrl}/api/distribution/delete-session/${sessionCode}?username=${user}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (res.ok) {
+        setCreatedSessions((prev) =>
+          prev.filter((s) => s.code !== sessionCode),
+        );
+      } else {
+        alert(t("deleteFail"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("errorOccurred"));
+    }
+  };
+
+  const handleLeaveSession = async (
+    e: React.MouseEvent,
+    sessionCode: string,
+  ) => {
+    e.stopPropagation();
+    if (!confirm(t("confirmLeaveSession"))) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(
+        `${apiUrl}/api/distribution/leave-session/${sessionCode}?username=${user}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (res.ok) {
+        setMySessions((prev) => prev.filter((s) => s.code !== sessionCode));
+      } else {
+        alert(t("leaveFail"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("errorOccurred"));
+    }
+  };
+
+  const handleResetSession = async (
+    e: React.MouseEvent,
+    sessionCode: string,
+  ) => {
+    e.stopPropagation();
+    if (!confirm(t("confirmResetSession"))) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(
+        `${apiUrl}/api/distribution/reset-session/${sessionCode}?username=${user}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (res.ok) {
+        alert(t("resetSuccess"));
+      } else {
+        const msg = await res.text();
+        alert(t("resetFailPrefix") + msg);
+      }
+    } catch (error) {
+      console.error(error);
+      alert(t("errorOccurred"));
+    }
   };
 
   return (
@@ -183,25 +268,19 @@ export default function Home() {
                     {createdSessions.map((session) => (
                       <div
                         key={session.id}
-                        onClick={() =>
-                          router.push(`/admin/monitor?code=${session.code}`)
-                        }
+                        onClick={() => router.push(`/join/${session.code}`)}
                         className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md hover:border-blue-300 transition cursor-pointer group"
                       >
-                        <div>
-                          <h4 className="font-bold text-gray-800">
+                        <div className="flex-1 min-w-0 mr-2">
+                          <h4 className="font-bold text-gray-800 truncate">
                             {session.description}
                           </h4>
-                          <div className="flex items-center gap-2 mt-2">
-                            {/* Link Görünümü */}
-                            <div className="flex items-center bg-gray-100 rounded-md border border-gray-200 px-2 py-1 max-w-[200px] sm:max-w-[260px]">
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <div className="flex items-center bg-gray-100 rounded-md border border-gray-200 px-2 py-1 max-w-[200px]">
                               <span className="text-xs text-gray-500 font-mono truncate select-all">
-                                {typeof window !== "undefined"
-                                  ? `${window.location.origin}/join/${session.code}`
-                                  : `.../join/${session.code}`}
+                                {session.code}
                               </span>
                             </div>
-
                             <button
                               onClick={(e) =>
                                 handleCopyLink(e, session.code, session.id)
@@ -211,11 +290,6 @@ export default function Home() {
                                   ? "bg-green-100 text-green-600 border-green-200"
                                   : "bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-500"
                               }`}
-                              title={
-                                copiedId === session.id
-                                  ? "Kopyalandı!"
-                                  : "Linki Kopyala"
-                              }
                             >
                               {copiedId === session.id ? (
                                 <svg
@@ -224,11 +298,12 @@ export default function Home() {
                                   viewBox="0 0 20 20"
                                   fill="currentColor"
                                 >
+                                  {" "}
                                   <path
                                     fillRule="evenodd"
                                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                     clipRule="evenodd"
-                                  />
+                                  />{" "}
                                 </svg>
                               ) : (
                                 <svg
@@ -239,37 +314,86 @@ export default function Home() {
                                   stroke="currentColor"
                                   strokeWidth={2}
                                 >
+                                  {" "}
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                  />
+                                  />{" "}
                                 </svg>
                               )}
                             </button>
                           </div>
                         </div>
 
-                        <Link
-                          href={`/admin/monitor?code=${session.code}`}
-                          className="px-3 py-1.5 bg-green-50 text-blue-700 text-sm font-bold rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition flex items-center gap-1"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleResetSession(e, session.code)}
+                            className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title={t("reset")}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                            />
-                          </svg>
-                          {t("trackButton")}
-                        </Link>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                              />
+                            </svg>
+                          </button>
+
+                          <button
+                            onClick={(e) =>
+                              handleDeleteSession(e, session.code)
+                            }
+                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                            title={t("delete")}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                              />
+                            </svg>
+                          </button>
+
+                          <Link
+                            href={`/admin/monitor?code=${session.code}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-3 py-1.5 bg-green-50 text-blue-700 text-sm font-bold rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition flex items-center gap-1"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              {" "}
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                              />{" "}
+                            </svg>
+                            {t("trackButton")}
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -314,21 +438,46 @@ export default function Home() {
                             )}
                           </div>
                         </div>
-                        <div className="bg-blue-50 text-green-600 p-2 rounded-full group-hover:bg-green-600 group-hover:text-white transition">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleLeaveSession(e, session.code)}
+                            className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                            title={t("leave") || "Ayrıl"}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M14 5l7 7m0 0l-7 7m7-7H3"
-                            />
-                          </svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                              />
+                            </svg>
+                          </button>
+
+                          <div className="bg-blue-50 text-green-600 p-2 rounded-full group-hover:bg-green-600 group-hover:text-white transition">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              {" "}
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                              />{" "}
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -350,13 +499,15 @@ export default function Home() {
                   href="/login"
                   className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow hover:bg-blue-700 transition"
                 >
-                  {t("guestLogin")}
+                  {" "}
+                  {t("guestLogin")}{" "}
                 </Link>
                 <Link
                   href="/register"
                   className="w-full py-3 bg-white text-blue-600 border border-blue-600 rounded-lg font-bold shadow hover:bg-blue-50 transition"
                 >
-                  {t("guestRegister")}
+                  {" "}
+                  {t("guestRegister")}{" "}
                 </Link>
               </div>
               <div className="mt-8 border-t pt-6">
@@ -372,7 +523,8 @@ export default function Home() {
                     onChange={(e) => setCode(e.target.value)}
                   />
                   <button className="px-4 py-2 bg-gray-800 text-white rounded text-sm font-bold">
-                    {t("joinButton")}
+                    {" "}
+                    {t("joinButton")}{" "}
                   </button>
                 </form>
               </div>

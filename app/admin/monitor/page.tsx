@@ -43,8 +43,7 @@ function MonitorContent() {
 
       const initialExpanded: Record<string, boolean> = {};
 
-      // Fix: Iterate over assignments to find resources, as resources list might not exist directly
-      if (data.assignments && Array.isArray(data.assignments)) {
+       if (data.assignments && Array.isArray(data.assignments)) {
         data.assignments.forEach((a) => {
           if (a.resource) {
             const name =
@@ -112,7 +111,7 @@ function MonitorContent() {
             <p className="text-gray-500 mt-1 ml-4 font-mono text-sm">
               {t("distCode")}:{" "}
               <span className="font-bold text-gray-800">
-                {session.uniqueCode}
+                {session.code}
               </span>
             </p>
           )}
