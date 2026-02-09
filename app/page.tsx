@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { SessionSummary } from "@/types";
+import { Resource, SessionSummary } from "@/types";
 
 export default function Home() {
-  const { t } = useLanguage();
+   const { t, language } = useLanguage(); 
   const { user, token } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -128,6 +128,15 @@ export default function Home() {
     }
   };
 
+   const getDisplayName = (resource: Resource) => {
+     let translation = resource.translations?.find((tr) => tr.langCode === language);
+
+     if (!translation) {
+      translation = resource.translations?.find((tr) => tr.langCode === "tr");
+    }
+    return translation ? translation.name : resource.codeKey;
+  };
+  
   const handleResetSession = async (
     e: React.MouseEvent,
     sessionCode: string,

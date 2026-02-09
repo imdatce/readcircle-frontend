@@ -9,7 +9,9 @@ export interface Resource {
   type: "COUNTABLE" | "PAGED" | "JOINT" | "LIST_BASED";
   codeKey: string;
   translations: ResourceTranslation[];
+  totalUnits: number;
 }
+
 
 export interface ResourceTranslation {
   langCode: string;

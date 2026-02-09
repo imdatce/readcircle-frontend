@@ -21,7 +21,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 
 const translations = {
   tr: {
-    title: "Manevi Gece",
+    title: "Read Circle",
     subtitle: "Kaynak Dağıtım Platformu",
     backHome: "Ana Sayfa",
     loginButton: "GİRİŞ YAP",
@@ -160,7 +160,7 @@ const translations = {
       "Halkalara katılmak veya kendi dağıtımını oluşturmak için lütfen giriş yap.",
     guestCheckCode: "Sadece bir koda bakmak mı istiyorsun?",
     guestCodePlaceholder: "Kod giriniz",
-    appTitle: "Manevi Gece",
+    appTitle: "Read Circle",
     loginTitle: "Giriş Yap",
     noAccount: "Hesabın yok mu?",
     registerLink: "Hemen Kayıt Ol",
@@ -172,8 +172,8 @@ const translations = {
     creatorLabel: "Kurucu",
   },
   ku: {
-    title: "Şeva Manewî",
-    appTitle: "Şeva Manewî",
+    title: "Read Circle",
+    appTitle: "Read Circle",
     subtitle: "Platforma Belavkirina Çavkaniyan",
     backHome: "Mal",
     loginButton: "TÊKETIN",
@@ -324,7 +324,7 @@ const translations = {
     creatorLabel: "Avaker",
   },
   en: {
-    title: "Spiritual Night",
+    title: "Read Circle",
     subtitle: "Resource Distribution Platform",
     backHome: "Home",
     loginButton: "LOGIN",
@@ -475,7 +475,7 @@ const translations = {
     creatorLabel: "Creator",
   },
   ar: {
-    title: "الليلة الروحانية",
+    title: "Read Circle",
     subtitle: "منصة توزيع القراءات",
     backHome: "الرئيسية",
     loginButton: "تسجيل الدخول",
@@ -611,7 +611,7 @@ const translations = {
     guestMessage: "الرجاء تسجيل الدخول للانضمام للحلقات أو إنشاء توزيعك الخاص.",
     guestCheckCode: "تريد فقط التحقق من رمز؟",
     guestCodePlaceholder: "أدخل الرمز",
-    appTitle: "حلقة قراءة",
+    appTitle: "Read Circle",
     loginTitle: "تسجيل الدخول",
     noAccount: "ليس لديك حساب؟",
     registerLink: "سجل الآن",
@@ -624,7 +624,7 @@ const translations = {
     creatorLabel: "المنشئ",
   },
   fr: {
-    title: "Nuit Spirituelle",
+    title: "Read Circle",
     subtitle: "Plateforme de Distribution de Ressources",
     backHome: "Accueil",
     loginButton: "CONNEXION",
@@ -766,7 +766,7 @@ const translations = {
       "Veuillez vous connecter pour rejoindre des cercles ou créer votre propre distribution.",
     guestCheckCode: "Voulez-vous juste vérifier un code ?",
     guestCodePlaceholder: "Entrer le code",
-    appTitle: "Cercle de Lecture",
+    appTitle: "Read Circle",
     loginTitle: "Connexion",
     noAccount: "Pas de compte ?",
     registerLink: "S'inscrire maintenant",

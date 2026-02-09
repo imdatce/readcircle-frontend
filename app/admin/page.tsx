@@ -4,18 +4,11 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
-
-interface Resource {
-  id: number;
-  codeKey: string;
-  type: string;
-  totalUnits: number;
-  translations: { name: string }[];
-}
+import { Resource } from "@/types";
 
 export default function AdminPage() {
-  const { t } = useLanguage();
-  const { user, token } = useAuth();
+  const { t, language } = useLanguage();
+  const { user, token, logout } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
 
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
@@ -25,6 +18,16 @@ export default function AdminPage() {
   const [createdCode, setCreatedCode] = useState<string>("");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+
+  const getDisplayName = (resource: Resource) => {
+    let translation = resource.translations?.find(
+      (tr) => tr.langCode === language,
+    );
+    if (!translation) {
+      translation = resource.translations?.find((tr) => tr.langCode === "tr");
+    }
+    return translation ? translation.name : resource.codeKey;
+  };
 
   useEffect(() => {
     if (!apiUrl) return;
@@ -36,22 +39,26 @@ export default function AdminPage() {
 
     fetch(`${apiUrl}/api/distribution/resources`, { headers })
       .then((res) => {
-        if (!res.ok) throw new Error("Veri çekilemedi: " + res.status);
+        if (res.status === 401 || res.status === 403) {
+          logout();
+          throw new Error(t("sessionExpired") || "Session expired");
+        }
+        if (!res.ok) throw new Error("Fetch failed: " + res.status);
         return res.json();
       })
       .then((data) => {
         if (Array.isArray(data)) {
           setResources(data);
         } else {
-          console.error("Beklenmeyen veri formatı:", data);
+          console.error("Unexpected data format:", data);
           setResources([]);
         }
       })
       .catch((err) => {
-        console.error("Fetch hatası:", err);
+        console.error("Fetch error:", err);
         setResources([]);
       });
-  }, [apiUrl, token]);
+  }, [apiUrl, token, logout, t]);
 
   useEffect(() => {
     const savedData = sessionStorage.getItem("adminState");
@@ -65,7 +72,7 @@ export default function AdminPage() {
         if (parsed.createdLink) setCreatedLink(parsed.createdLink);
         if (parsed.createdCode) setCreatedCode(parsed.createdCode);
       } catch (e) {
-        console.error("Hafıza okuma hatası", e);
+        console.error("Storage read error", e);
       }
     }
   }, []);
@@ -124,7 +131,7 @@ export default function AdminPage() {
             throw new Error(msg || errorText);
           }
         } catch (e) {}
-        throw new Error(`Hata ${res.status}: ${errorText}`);
+        throw new Error(`Error ${res.status}: ${errorText}`);
       }
 
       const data = await res.json();
@@ -137,8 +144,9 @@ export default function AdminPage() {
       alert(err.message || t("errorOccurred"));
     }
   };
+
   const handleResetData = async () => {
-    if (!confirm(t("confirmReset") || "Emin misiniz?")) return;
+    if (!confirm(t("confirmReset") || "Are you sure?")) return;
     if (!token) return;
 
     try {
@@ -149,14 +157,16 @@ export default function AdminPage() {
         },
       });
 
-      const text = await res.text();
-      alert(text);
-
-      sessionStorage.removeItem("adminState");
-
-      window.location.reload();
+      if (res.ok) {
+        const text = await res.text();
+        alert(text);
+        sessionStorage.removeItem("adminState");
+        window.location.reload();
+      } else {
+        alert("Reset failed");
+      }
     } catch (e) {
-      alert("Hata");
+      alert("Error during reset");
     }
   };
 
@@ -166,7 +176,10 @@ export default function AdminPage() {
 
   const selectedResourcesWithInput = selectedResources
     .map((id) => safeResources.find((r) => r.id.toString() === id))
-    .filter((r) => r && (r.type === "COUNTABLE" || r.type === "JOINT"));
+    .filter(
+      (r): r is Resource =>
+        r !== undefined && (r.type === "COUNTABLE" || r.type === "JOINT"),
+    );
 
   const renderList = (list: Resource[]) => (
     <div className="space-y-2">
@@ -187,8 +200,7 @@ export default function AdminPage() {
             htmlFor={`res-${r.id}`}
             className="ml-3 text-gray-800 cursor-pointer select-none flex-1"
           >
-            {r.translations[0]?.name}{" "}
-            <span className="text-xs text-gray-400 ml-1">({r.codeKey})</span>
+            {getDisplayName(r)}
           </label>
         </div>
       ))}
@@ -203,17 +215,21 @@ export default function AdminPage() {
             onClick={handleResetData}
             className="text-xs text-red-500 underline hover:text-red-700"
           >
-            {t("refresh")}
+            {t("refresh") || "Reset Data"}
           </button>
           {user && (
             <span className="text-xs text-blue-600 font-bold">👤 {user}</span>
           )}
         </div>
 
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          {t("createDistTitle") || "Create New Session"}
+        </h2>
+
         {distributedResources.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wide mb-2 flex items-center">
-              {t("distributedResources") || "Paylaşılan Kaynaklar"}
+              {t("sharedResources") || "Shared Resources"}
             </h3>
             <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
               {renderList(distributedResources)}
@@ -224,7 +240,7 @@ export default function AdminPage() {
         {individualResources.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center">
-              {t("individualResources") || "Bireysel Kaynaklar"}
+              {t("fixedResources") || "Fixed Resources"}
             </h3>
             <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
               {renderList(individualResources)}
@@ -235,42 +251,39 @@ export default function AdminPage() {
         {selectedResourcesWithInput.length > 0 && (
           <div className="mb-6 animate-in fade-in slide-in-from-top-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="block text-amber-800 font-bold mb-3 text-sm border-b border-amber-200 pb-2">
-              {t("setTargetCounts") || "Hedef Sayıları Belirle (Opsiyonel)"}
+              {t("setTargetCounts") || "Set Custom Targets (Optional)"}
             </p>
 
-            {selectedResourcesWithInput.map(
-              (r) =>
-                r && (
-                  <div key={r.id} className="mb-3 last:mb-0 flex flex-col">
-                    <label className="text-xs font-bold text-gray-700 mb-1">
-                      {r.translations[0]?.name}
-                    </label>
-                    <div className="flex items-center">
-                      <input
-                        type="number"
-                        placeholder={r.totalUnits.toString()}
-                        className="w-full border p-2 rounded text-black text-sm focus:border-amber-500 outline-none bg-white"
-                        value={customTotals[r.id.toString()] || ""}
-                        onChange={(e) =>
-                          setCustomTotals({
-                            ...customTotals,
-                            [r.id.toString()]: e.target.value,
-                          })
-                        }
-                      />
-                      <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
-                        {t("default") || "Varsayılan"}: {r.totalUnits}
-                      </span>
-                    </div>
-                  </div>
-                ),
-            )}
+            {selectedResourcesWithInput.map((r) => (
+              <div key={r.id} className="mb-3 last:mb-0 flex flex-col">
+                <label className="text-xs font-bold text-gray-700 mb-1">
+                  {getDisplayName(r)}
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    placeholder={r.totalUnits.toString()}
+                    className="w-full border p-2 rounded text-black text-sm focus:border-amber-500 outline-none bg-white"
+                    value={customTotals[r.id.toString()] || ""}
+                    onChange={(e) =>
+                      setCustomTotals({
+                        ...customTotals,
+                        [r.id.toString()]: e.target.value,
+                      })
+                    }
+                  />
+                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
+                    {t("default") || "Def"}: {r.totalUnits}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         <div className="mb-6">
           <label className="block text-gray-700 font-bold mb-2">
-            {t("participantCount") || "Kaç Kişi Okuyacak?"}
+            {t("participantCount") || "Participant Count"}
           </label>
           <input
             type="number"
@@ -288,18 +301,19 @@ export default function AdminPage() {
           className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-bold shadow-md active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {user
-            ? t("createDistribution") || "DAĞITIMI OLUŞTUR"
-            : t("loginRequired") || "Lütfen Giriş Yapın"}
+            ? t("createButton") || "CREATE SESSION"
+            : t("loginRequired") || "Please Login"}
         </button>
 
         {createdLink && (
           <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded text-center">
             <p className="text-green-800 font-bold mb-2">
-              {t("linkCreated") || "Link Oluşturuldu:"}
+              {t("linkCreated") || "Session Link Created:"}
             </p>
             <a
               href={createdLink}
               target="_blank"
+              rel="noopener noreferrer"
               className="text-blue-600 underline text-sm break-all font-mono block mb-3"
             >
               {createdLink}
@@ -307,10 +321,13 @@ export default function AdminPage() {
 
             <div className="flex justify-center gap-3">
               <button
-                onClick={() => navigator.clipboard.writeText(createdLink)}
+                onClick={() => {
+                  navigator.clipboard.writeText(createdLink);
+                  alert(t("copied") || "Copied!");
+                }}
                 className="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100 text-black text-sm font-bold transition shadow-sm"
               >
-                {t("copy") || "Kopyala"}
+                {t("copy") || "Copy"}
               </button>
 
               <a
@@ -330,7 +347,7 @@ export default function AdminPage() {
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                   />
                 </svg>
-                {t("trackButton") || "Takip Et"}
+                {t("trackButton") || "Track"}
               </a>
             </div>
           </div>
