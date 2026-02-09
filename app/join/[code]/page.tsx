@@ -513,6 +513,8 @@ export default function JoinPage({
 
   const handleOpenReading = (assignment: Assignment) => {
     const resource = assignment.resource;
+
+    // 1. Dil seçimi (Önce seçili dil, yoksa TR, yoksa ilk bulunan)
     let translation = resource.translations?.find(
       (trans) => trans.langCode === language,
     );
@@ -524,8 +526,14 @@ export default function JoinPage({
     }
 
     const description = translation?.description;
-    if (!description) return;
 
+    // Açıklama yoksa fonksiyonu durdurma, hata ver (Debug için)
+    if (!description) {
+      console.warn("İçerik bulunamadı");
+      return;
+    }
+
+    // --- TİP 1: SAYILABİLİR ve ORTAK (COUNTABLE / JOINT) ---
     if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
       const parts = description.split("|||");
 
@@ -561,14 +569,32 @@ export default function JoinPage({
         assignmentId: assignment.id,
       });
       setActiveTab("ARABIC");
-    } else if (resource.type === "LIST_BASED") {
+    }
+
+    // --- TİP 2: LİSTE BAZLI (LIST_BASED - BEDİR, CEVŞEN vb.) ---
+    else if (resource.type === "LIST_BASED") {
       if (
         resource.codeKey === "BEDIR" ||
         resource.codeKey === "CEVSEN" ||
         resource.codeKey === "UHUD" ||
         resource.codeKey === "TEVHIDNAME"
       ) {
-        const allParts = description.split("###");
+        // --- DÜZELTME BURADA BAŞLIYOR ---
+
+        let separator = "###"; // Varsayılan ayırıcı
+
+        // Eğer BEDİR ise ve içinde ### yoksa, satır sonuna (\n) göre böl
+        if (resource.codeKey === "BEDIR" && !description.includes("###")) {
+          separator = "\n";
+        }
+
+        // Metni böl ve boş satırları temizle
+        const allParts = description
+          .split(separator)
+          .filter((p) => p.trim().length > 0);
+
+        // --- DÜZELTME BİTİŞ ---
+
         const selectedPartsRaw = allParts.slice(
           Math.max(0, assignment.startUnit - 1),
           Math.min(allParts.length, assignment.endUnit),
@@ -576,12 +602,15 @@ export default function JoinPage({
 
         const parsedData: CevsenBab[] = selectedPartsRaw.map(
           (rawPart, index) => {
+            // Eğer Bedir listesi sadece isimlerden oluşuyorsa ||| olmayabilir.
+            // Bu durumda ismi hem Arapça hem Latin alanına koyuyoruz.
             const parts = rawPart.split("|||");
+
             return {
               babNumber: assignment.startUnit + index,
-              arabic: parts[0]?.trim() || "",
-              transcript: parts[1]?.trim() || "",
-              meaning: parts[2]?.trim() || t("translationPending"),
+              arabic: parts[0]?.trim() || rawPart.trim(), // ||| yoksa tüm satırı al
+              transcript: parts[1]?.trim() || rawPart.trim(), // ||| yoksa tüm satırı al
+              meaning: parts[2]?.trim() || "",
             };
           },
         );
