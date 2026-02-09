@@ -103,7 +103,6 @@ export default function AdminPage() {
       const payload = {
         resourceIds: selectedResources.map((id) => Number(id)),
         participants: participants,
-        creatorName: user,
         customTotals: customTotals,
       };
 
@@ -118,6 +117,13 @@ export default function AdminPage() {
 
       if (!res.ok) {
         const errorText = await res.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (typeof errorJson === "object") {
+            const msg = Object.values(errorJson).join("\n");
+            throw new Error(msg || errorText);
+          }
+        } catch (e) {}
         throw new Error(`Hata ${res.status}: ${errorText}`);
       }
 
@@ -131,7 +137,6 @@ export default function AdminPage() {
       alert(err.message || t("errorOccurred"));
     }
   };
-
   const handleResetData = async () => {
     if (!confirm(t("confirmReset") || "Emin misiniz?")) return;
     if (!token) return;

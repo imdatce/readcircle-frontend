@@ -1,17 +1,42 @@
-export interface ResourceTranslation {
-  id: number;
-  langCode: string;
-  name: string;
-  unitName: string;
-  description: string;
-}
+export const SUPPORTED_LANGUAGES = ['tr', 'en', 'ku', 'ar', 'fr'] as const;
+
+export type Language = (typeof SUPPORTED_LANGUAGES)[number];
+
+export type ViewMode = "ARABIC" | "LATIN" | "MEANING";
 
 export interface Resource {
   id: number;
-  codeKey: string;
-  type: "PAGED" | "LIST_BASED" | "COUNTABLE" | "JOINT";
-  totalUnits: number;
+  type: "COUNTABLE" | "PAGED" | "JOINT" | "LIST_BASED";
+  codeKey: string; 
   translations: ResourceTranslation[];
+}
+
+export interface ResourceTranslation {
+  language: string;
+  name: string;
+  description?: string;
+  unitName?: string;
+}
+
+export interface Assignment {
+  id: number;
+  resource: Resource;
+  participantNumber: number;
+  startUnit: number;
+  endUnit: number;
+  isTaken: boolean;
+  assignedToName?: string;
+  isCompleted?: boolean;
+  currentCount?: number; 
+}
+
+export interface DistributionSession {
+  id: number;
+  code: string;
+  description?: string; 
+  participants: number;
+  creatorName?: string;
+  assignments: Assignment[];
 }
 
 export interface SessionSummary {
@@ -28,33 +53,6 @@ export interface CevsenBab {
   meaning: string;
 }
 
-export interface Assignment {
-  id: number;
-  resource: Resource;
-  participantNumber: number;
-  startUnit: number;
-  endUnit: number;
-  isTaken: boolean;
-  assignedToName: string | null;
-  currentCount?: number | null;
-  isCompleted?: boolean;
-}
-export interface DistributionSession {
-  id: number;
-  code: string;
-  description?: string;
-  creatorName?: string;
-  participants: number;
-  assignments: Assignment[];
-}
-
-export interface AuthContextType {
-  user: string | null;
-  token: string | null;
-  login: (username: string, token: string) => void;
-  logout: () => void;
-}
-
 export interface ZikirmatikProps {
   currentCount: number;
   onDecrement: () => void;
@@ -62,5 +60,3 @@ export interface ZikirmatikProps {
   t: (key: string) => string;
   readOnly?: boolean;
 }
-
-export type Language = 'tr' | 'en' | 'ku';

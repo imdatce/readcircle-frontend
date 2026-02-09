@@ -6,6 +6,7 @@ import {
   DistributionSession,
   Assignment,
   CevsenBab,
+  ViewMode,
   ZikirmatikProps,
 } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -60,16 +61,13 @@ const Zikirmatik = ({
   );
 };
 
-type ViewMode = "ARABIC" | "LATIN" | "MEANING";
-
 export default function JoinPage({
   params,
 }: {
   params: Promise<{ code: string }>;
 }) {
   const { t } = useLanguage();
-  const { user } = useAuth();
-
+  const { user, token } = useAuth();
   const [fontLevel, setFontLevel] = useState(1);
   const { code } = use(params);
 
@@ -80,6 +78,7 @@ export default function JoinPage({
   };
 
   const [userName, setUserName] = useState<string | null>(null);
+
   const [isClient, setIsClient] = useState(false);
 
   const [session, setSession] = useState<DistributionSession | null>(null);
@@ -115,6 +114,13 @@ export default function JoinPage({
       setUserName(user);
     }
   }, [user]);
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("guestUserName");
+    if (savedName) {
+      setUserName(savedName);
+    }
+  }, []);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -166,7 +172,6 @@ export default function JoinPage({
   const decrementCount = async (assignmentId: number) => {
     const currentCount = localCounts[assignmentId];
     if (currentCount === undefined || currentCount <= 0) return;
-
     const newCount = currentCount - 1;
 
     setLocalCounts((prev) => ({
@@ -175,13 +180,52 @@ export default function JoinPage({
     }));
 
     try {
-      await fetch(
-        `${apiUrl}/api/distribution/update-progress/${assignmentId}?count=${newCount}`,
-        {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      let nameToUse = userName;
+      if (!token && !nameToUse) {
+        nameToUse = localStorage.getItem("guestUserName");
+      }
+
+      if (!token && !nameToUse) {
+        alert(t("alertEnterName"));
+        setLocalCounts((prev) => ({
+          ...prev,
+          [assignmentId]: currentCount,
+        }));
+        return;
+      }
+
+      let updateUrl = `${apiUrl}/api/distribution/update-progress/${assignmentId}?count=${newCount}`;
+      if (!token && nameToUse) {
+        updateUrl += `&name=${encodeURIComponent(nameToUse)}`;
+      }
+
+      await fetch(updateUrl, {
+        method: "POST",
+        headers: headers,
+        cache: "no-store",
+      });
+
+      if (newCount === 0) {
+        let completeUrl = `${apiUrl}/api/distribution/complete/${assignmentId}`;
+        if (!token && nameToUse) {
+          completeUrl += `?name=${encodeURIComponent(nameToUse)}`;
+        }
+
+        const resComplete = await fetch(completeUrl, {
           method: "POST",
-          cache: "no-store",
-        },
-      );
+          headers: headers,
+        });
+
+        if (resComplete.ok) {
+          dataFetchedRef.current = false;
+          fetchSession();
+        }
+      }
     } catch (e) {
       console.error("Save progress failed", e);
       setLocalCounts((prev) => ({
@@ -203,8 +247,17 @@ export default function JoinPage({
     }
 
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(
-        `${apiUrl}/api/distribution/take/${assignmentId}?name=${userName}`,
+        `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(userName)}`,
+        {
+          method: "POST",
+          headers: headers,
+        },
       );
 
       if (res.status === 409) {
@@ -236,16 +289,25 @@ export default function JoinPage({
 
     let nameToUse = user;
     if (!nameToUse && userName) nameToUse = userName;
+    if (!nameToUse) nameToUse = localStorage.getItem("guestUserName");
 
     if (!nameToUse) return;
 
     try {
-      const res = await fetch(
-        `${apiUrl}/api/distribution/cancel/${assignmentId}?name=${nameToUse}`,
-        {
-          method: "POST",
-        },
-      );
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      let url = `${apiUrl}/api/distribution/cancel/${assignmentId}`;
+      if (!token) {
+        url += `?name=${encodeURIComponent(nameToUse)}`;
+      }
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: headers,
+      });
 
       if (res.ok) {
         dataFetchedRef.current = false;
@@ -261,16 +323,27 @@ export default function JoinPage({
   const handleCompletePart = async (assignmentId: number) => {
     let nameToUse = user;
     if (!nameToUse && userName) nameToUse = userName;
+    if (!nameToUse) nameToUse = localStorage.getItem("guestUserName");
 
     if (!nameToUse) return;
 
     if (!confirm(t("confirmComplete"))) return;
 
     try {
-      const res = await fetch(
-        `${apiUrl}/api/distribution/complete/${assignmentId}?name=${encodeURIComponent(nameToUse)}`,
-        { method: "POST" },
-      );
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      let url = `${apiUrl}/api/distribution/complete/${assignmentId}`;
+      if (!token) {
+        url += `?name=${encodeURIComponent(nameToUse)}`;
+      }
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: headers,
+      });
 
       if (res.ok) {
         dataFetchedRef.current = false;
@@ -283,6 +356,159 @@ export default function JoinPage({
       console.error(e);
       alert(t("connectionError"));
     }
+  };
+
+  const formatArabicText = (text: string) => {
+    const parts = text.split(/([١٢٣٤٥٦٧٨٩٠]+)/g);
+    const currentFontClass = fontSizes.ARABIC[fontLevel];
+
+    return (
+      <div className={`leading-relaxed ${currentFontClass}`}>
+        {parts.map((part, index) => {
+          if (/^[١٢٣٤٥٦٧٨٩٠]+$/.test(part)) {
+            return (
+              <span
+                key={index}
+                className="inline-flex items-center justify-center mx-1 w-9 h-9 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xl align-middle shadow-sm"
+              >
+                {part}
+              </span>
+            );
+          }
+          if (part.includes("سُبْحَانَكَ")) {
+            const subParts = part.split("سُبْحَانَكَ");
+            return (
+              <span key={index}>
+                {subParts[0]} <br />
+                <div
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold shadow-inner text-center ${fontSizes.ARABIC[fontLevel]}`}
+                >
+                  سُبْحَانَكَ {subParts[1]}
+                </div>
+              </span>
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    );
+  };
+  const formatLatinText = (text: string) => {
+    const parts = text.split(/(\d+\s)/g);
+    const currentFontClass = fontSizes.LATIN[fontLevel];
+    return (
+      <div
+        className={`${currentFontClass} text-gray-800 font-serif leading-relaxed`}
+      >
+        {parts.map((part, index) => {
+          if (/^\d+\s$/.test(part)) {
+            return (
+              <span
+                key={index}
+                className="inline-flex items-center justify-center mx-2 w-8 h-8 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-sans font-bold text-lg align-middle shadow-sm"
+              >
+                {part.trim()}
+              </span>
+            );
+          }
+          if (part.toLowerCase().includes("sübhâneke")) {
+            const subParts = part.split(/sübhâneke/i);
+            return (
+              <span key={index}>
+                {subParts[0]} <br />
+                <div
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold shadow-inner text-center font-sans ${currentFontClass}`}
+                >
+                  Sübhâneke {subParts[1]}
+                </div>
+              </span>
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    );
+  };
+
+  const formatStyledText = (text: string, type: "LATIN" | "MEANING") => {
+    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    const sizeClass =
+      type === "LATIN"
+        ? fontSizes.LATIN[fontLevel]
+        : fontSizes.MEANING[fontLevel];
+    return (
+      <div className="space-y-3">
+        {lines.map((line, index) => (
+          <div
+            key={index}
+            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${type === "LATIN" ? `bg-white border-gray-200 text-gray-800 font-serif italic ${sizeClass}` : `bg-emerald-50 border-emerald-100 text-emerald-900 font-sans ${sizeClass}`}`}
+          >
+            <div
+              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${type === "LATIN" ? "bg-blue-100 text-blue-700" : "bg-emerald-200 text-emerald-800"}`}
+            >
+              {index + 1}
+            </div>
+            <p className="leading-relaxed mt-1">{line.trim()}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const formatMeaningText = (text: string) => {
+    const lines = text.split(/[-•\n]/).filter((line) => line.trim().length > 0);
+    const sizeClass = fontSizes.MEANING[fontLevel];
+    return (
+      <div className="space-y-4">
+        {lines.map((line, index) => (
+          <div key={index} className="flex items-start group">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+              {index + 1}
+            </div>
+            <p
+              className={`text-gray-800 leading-relaxed font-medium italic ${sizeClass}`}
+            >
+              {line.trim()}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderUhudList = (text: string, type: "ARABIC" | "LATIN") => {
+    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    const isArabic = type === "ARABIC";
+    const dir = isArabic ? "rtl" : "ltr";
+    const sizeClass = isArabic
+      ? fontSizes.ARABIC[fontLevel]
+      : fontSizes.LATIN[fontLevel];
+    const fontClass = isArabic
+      ? `font-serif leading-[3.5rem] text-emerald-950 ${sizeClass}`
+      : `font-serif leading-relaxed text-emerald-900 ${sizeClass}`;
+
+    return (
+      <div
+        className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner"
+        dir={dir}
+      >
+        <div className="space-y-0 divide-y divide-emerald-200/60">
+          {lines.map((line, index) => (
+            <div
+              key={index}
+              className="flex items-start py-3 group hover:bg-emerald-100/80 transition-colors px-3 rounded-lg"
+            >
+              <div
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border mt-1 ${isArabic ? "ml-4" : "mr-4"} bg-white text-emerald-700 border-emerald-200 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all`}
+              >
+                {index + 1}
+              </div>
+              <p className={`${fontClass} flex-1 pt-0.5`}>{line.trim()}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const handleOpenReading = (assignment: Assignment) => {
@@ -396,174 +622,6 @@ export default function JoinPage({
 
   const toggleGroup = (groupName: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
-  };
-
-  const formatArabicText = (text: string) => {
-    const parts = text.split(/([١٢٣٤٥٦٧٨٩٠]+)/g);
-    const currentFontClass = fontSizes.ARABIC[fontLevel];
-
-    return (
-      <div className={`leading-relaxed ${currentFontClass}`}>
-        {parts.map((part, index) => {
-          if (/^[١٢٣٤٥٦٧٨٩٠]+$/.test(part)) {
-            return (
-              <span
-                key={index}
-                className="inline-flex items-center justify-center mx-1 w-9 h-9 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xl align-middle shadow-sm"
-              >
-                {part}
-              </span>
-            );
-          }
-          if (part.includes("سُبْحَانَكَ")) {
-            const subParts = part.split("سُبْحَانَكَ");
-            return (
-              <span key={index}>
-                {subParts[0]} <br />
-                <div
-                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold shadow-inner text-center ${fontSizes.ARABIC[fontLevel]}`}
-                >
-                  سُبْحَانَكَ {subParts[1]}
-                </div>
-              </span>
-            );
-          }
-          return <span key={index}>{part}</span>;
-        })}
-      </div>
-    );
-  };
-
-  const formatLatinText = (text: string) => {
-    const parts = text.split(/(\d+\s)/g);
-    const currentFontClass = fontSizes.LATIN[fontLevel];
-
-    return (
-      <div
-        className={`${currentFontClass} text-gray-800 font-serif leading-relaxed`}
-      >
-        {parts.map((part, index) => {
-          if (/^\d+\s$/.test(part)) {
-            return (
-              <span
-                key={index}
-                className="inline-flex items-center justify-center mx-2 w-8 h-8 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-sans font-bold text-lg align-middle shadow-sm"
-              >
-                {part.trim()}
-              </span>
-            );
-          }
-          if (part.toLowerCase().includes("sübhâneke")) {
-            const subParts = part.split(/sübhâneke/i);
-            return (
-              <span key={index}>
-                {subParts[0]} <br />
-                <div
-                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold shadow-inner text-center font-sans ${currentFontClass}`}
-                >
-                  Sübhâneke {subParts[1]}
-                </div>
-              </span>
-            );
-          }
-          return <span key={index}>{part}</span>;
-        })}
-      </div>
-    );
-  };
-
-  const formatStyledText = (text: string, type: "LATIN" | "MEANING") => {
-    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
-    const sizeClass =
-      type === "LATIN"
-        ? fontSizes.LATIN[fontLevel]
-        : fontSizes.MEANING[fontLevel];
-
-    return (
-      <div className="space-y-3">
-        {lines.map((line, index) => (
-          <div
-            key={index}
-            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${type === "LATIN" ? `bg-white border-gray-200 text-gray-800 font-serif italic ${sizeClass}` : `bg-emerald-50 border-emerald-100 text-emerald-900 font-sans ${sizeClass}`}`}
-          >
-            <div
-              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${type === "LATIN" ? "bg-blue-100 text-blue-700" : "bg-emerald-200 text-emerald-800"}`}
-            >
-              {index + 1}
-            </div>
-            <p className="leading-relaxed mt-1">{line.trim()}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const formatMeaningText = (text: string) => {
-    const lines = text.split(/[-•\n]/).filter((line) => line.trim().length > 0);
-    const sizeClass = fontSizes.MEANING[fontLevel];
-
-    return (
-      <div className="space-y-4">
-        {lines.map((line, index) => (
-          <div key={index} className="flex items-start group">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-              {index + 1}
-            </div>
-            <p
-              className={`text-gray-800 leading-relaxed font-medium italic ${sizeClass}`}
-            >
-              {line.trim()}
-            </p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderUhudList = (text: string, type: "ARABIC" | "LATIN") => {
-    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
-    const isArabic = type === "ARABIC";
-    const dir = isArabic ? "rtl" : "ltr";
-
-    const sizeClass = isArabic
-      ? fontSizes.ARABIC[fontLevel]
-      : fontSizes.LATIN[fontLevel];
-
-    const fontClass = isArabic
-      ? `font-serif leading-[3.5rem] text-emerald-950 ${sizeClass}`
-      : `font-serif leading-relaxed text-emerald-900 ${sizeClass}`;
-
-    return (
-      <div
-        className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner"
-        dir={dir}
-      >
-        <div className="space-y-0 divide-y divide-emerald-200/60">
-          {lines.map((line, index) => (
-            <div
-              key={index}
-              className="flex items-start py-3 group hover:bg-emerald-100/80 transition-colors px-3 rounded-lg"
-            >
-              <div
-                className={`
-                            flex-shrink-0 w-8 h-8 rounded-full 
-                            flex items-center justify-center 
-                            text-sm font-bold shadow-sm border
-                            mt-1
-                            ${isArabic ? "ml-4" : "mr-4"}
-                            bg-white text-emerald-700 border-emerald-200
-                            group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600
-                            transition-all
-                        `}
-              >
-                {index + 1}
-              </div>
-              <p className={`${fontClass} flex-1 pt-0.5`}>{line.trim()}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
   };
 
   const renderGroupList = (groups: Record<string, Assignment[]>) => {
@@ -929,7 +987,11 @@ export default function JoinPage({
                   type="text"
                   placeholder={t("yourName")}
                   value={userName || ""}
-                  onChange={(e) => setUserName(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUserName(val);
+                    localStorage.setItem("guestUserName", val);
+                  }}
                   className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
