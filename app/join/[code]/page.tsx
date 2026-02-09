@@ -13,6 +13,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
+// --- ZİKİRMATİK BİLEŞENİ ---
 const Zikirmatik = ({
   currentCount,
   onDecrement,
@@ -61,6 +62,7 @@ const Zikirmatik = ({
   );
 };
 
+// --- ANA SAYFA BİLEŞENİ ---
 export default function JoinPage({
   params,
 }: {
@@ -78,28 +80,25 @@ export default function JoinPage({
   };
 
   const [userName, setUserName] = useState<string | null>(null);
-
   const [isClient, setIsClient] = useState(false);
-
   const [session, setSession] = useState<DistributionSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
   const [localCounts, setLocalCounts] = useState<Record<number, number>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
-
   const dataFetchedRef = useRef(false);
 
+  // Modal State'i
   const [readingModalContent, setReadingModalContent] = useState<{
     title: string;
-    type: "SIMPLE" | "CEVSEN" | "SALAVAT";
+    type: "SIMPLE" | "CEVSEN" | "SALAVAT" | "QURAN_PAGES";
     simpleItems?: string[];
     cevsenData?: CevsenBab[];
     salavatData?: { arabic: string; transcript: string; meaning: string };
+    quranPages?: number[];
     isArabic?: boolean;
     startUnit?: number;
     codeKey?: string;
@@ -134,7 +133,6 @@ export default function JoinPage({
       }
 
       const data: DistributionSession = await res.json();
-
       setSession(data);
 
       setLocalCounts((prev) => {
@@ -165,7 +163,6 @@ export default function JoinPage({
   useEffect(() => {
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
-
     fetchSession();
   }, [fetchSession]);
 
@@ -181,28 +178,20 @@ export default function JoinPage({
 
     try {
       const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      let nameToUse = userName;
-      if (!token && !nameToUse) {
-        nameToUse = localStorage.getItem("guestUserName");
-      }
+      // DÜZELTME: let -> const (Çünkü artık tek satırda tanımlıyoruz ve değiştirmiyoruz)
+      const nameToUse = userName || localStorage.getItem("guestUserName");
 
       if (!token && !nameToUse) {
         alert(t("alertEnterName"));
-        setLocalCounts((prev) => ({
-          ...prev,
-          [assignmentId]: currentCount,
-        }));
+        setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
         return;
       }
 
       let updateUrl = `${apiUrl}/api/distribution/update-progress/${assignmentId}?count=${newCount}`;
-      if (!token && nameToUse) {
+      if (!token && nameToUse)
         updateUrl += `&name=${encodeURIComponent(nameToUse)}`;
-      }
 
       await fetch(updateUrl, {
         method: "POST",
@@ -212,15 +201,12 @@ export default function JoinPage({
 
       if (newCount === 0) {
         let completeUrl = `${apiUrl}/api/distribution/complete/${assignmentId}`;
-        if (!token && nameToUse) {
+        if (!token && nameToUse)
           completeUrl += `?name=${encodeURIComponent(nameToUse)}`;
-        }
-
         const resComplete = await fetch(completeUrl, {
           method: "POST",
           headers: headers,
         });
-
         if (resComplete.ok) {
           dataFetchedRef.current = false;
           fetchSession();
@@ -228,16 +214,25 @@ export default function JoinPage({
       }
     } catch (e) {
       console.error("Save progress failed", e);
-      setLocalCounts((prev) => ({
-        ...prev,
-        [assignmentId]: currentCount,
-      }));
+      setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
     }
   };
 
-  const handleOpenQuran = (pageNumber: number) => {
-    const url = `https://kuran.hayrat.com.tr/icerik/kuran_hizmetlerimiz/kuran-oku.aspx?sayfa=${pageNumber}`;
-    window.open(url, "_blank");
+  const handleOpenQuran = (assignment: Assignment) => {
+    const start = assignment.startUnit;
+    const end = assignment.endUnit;
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    setReadingModalContent({
+      title: `${t("page") || "Sayfa"} ${start} - ${end}`,
+      type: "QURAN_PAGES",
+      quranPages: pages,
+      assignmentId: assignment.id,
+      codeKey: "QURAN",
+    });
   };
 
   const handleTakePart = async (assignmentId: number) => {
@@ -245,19 +240,13 @@ export default function JoinPage({
       alert(t("alertEnterName"));
       return;
     }
-
     try {
       const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const res = await fetch(
         `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(userName)}`,
-        {
-          method: "POST",
-          headers: headers,
-        },
+        { method: "POST", headers: headers },
       );
 
       if (res.status === 409) {
@@ -265,15 +254,12 @@ export default function JoinPage({
         fetchSession();
         return;
       }
-
       if (!res.ok) {
         const text = await res.text();
-        const displayMsg = text.includes("{") ? t("errorOccurred") : text;
-        alert(t("alertStatus") + displayMsg);
+        alert(t("alertStatus") + text);
         fetchSession();
         return;
       }
-
       alert(t("alertTakenSuccess"));
       dataFetchedRef.current = false;
       fetchSession();
@@ -287,28 +273,19 @@ export default function JoinPage({
   const handleCancelPart = async (assignmentId: number) => {
     if (!confirm(t("confirmCancel"))) return;
 
-    let nameToUse = user;
-    if (!nameToUse && userName) nameToUse = userName;
-    if (!nameToUse) nameToUse = localStorage.getItem("guestUserName");
+    // DÜZELTME: let -> const
+    const nameToUse = user || userName || localStorage.getItem("guestUserName");
 
     if (!nameToUse) return;
 
     try {
       const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       let url = `${apiUrl}/api/distribution/cancel/${assignmentId}`;
-      if (!token) {
-        url += `?name=${encodeURIComponent(nameToUse)}`;
-      }
+      if (!token) url += `?name=${encodeURIComponent(nameToUse)}`;
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: headers,
-      });
-
+      const res = await fetch(url, { method: "POST", headers: headers });
       if (res.ok) {
         dataFetchedRef.current = false;
         fetchSession();
@@ -321,30 +298,20 @@ export default function JoinPage({
   };
 
   const handleCompletePart = async (assignmentId: number) => {
-    let nameToUse = user;
-    if (!nameToUse && userName) nameToUse = userName;
-    if (!nameToUse) nameToUse = localStorage.getItem("guestUserName");
+    // DÜZELTME: let -> const
+    const nameToUse = user || userName || localStorage.getItem("guestUserName");
 
     if (!nameToUse) return;
-
     if (!confirm(t("confirmComplete"))) return;
 
     try {
       const headers: Record<string, string> = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       let url = `${apiUrl}/api/distribution/complete/${assignmentId}`;
-      if (!token) {
-        url += `?name=${encodeURIComponent(nameToUse)}`;
-      }
+      if (!token) url += `?name=${encodeURIComponent(nameToUse)}`;
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: headers,
-      });
-
+      const res = await fetch(url, { method: "POST", headers: headers });
       if (res.ok) {
         dataFetchedRef.current = false;
         fetchSession();
@@ -358,10 +325,10 @@ export default function JoinPage({
     }
   };
 
+  // --- METİN FORMATLAMA YARDIMCILARI ---
   const formatArabicText = (text: string) => {
     const parts = text.split(/([١٢٣٤٥٦٧٨٩٠]+)/g);
     const currentFontClass = fontSizes.ARABIC[fontLevel];
-
     return (
       <div className={`leading-relaxed ${currentFontClass}`}>
         {parts.map((part, index) => {
@@ -429,7 +396,6 @@ export default function JoinPage({
       </div>
     );
   };
-
   const formatStyledText = (text: string, type: "LATIN" | "MEANING") => {
     const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
     const sizeClass =
@@ -454,7 +420,6 @@ export default function JoinPage({
       </div>
     );
   };
-
   const formatMeaningText = (text: string) => {
     const lines = text.split(/[-•\n]/).filter((line) => line.trim().length > 0);
     const sizeClass = fontSizes.MEANING[fontLevel];
@@ -476,62 +441,45 @@ export default function JoinPage({
     );
   };
 
-  const renderUhudList = (text: string, type: "ARABIC" | "LATIN") => {
-    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
-    const isArabic = type === "ARABIC";
-    const dir = isArabic ? "rtl" : "ltr";
-    const sizeClass = isArabic
-      ? fontSizes.ARABIC[fontLevel]
-      : fontSizes.LATIN[fontLevel];
-    const fontClass = isArabic
-      ? `font-serif leading-[3.5rem] text-emerald-950 ${sizeClass}`
-      : `font-serif leading-relaxed text-emerald-900 ${sizeClass}`;
-
-    return (
-      <div
-        className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner"
-        dir={dir}
-      >
-        <div className="space-y-0 divide-y divide-emerald-200/60">
-          {lines.map((line, index) => (
-            <div
-              key={index}
-              className="flex items-start py-3 group hover:bg-emerald-100/80 transition-colors px-3 rounded-lg"
-            >
-              <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border mt-1 ${isArabic ? "ml-4" : "mr-4"} bg-white text-emerald-700 border-emerald-200 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all`}
-              >
-                {index + 1}
-              </div>
-              <p className={`${fontClass} flex-1 pt-0.5`}>{line.trim()}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
   const handleOpenReading = (assignment: Assignment) => {
+    console.log("handleOpenReading tetiklendi:", assignment); // Debug log
+
     const resource = assignment.resource;
+
+    // Çeviri Bulma Mantığı
     let translation = resource.translations?.find(
       (trans) => trans.langCode === language,
     );
 
     if (!translation) {
-      translation =
-        resource.translations?.find((trans) => trans.langCode === "tr") ||
-        resource.translations?.[0];
+      translation = resource.translations?.find(
+        (trans) => trans.langCode === "tr",
+      );
+    }
+    if (
+      !translation &&
+      resource.translations &&
+      resource.translations.length > 0
+    ) {
+      translation = resource.translations[0];
     }
 
     const description = translation?.description;
-    if (!description) return;
 
+    if (!description) {
+      console.warn("İçerik açıklaması bulunamadı.");
+      return;
+    }
+
+    const title = translation?.name || resource.codeKey || t("readingTitle");
+
+    // Mantık
     if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
       const parts = description.split("|||");
-
       if (resource.codeKey === "UHUD") {
         setReadingModalContent({
-          title: resource.translations?.[0]?.name || t("readingTitle"),
+          title: title,
           type: "CEVSEN",
           cevsenData: [
             {
@@ -550,7 +498,7 @@ export default function JoinPage({
       }
 
       setReadingModalContent({
-        title: resource.translations?.[0]?.name || t("readingTitle"),
+        title: title,
         type: "SALAVAT",
         salavatData: {
           arabic: parts[0]?.trim() || "",
@@ -562,40 +510,39 @@ export default function JoinPage({
       });
       setActiveTab("ARABIC");
     } else if (resource.type === "LIST_BASED") {
-      if (
-        resource.codeKey === "BEDIR" ||
-        resource.codeKey === "CEVSEN" ||
-        resource.codeKey === "UHUD" ||
-        resource.codeKey === "TEVHIDNAME"
-      ) {
-        const allParts = description.split("###");
-        const selectedPartsRaw = allParts.slice(
-          Math.max(0, assignment.startUnit - 1),
-          Math.min(allParts.length, assignment.endUnit),
-        );
+      const allParts = description.split("###");
+      const selectedPartsRaw = allParts.slice(
+        Math.max(0, assignment.startUnit - 1),
+        Math.min(allParts.length, assignment.endUnit),
+      );
 
-        const parsedData: CevsenBab[] = selectedPartsRaw.map(
-          (rawPart, index) => {
-            const parts = rawPart.split("|||");
-            return {
-              babNumber: assignment.startUnit + index,
-              arabic: parts[0]?.trim() || "",
-              transcript: parts[1]?.trim() || "",
-              meaning: parts[2]?.trim() || t("translationPending"),
-            };
-          },
-        );
+      const parsedData: CevsenBab[] = selectedPartsRaw.map((rawPart, index) => {
+        const parts = rawPart.split("|||");
+        return {
+          babNumber: assignment.startUnit + index,
+          arabic: parts[0]?.trim() || "",
+          transcript: parts[1]?.trim() || "",
+          meaning: parts[2]?.trim() || t("translationPending"),
+        };
+      });
 
-        setReadingModalContent({
-          title: resource.translations?.[0]?.name || t("readingTitle"),
-          type: "CEVSEN",
-          cevsenData: parsedData,
-          startUnit: assignment.startUnit,
-          codeKey: resource.codeKey,
-          assignmentId: assignment.id,
-        });
-        setActiveTab("ARABIC");
-      }
+      setReadingModalContent({
+        title: title,
+        type: "CEVSEN",
+        cevsenData: parsedData,
+        startUnit: assignment.startUnit,
+        codeKey: resource.codeKey,
+        assignmentId: assignment.id,
+      });
+      setActiveTab("ARABIC");
+    } else {
+      // Fallback: Basit metin
+      setReadingModalContent({
+        title: title,
+        type: "SIMPLE",
+        simpleItems: [description],
+        assignmentId: assignment.id,
+      });
     }
   };
 
@@ -606,13 +553,10 @@ export default function JoinPage({
     const individual: Record<string, Assignment[]> = {};
 
     session.assignments.forEach((assignment) => {
-      // DİL DESTEĞİ EKLENDİ 👇
-
+      // Dinamik İsimlendirme
       let translation = assignment.resource?.translations?.find(
         (t) => t.langCode === language,
       );
-
-      // 2. Yoksa Türkçe'yi, o da yoksa ilk geleni al
       if (!translation) {
         translation =
           assignment.resource?.translations?.find((t) => t.langCode === "tr") ||
@@ -620,10 +564,7 @@ export default function JoinPage({
       }
 
       const resourceName =
-        translation?.name || // Artık dinamik isim kullanılıyor
-        assignment.resource?.codeKey ||
-        t("otherResource");
-
+        translation?.name || assignment.resource?.codeKey || t("otherResource");
       const type = assignment.resource.type;
 
       if (type === "JOINT") {
@@ -643,6 +584,7 @@ export default function JoinPage({
 
     return { distributed, individual };
   };
+
   const toggleGroup = (groupName: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
   };
@@ -717,47 +659,25 @@ export default function JoinPage({
                     isClient && userName && item.assignedToName === userName;
                   const isCompleted = item.isCompleted || false;
 
-                    let translation = item.resource.translations?.find(
+                  let translation = item.resource.translations?.find(
                     (t) => t.langCode === language,
                   );
                   if (!translation) {
-                     translation =
+                    translation =
                       item.resource.translations?.find(
                         (t) => t.langCode === "tr",
                       ) || item.resource.translations?.[0];
                   }
- 
+
                   return (
                     <div
                       key={item.id}
-                      className={`
-                            relative p-5 rounded-xl border transition-all duration-300 shadow-sm
-                            ${
-                              isCompleted
-                                ? "bg-green-50 border-green-200 opacity-80"
-                                : item.isTaken
-                                  ? isAssignedToUser
-                                    ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100"
-                                    : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5]"
-                                  : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200"
-                            }
-                        `}
+                      className={`relative p-5 rounded-xl border transition-all duration-300 shadow-sm ${isCompleted ? "bg-green-50 border-green-200 opacity-80" : item.isTaken ? (isAssignedToUser ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100" : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5]") : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200"}`}
                     >
+                      {/* Durum Etiketleri */}
                       <div className="absolute top-4 right-4">
                         {isCompleted ? (
                           <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-3 w-3"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
                             {t("completed")}
                           </span>
                         ) : item.isTaken ? (
@@ -771,6 +691,7 @@ export default function JoinPage({
                         )}
                       </div>
 
+                      {/* Bilgi Alanı */}
                       <div className="mb-3">
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-bold text-gray-800">
@@ -785,7 +706,6 @@ export default function JoinPage({
                                 : item.resource.type === "COUNTABLE"
                                   ? t("pieces")
                                   : translation?.unitName || t("part")) + ":"}
- 
                           {item.resource.type === "JOINT" ? (
                             <span className="ml-1 font-bold">
                               {item.endUnit} {t("pieces")}
@@ -796,7 +716,6 @@ export default function JoinPage({
                               {item.startUnit} - {item.endUnit}
                             </span>
                           )}
-
                           {item.resource.type === "COUNTABLE" && (
                             <span className="ml-2 font-bold text-blue-600">
                               ({t("total")}: {item.endUnit - item.startUnit + 1}
@@ -805,12 +724,14 @@ export default function JoinPage({
                           )}
                         </div>
                       </div>
+
+                      {/* Buton Alanı */}
                       <div className="flex flex-col gap-1 items-center w-full">
-                        {" "}
                         {item.isTaken ? (
                           <>
-                            {item.resource.type === "COUNTABLE" ||
-                            item.resource.type === "JOINT" ? (
+                            {/* Zikirmatik varsa göster */}
+                            {(item.resource.type === "COUNTABLE" ||
+                              item.resource.type === "JOINT") && (
                               <div className="w-full flex flex-col items-center">
                                 <Zikirmatik
                                   currentCount={safeCount}
@@ -818,50 +739,25 @@ export default function JoinPage({
                                   t={t}
                                   readOnly={!isAssignedToUser}
                                 />
-
-                                {isAssignedToUser && (
-                                  <button
-                                    onClick={() => handleOpenReading(item)}
-                                    className="mt-2 text-blue-600 text-sm font-semibold underline hover:text-blue-800"
-                                  >
-                                    {t("takeRead")} ({t("readText")})
-                                  </button>
-                                )}
                               </div>
-                            ) : item.resource.type === "LIST_BASED" ? (
-                              isAssignedToUser ? (
-                                <button
-                                  onClick={() => handleOpenReading(item)}
-                                  className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2"
-                                >
-                                  {t("takeRead")}
-                                </button>
-                              ) : (
-                                <button
-                                  disabled
-                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400"
-                                >
-                                  {t("full")}
-                                </button>
-                              )
-                            ) : item.resource.type === "PAGED" ? (
-                              isAssignedToUser ? (
-                                <button
-                                  onClick={() =>
-                                    handleOpenQuran(item.startUnit)
+                            )}
+
+                            {/* OKUMA / GİT BUTONU */}
+                            {isAssignedToUser ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // KURAN İSE ÖZEL FONKSİYON, DEĞİLSE GENEL
+                                  if (item.resource.codeKey === "QURAN") {
+                                    handleOpenQuran(item);
+                                  } else {
+                                    handleOpenReading(item);
                                   }
-                                  className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2"
-                                >
-                                  {t("takeRead")} ({t("goToSite")})
-                                </button>
-                              ) : (
-                                <button
-                                  disabled
-                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400"
-                                >
-                                  {t("full")}
-                                </button>
-                              )
+                                }}
+                                className="mt-2 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold shadow transition flex items-center justify-center gap-2"
+                              >
+                                {t("takeRead") || "Oku"}
+                              </button>
                             ) : (
                               <button
                                 disabled
@@ -880,6 +776,8 @@ export default function JoinPage({
                           </button>
                         )}
                       </div>
+
+                      {/* Alt Aksiyonlar (Tamamla / İptal) */}
                       {isAssignedToUser && (
                         <div className="mt-3 w-full space-y-2">
                           {!isCompleted && (
@@ -887,40 +785,13 @@ export default function JoinPage({
                               onClick={() => handleCompletePart(item.id)}
                               className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all active:scale-95 font-bold text-sm"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
                               {t("finished")}
                             </button>
                           )}
-
                           <button
                             onClick={() => handleCancelPart(item.id)}
                             className="w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2.5}
-                              stroke="currentColor"
-                              className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18 18 6M6 6l12 12"
-                              />
-                            </svg>
                             {t("cancelRead")}
                           </button>
                         </div>
@@ -956,20 +827,6 @@ export default function JoinPage({
         href="/"
         className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
         <span className="hidden sm:inline">{t("backHome")}</span>
       </Link>
 
@@ -981,34 +838,14 @@ export default function JoinPage({
           <div className="mb-6">
             {isClient && user ? (
               <div className="relative">
-                <label htmlFor="participant-name" className="sr-only">
-                  {t("participantName")}
-                </label>
                 <input
-                  id="participant-name"
-                  name="participantName"
                   type="text"
                   value={user}
+                  placeholder="text"
                   readOnly
-                  title={t("participantName")}
                   className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 font-bold cursor-not-allowed focus:outline-none"
                 />
-                <div className="absolute right-3 top-3 text-green-600">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
+                <div className="absolute right-3 top-3 text-green-600">✓</div>
               </div>
             ) : (
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
@@ -1061,46 +898,23 @@ export default function JoinPage({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center bg-blue-700/50 rounded-lg p-1 mr-2 border border-blue-500/30">
                     <button
-                      onClick={() =>
-                        setFontLevel((prev) => Math.max(0, prev - 1))
-                      }
-                      disabled={fontLevel === 0}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded disabled:opacity-30 transition font-serif font-bold"
-                      aria-label="Küçült"
+                      onClick={() => setFontLevel((p) => Math.max(0, p - 1))}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded font-bold"
                     >
                       A-
                     </button>
-                    <div className="w-px h-4 bg-blue-400/50 mx-1"></div>
                     <button
-                      onClick={() =>
-                        setFontLevel((prev) => Math.min(4, prev + 1))
-                      }
-                      disabled={fontLevel === 4}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded disabled:opacity-30 transition font-serif font-bold text-xl"
-                      aria-label="Büyüt"
+                      onClick={() => setFontLevel((p) => Math.min(4, p + 1))}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded font-bold"
                     >
                       A+
                     </button>
                   </div>
                   <button
                     onClick={() => setReadingModalContent(null)}
-                    aria-label={t("closeWindow")}
-                    className="text-white hover:bg-blue-700 p-1 rounded-full transition"
+                    className="text-white hover:bg-blue-700 p-1 rounded-full"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2.5}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18 18 6M6 6l12 12"
-                      />
-                    </svg>
+                    ✕
                   </button>
                 </div>
               </div>
@@ -1141,12 +955,69 @@ export default function JoinPage({
                     {readingModalContent.simpleItems.map((item, index) => (
                       <li
                         key={index}
-                        className="pl-2 border-b border-gray-100 pb-2 last:border-0 hover:bg-gray-50 transition text-lg"
+                        className="pl-2 border-b border-gray-100 pb-2 hover:bg-gray-50 text-lg"
                       >
                         {item}
                       </li>
                     ))}
                   </ul>
+                )}
+
+              {readingModalContent.type === "QURAN_PAGES" &&
+                readingModalContent.quranPages && (
+                  <div className="flex flex-col items-center gap-6 bg-amber-50/30 p-2 md:p-6">
+                    {readingModalContent.quranPages.map((pageNumber) => {
+                      const paddedPage = pageNumber.toString().padStart(3, "0");
+                      const imageUrl = `https://verses.quran.com/mus-haf/madani/png_big/${paddedPage}.png`;
+                      return (
+                        <div
+                          key={pageNumber}
+                          className="w-full max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200"
+                        >
+                          <div className="bg-gray-100 px-4 py-2 border-b text-center text-gray-500 font-bold text-sm">
+                            {t("page") || "Sayfa"} {pageNumber}
+                          </div>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrl}
+                            alt={`Sayfa ${pageNumber}`}
+                            className="w-full h-auto object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                      );
+                    })}
+                    {readingModalContent.assignmentId && (
+                      <div className="sticky bottom-0 bg-white/95 backdrop-blur shadow-2xl border-t border-gray-200 w-full p-4 rounded-xl mt-4 flex justify-center">
+                        <div className="flex flex-col items-center">
+                          <p className="text-gray-500 text-xs mb-2 font-bold uppercase tracking-wider">
+                            {t("clickToCount")}
+                          </p>
+                          <Zikirmatik
+                            currentCount={
+                              localCounts[readingModalContent.assignmentId!] ??
+                              1
+                            }
+                            onDecrement={() =>
+                              decrementCount(readingModalContent.assignmentId!)
+                            }
+                            isModal={true}
+                            t={t as unknown as (key: string) => string}
+                            readOnly={
+                              !(
+                                isClient &&
+                                userName &&
+                                session?.assignments.find(
+                                  (a) =>
+                                    a.id === readingModalContent.assignmentId,
+                                )?.assignedToName === userName
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
               {readingModalContent.type === "CEVSEN" &&
@@ -1155,66 +1026,32 @@ export default function JoinPage({
                     {readingModalContent.cevsenData.map((bab, index) => (
                       <div
                         key={index}
-                        className="mb-2 pb-2 border-b border-gray-100 last:border-0"
+                        className="mb-2 pb-2 border-b border-gray-100"
                       >
                         <div className="flex justify-center mb-2">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide uppercase text-xs">
-                            {readingModalContent.codeKey === "CEVSEN"
-                              ? `${bab.babNumber}. ${t("chapter")}`
-                              : `${bab.babNumber}. ${t("group")}`}
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold text-xs">
+                            {bab.babNumber}. {t("chapter")}
                           </span>
                         </div>
-
                         {activeTab === "ARABIC" && (
                           <div
-                            className={
-                              ["UHUD", "BEDIR"].includes(
-                                readingModalContent.codeKey || "",
-                              )
-                                ? ""
-                                : "text-right font-serif text-3xl leading-relaxed"
-                            }
+                            className="text-right font-serif text-3xl leading-relaxed"
                             dir="rtl"
                           >
-                            {["UHUD", "BEDIR"].includes(
-                              readingModalContent.codeKey || "",
-                            )
-                              ? renderUhudList(bab.arabic, "ARABIC")
-                              : formatArabicText(bab.arabic)}
+                            {formatArabicText(bab.arabic)}
                           </div>
                         )}
-
                         {activeTab === "LATIN" && (
-                          <div
-                            className={
-                              ["UHUD", "BEDIR"].includes(
-                                readingModalContent.codeKey || "",
-                              )
-                                ? ""
-                                : "text-left font-serif text-xl leading-relaxed"
-                            }
-                          >
-                            {["UHUD", "BEDIR"].includes(
-                              readingModalContent.codeKey || "",
-                            )
-                              ? renderUhudList(bab.transcript, "LATIN")
-                              : formatLatinText(bab.transcript)}
+                          <div className="text-left font-serif text-xl leading-relaxed">
+                            {formatLatinText(bab.transcript)}
                           </div>
                         )}
-
                         {activeTab === "MEANING" &&
                           !["BEDIR", "UHUD", "TEVHIDNAME"].includes(
                             readingModalContent.codeKey || "",
                           ) && (
-                            <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner">
-                              <div className="flex items-center mb-2 text-emerald-700">
-                                <span className="font-bold text-[10px] uppercase tracking-widest">
-                                  {t("translationTitle")}
-                                </span>
-                              </div>
-                              <div className="text-sm">
-                                {formatMeaningText(bab.meaning)}
-                              </div>
+                            <div className="bg-emerald-50 p-3 rounded-xl text-sm">
+                              {formatMeaningText(bab.meaning)}
                             </div>
                           )}
                       </div>
@@ -1224,108 +1061,40 @@ export default function JoinPage({
 
               {readingModalContent.type === "SALAVAT" &&
                 readingModalContent.salavatData && (
-                  <div className="flex flex-col items-center w-full h-full">
-                    <div className="w-full flex-1 overflow-y-auto p-2">
-                      {activeTab === "ARABIC" && (
-                        <>
-                          {(
-                            readingModalContent.salavatData.arabic || ""
-                          ).startsWith("IMAGE_MODE") ? (
-                            <div className="flex flex-col gap-4 w-full items-center">
-                              {readingModalContent.salavatData.arabic
-                                .replace("IMAGE_MODE:::", "")
-                                .split(",")
-                                .map((imgSrc, index) => (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    key={index}
-                                    src={imgSrc.trim()}
-                                    alt={`${t("arabicPage")} ${index + 1}`}
-                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
-                                  />
-                                ))}
-                            </div>
-                          ) : (
-                            <div
-                              className="text-center font-serif text-3xl leading-[4.5rem] py-4"
-                              dir="rtl"
-                            >
-                              {readingModalContent.salavatData.arabic}
-                            </div>
-                          )}
-                        </>
+                  <div className="flex flex-col items-center w-full">
+                    {activeTab === "ARABIC" && (
+                      <div
+                        className="text-center font-serif text-3xl leading-[4.5rem] py-4"
+                        dir="rtl"
+                      >
+                        {readingModalContent.salavatData.arabic}
+                      </div>
+                    )}
+                    {activeTab === "LATIN" &&
+                      formatStyledText(
+                        readingModalContent.salavatData.transcript,
+                        "LATIN",
                       )}
-
-                      {activeTab === "LATIN" &&
-                        formatStyledText(
-                          readingModalContent.salavatData.transcript,
-                          "LATIN",
-                        )}
-
-                      {activeTab === "MEANING" && (
-                        <>
-                          {(
-                            readingModalContent.salavatData.meaning || ""
-                          ).startsWith("IMAGE_MODE") ? (
-                            <div className="flex flex-col gap-4 w-full items-center">
-                              {readingModalContent.salavatData.meaning
-                                .replace("IMAGE_MODE:::", "")
-                                .split(",")
-                                .map((imgSrc, index) => (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    key={index}
-                                    src={imgSrc.trim()}
-                                    alt={`${t("meaningPage")} ${index + 1}`}
-                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
-                                  />
-                                ))}
-                            </div>
-                          ) : (
-                            formatStyledText(
-                              readingModalContent.salavatData.meaning,
-                              "MEANING",
-                            )
-                          )}
-                        </>
+                    {activeTab === "MEANING" &&
+                      formatStyledText(
+                        readingModalContent.salavatData.meaning,
+                        "MEANING",
                       )}
-                    </div>
 
                     {readingModalContent.assignmentId && (
                       <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
-                        <p className="text-gray-500 text-sm mb-2 font-semibold">
-                          {t("clickToCount")}
-                        </p>
-
-                        {(() => {
-                          const currentAssignment = session?.assignments.find(
-                            (a) => a.id === readingModalContent.assignmentId,
-                          );
-                          const isOwner =
-                            currentAssignment &&
-                            currentAssignment.assignedToName === userName;
-                          const safeCount =
+                        <Zikirmatik
+                          currentCount={
                             localCounts[readingModalContent.assignmentId!] ??
-                            (currentAssignment
-                              ? currentAssignment.endUnit -
-                                currentAssignment.startUnit +
-                                1
-                              : 0);
-
-                          return (
-                            <Zikirmatik
-                              currentCount={safeCount}
-                              onDecrement={() =>
-                                decrementCount(
-                                  readingModalContent.assignmentId!,
-                                )
-                              }
-                              isModal={true}
-                              t={t as unknown as (key: string) => string}
-                              readOnly={!isOwner}
-                            />
-                          );
-                        })()}
+                            100
+                          }
+                          onDecrement={() =>
+                            decrementCount(readingModalContent.assignmentId!)
+                          }
+                          isModal={true}
+                          t={t as unknown as (key: string) => string}
+                          readOnly={false}
+                        />
                       </div>
                     )}
                   </div>
