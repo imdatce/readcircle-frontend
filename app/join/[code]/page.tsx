@@ -66,7 +66,7 @@ export default function JoinPage({
 }: {
   params: Promise<{ code: string }>;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, token } = useAuth();
   const [fontLevel, setFontLevel] = useState(1);
   const { code } = use(params);
@@ -513,7 +513,17 @@ export default function JoinPage({
 
   const handleOpenReading = (assignment: Assignment) => {
     const resource = assignment.resource;
-    const description = resource.translations?.[0]?.description;
+    let translation = resource.translations?.find(
+      (trans) => trans.langCode === language,
+    );
+
+    if (!translation) {
+      translation =
+        resource.translations?.find((trans) => trans.langCode === "tr") ||
+        resource.translations?.[0];
+    }
+
+    const description = translation?.description;
     if (!description) return;
 
     if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
@@ -596,10 +606,24 @@ export default function JoinPage({
     const individual: Record<string, Assignment[]> = {};
 
     session.assignments.forEach((assignment) => {
+      // DİL DESTEĞİ EKLENDİ 👇
+
+      let translation = assignment.resource?.translations?.find(
+        (t) => t.langCode === language,
+      );
+
+      // 2. Yoksa Türkçe'yi, o da yoksa ilk geleni al
+      if (!translation) {
+        translation =
+          assignment.resource?.translations?.find((t) => t.langCode === "tr") ||
+          assignment.resource?.translations?.[0];
+      }
+
       const resourceName =
-        assignment.resource?.translations?.[0]?.name ||
+        translation?.name || // Artık dinamik isim kullanılıyor
         assignment.resource?.codeKey ||
         t("otherResource");
+
       const type = assignment.resource.type;
 
       if (type === "JOINT") {
@@ -619,7 +643,6 @@ export default function JoinPage({
 
     return { distributed, individual };
   };
-
   const toggleGroup = (groupName: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
   };
@@ -694,6 +717,16 @@ export default function JoinPage({
                     isClient && userName && item.assignedToName === userName;
                   const isCompleted = item.isCompleted || false;
 
+                    let translation = item.resource.translations?.find(
+                    (t) => t.langCode === language,
+                  );
+                  if (!translation) {
+                     translation =
+                      item.resource.translations?.find(
+                        (t) => t.langCode === "tr",
+                      ) || item.resource.translations?.[0];
+                  }
+ 
                   return (
                     <div
                       key={item.id}
@@ -751,9 +784,8 @@ export default function JoinPage({
                                 ? t("page")
                                 : item.resource.type === "COUNTABLE"
                                   ? t("pieces")
-                                  : item.resource.translations?.[0]?.unitName ||
-                                    t("part")) + ":"}
-
+                                  : translation?.unitName || t("part")) + ":"}
+ 
                           {item.resource.type === "JOINT" ? (
                             <span className="ml-1 font-bold">
                               {item.endUnit} {t("pieces")}

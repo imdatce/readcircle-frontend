@@ -143,10 +143,12 @@ export default function AdminPage() {
 
     try {
       const res = await fetch(`${apiUrl}/api/distribution/init`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       const text = await res.text();
       alert(text);
 

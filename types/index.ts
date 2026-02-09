@@ -7,12 +7,12 @@ export type ViewMode = "ARABIC" | "LATIN" | "MEANING";
 export interface Resource {
   id: number;
   type: "COUNTABLE" | "PAGED" | "JOINT" | "LIST_BASED";
-  codeKey: string; 
+  codeKey: string;
   translations: ResourceTranslation[];
 }
 
 export interface ResourceTranslation {
-  language: string;
+  langCode: string;
   name: string;
   description?: string;
   unitName?: string;
@@ -27,13 +27,13 @@ export interface Assignment {
   isTaken: boolean;
   assignedToName?: string;
   isCompleted?: boolean;
-  currentCount?: number; 
+  currentCount?: number;
 }
 
 export interface DistributionSession {
   id: number;
   code: string;
-  description?: string; 
+  description?: string;
   participants: number;
   creatorName?: string;
   assignments: Assignment[];
@@ -59,4 +59,11 @@ export interface ZikirmatikProps {
   isModal?: boolean;
   t: (key: string) => string;
   readOnly?: boolean;
+}
+
+export interface AuthContextType {
+  user: string | null;
+  token: string | null;
+  login: (username: string, token: string) => void;
+  logout: () => void;
 }
