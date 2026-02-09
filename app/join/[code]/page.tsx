@@ -2,6 +2,7 @@
 "use client";
 
 import { use, useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   DistributionSession,
   Assignment,
@@ -20,7 +21,7 @@ const Zikirmatik = ({
   t,
   readOnly = false,
 }: ZikirmatikProps) => {
-  return (
+  return ( 
     <div className={`flex flex-col items-center ${isModal ? "mt-8" : "mt-3"}`}>
       <button
         onClick={readOnly ? undefined : onDecrement}
@@ -68,6 +69,7 @@ export default function JoinPage({
 }) {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
+  const router = useRouter();
   const [fontLevel, setFontLevel] = useState(1);
   const { code } = use(params);
 
@@ -96,13 +98,15 @@ export default function JoinPage({
 
   const [readingModalContent, setReadingModalContent] = useState<{
     title: string;
-    type: "SIMPLE" | "CEVSEN" | "SALAVAT";
+    type: "SIMPLE" | "CEVSEN" | "SALAVAT" | "QURAN";
     simpleItems?: string[];
     cevsenData?: CevsenBab[];
     salavatData?: { arabic: string; transcript: string; meaning: string };
     isArabic?: boolean;
     startUnit?: number;
     codeKey?: string;
+    endUnit?: number;
+    currentUnit?: number;
     assignmentId?: number;
   } | null>(null);
 
@@ -235,9 +239,19 @@ export default function JoinPage({
     }
   };
 
-  const handleOpenQuran = (pageNumber: number) => {
-    const url = `https://kuran.hayrat.com.tr/icerik/kuran_hizmetlerimiz/kuran-oku.aspx?sayfa=${pageNumber}`;
-    window.open(url, "_blank");
+  const handleOpenQuran = (
+    startPage: number,
+    endPage: number,
+    assignmentId: number,
+  ) => {
+    setReadingModalContent({
+      title: `${t("page")} ${startPage} - ${endPage}`,
+      type: "QURAN",
+      startUnit: startPage,
+      endUnit: endPage,
+      currentUnit: startPage,
+      assignmentId: assignmentId,
+    });
   };
 
   const handleTakePart = async (assignmentId: number) => {
@@ -514,7 +528,6 @@ export default function JoinPage({
   const handleOpenReading = (assignment: Assignment) => {
     const resource = assignment.resource;
 
-    // 1. Dil seçimi (Önce seçili dil, yoksa TR, yoksa ilk bulunan)
     let translation = resource.translations?.find(
       (trans) => trans.langCode === language,
     );
@@ -527,13 +540,11 @@ export default function JoinPage({
 
     const description = translation?.description;
 
-    // Açıklama yoksa fonksiyonu durdurma, hata ver (Debug için)
     if (!description) {
       console.warn("İçerik bulunamadı");
       return;
     }
 
-    // --- TİP 1: SAYILABİLİR ve ORTAK (COUNTABLE / JOINT) ---
     if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
       const parts = description.split("|||");
 
@@ -569,31 +580,22 @@ export default function JoinPage({
         assignmentId: assignment.id,
       });
       setActiveTab("ARABIC");
-    }
-
-    // --- TİP 2: LİSTE BAZLI (LIST_BASED - BEDİR, CEVŞEN vb.) ---
-    else if (resource.type === "LIST_BASED") {
+    } else if (resource.type === "LIST_BASED") {
       if (
         resource.codeKey === "BEDIR" ||
         resource.codeKey === "CEVSEN" ||
         resource.codeKey === "UHUD" ||
         resource.codeKey === "TEVHIDNAME"
       ) {
-        // --- DÜZELTME BURADA BAŞLIYOR ---
+        let separator = "###";
 
-        let separator = "###"; // Varsayılan ayırıcı
-
-        // Eğer BEDİR ise ve içinde ### yoksa, satır sonuna (\n) göre böl
         if (resource.codeKey === "BEDIR" && !description.includes("###")) {
           separator = "\n";
         }
 
-        // Metni böl ve boş satırları temizle
         const allParts = description
           .split(separator)
           .filter((p) => p.trim().length > 0);
-
-        // --- DÜZELTME BİTİŞ ---
 
         const selectedPartsRaw = allParts.slice(
           Math.max(0, assignment.startUnit - 1),
@@ -602,14 +604,12 @@ export default function JoinPage({
 
         const parsedData: CevsenBab[] = selectedPartsRaw.map(
           (rawPart, index) => {
-            // Eğer Bedir listesi sadece isimlerden oluşuyorsa ||| olmayabilir.
-            // Bu durumda ismi hem Arapça hem Latin alanına koyuyoruz.
             const parts = rawPart.split("|||");
 
             return {
               babNumber: assignment.startUnit + index,
-              arabic: parts[0]?.trim() || rawPart.trim(), // ||| yoksa tüm satırı al
-              transcript: parts[1]?.trim() || rawPart.trim(), // ||| yoksa tüm satırı al
+              arabic: parts[0]?.trim() || rawPart.trim(),
+              transcript: parts[1]?.trim() || rawPart.trim(),
               meaning: parts[2]?.trim() || "",
             };
           },
@@ -635,13 +635,10 @@ export default function JoinPage({
     const individual: Record<string, Assignment[]> = {};
 
     session.assignments.forEach((assignment) => {
-      // DİL DESTEĞİ EKLENDİ 👇
-
       let translation = assignment.resource?.translations?.find(
         (t) => t.langCode === language,
       );
 
-      // 2. Yoksa Türkçe'yi, o da yoksa ilk geleni al
       if (!translation) {
         translation =
           assignment.resource?.translations?.find((t) => t.langCode === "tr") ||
@@ -649,9 +646,7 @@ export default function JoinPage({
       }
 
       const resourceName =
-        translation?.name || // Artık dinamik isim kullanılıyor
-        assignment.resource?.codeKey ||
-        t("otherResource");
+        translation?.name || assignment.resource?.codeKey || t("otherResource");
 
       const type = assignment.resource.type;
 
@@ -877,11 +872,15 @@ export default function JoinPage({
                               isAssignedToUser ? (
                                 <button
                                   onClick={() =>
-                                    handleOpenQuran(item.startUnit)
+                                    handleOpenQuran(
+                                      item.startUnit,
+                                      item.endUnit,
+                                      item.id,
+                                    )
                                   }
                                   className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2"
                                 >
-                                  {t("takeRead")} ({t("goToSite")})
+                                  {t("takeRead")}
                                 </button>
                               ) : (
                                 <button
@@ -1003,43 +1002,12 @@ export default function JoinPage({
       </Link>
 
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
-          <h1 className="text-3xl font-bold text-red-800 mb-2">
-            {t("joinTitle")}
-          </h1>
-          <div className="mb-6">
-            {isClient && user ? (
-              <div className="relative">
-                <label htmlFor="participant-name" className="sr-only">
-                  {t("participantName")}
-                </label>
-                <input
-                  id="participant-name"
-                  name="participantName"
-                  type="text"
-                  value={user}
-                  readOnly
-                  title={t("participantName")}
-                  className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 font-bold cursor-not-allowed focus:outline-none"
-                />
-                <div className="absolute right-3 top-3 text-green-600">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            ) : (
+        {!user && (
+          <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
+            <h1 className="text-3xl font-bold text-red-800 mb-2">
+              {t("joinTitle")}
+            </h1>
+            <div className="mb-6">
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
                 <p className="text-sm text-red-700 font-bold mb-2">
                   {t("joinIntro")}
@@ -1056,27 +1024,69 @@ export default function JoinPage({
                   className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 md:gap-8 items-start mt-10">
+          <div className="w-full">
+            {Object.keys(distributed).length > 0 && (
+              <div className="mb-6 md:mb-0">
+                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm">
+                  <span className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                  </span>
+                  {t("distributedResources")}
+                </h2>
+                <div className="flex flex-col gap-3 md:gap-5">
+                  {renderGroupList(distributed)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="w-full">
+            {Object.keys(individual).length > 0 && (
+              <div>
+                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm">
+                  <span className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </span>
+                  {t("individualResources")}
+                </h2>
+                <div className="flex flex-col gap-3 md:gap-5">
+                  {renderGroupList(individual)}
+                </div>
+              </div>
             )}
           </div>
         </div>
-
-        {Object.keys(distributed).length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-700 border-b border-gray-300 pb-2 mb-4 flex items-center">
-              {t("distributedResources")}
-            </h2>
-            {renderGroupList(distributed)}
-          </div>
-        )}
-
-        {Object.keys(individual).length > 0 && (
-          <div>
-            <h2 className="text-xl font-bold text-gray-700 border-b border-gray-300 pb-2 mb-4 flex items-center">
-              {t("individualResources")}
-            </h2>
-            {renderGroupList(individual)}
-          </div>
-        )}
       </div>
 
       {readingModalContent && (
@@ -1357,6 +1367,129 @@ export default function JoinPage({
                         })()}
                       </div>
                     )}
+                  </div>
+                )}
+
+              {readingModalContent.type === "QURAN" &&
+                readingModalContent.currentUnit && (
+                  <div className="flex flex-col items-center h-full">
+                    <div className="flex items-center justify-between w-full mb-4 px-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          setReadingModalContent((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  currentUnit: Math.max(
+                                    prev.startUnit!,
+                                    prev.currentUnit! - 1,
+                                  ),
+                                }
+                              : null,
+                          );
+                        }}
+                        disabled={
+                          readingModalContent.currentUnit ===
+                          readingModalContent.startUnit
+                        }
+                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors"
+                      >
+                        ← {t("previous")}
+                      </button>
+
+                      <span className="font-bold text-lg text-gray-700">
+                        {t("page")} {readingModalContent.currentUnit}
+                      </span>
+
+                      <button
+                        onClick={() => {
+                          setReadingModalContent((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  currentUnit: Math.min(
+                                    prev.endUnit!,
+                                    prev.currentUnit! + 1,
+                                  ),
+                                }
+                              : null,
+                          );
+                        }}
+                        disabled={
+                          readingModalContent.currentUnit ===
+                          readingModalContent.endUnit
+                        }
+                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors"
+                      >
+                        {t("next")} →
+                      </button>
+                    </div>
+
+                    <div className="flex-1 w-full overflow-y-auto flex flex-col items-center bg-gray-50 rounded-lg border border-gray-200 p-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(readingModalContent.currentUnit).padStart(3, "0")}.png`}
+                        alt={`Page ${readingModalContent.currentUnit}`}
+                        className="max-w-full h-auto object-contain shadow-lg mb-4"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement!.innerHTML += `<div class="text-red-500 p-4">Sayfa yüklenemedi.</div>`;
+                        }}
+                      />
+
+                      <div className="flex items-center justify-between w-full p-4 mt-auto border-t border-gray-200 bg-white">
+                        <button
+                          onClick={() => {
+                            setReadingModalContent((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    currentUnit: Math.max(
+                                      prev.startUnit!,
+                                      prev.currentUnit! - 1,
+                                    ),
+                                  }
+                                : null,
+                            );
+                          }}
+                          disabled={
+                            readingModalContent.currentUnit ===
+                            readingModalContent.startUnit
+                          }
+                          className="px-6 py-3 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors flex-1 mr-2"
+                        >
+                          ← {t("previous")}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setReadingModalContent((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    currentUnit: Math.min(
+                                      prev.endUnit!,
+                                      prev.currentUnit! + 1,
+                                    ),
+                                  }
+                                : null,
+                            );
+                          }}
+                          disabled={
+                            readingModalContent.currentUnit ===
+                            readingModalContent.endUnit
+                          }
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg disabled:opacity-30 hover:bg-blue-700 font-bold transition-colors flex-1 ml-2"
+                        >
+                          {t("next")} →
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 text-xs text-gray-400 shrink-0">
+                      Kaynak: Open Source Quran Images
+                    </div>
                   </div>
                 )}
             </div>

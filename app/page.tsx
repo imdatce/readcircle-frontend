@@ -5,54 +5,56 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Resource, SessionSummary } from "@/types";
+import { SessionSummary } from "@/types";
 
 export default function Home() {
-   const { t, language } = useLanguage(); 
+  const { t, language } = useLanguage();
   const { user, token } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { logout } = useAuth();
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
   const [createdSessions, setCreatedSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
+  // --- KRİTİK DÜZELTME ---
+  // Kürtçe (ku) Latin alfabesi kullandığı için RTL grubundan ÇIKARILDI.
+  // Artık sadece Arapça (ar) Sağdan Sola (RTL) davranacak.
+  const isRTL = language === "ar";
+
+  // Verileri çekme fonksiyonu
   useEffect(() => {
     if (user && token) {
+      const fetchAllData = async () => {
+        try {
+          setLoading(true);
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          };
+
+          const [resJoined, resCreated] = await Promise.all([
+            fetch(`${apiUrl}/api/distribution/my-sessions?name=${user}`, {
+              headers,
+            }),
+            fetch(
+              `${apiUrl}/api/distribution/my-created-sessions?name=${user}`,
+              { headers },
+            ),
+          ]);
+
+          if (resJoined.ok) setMySessions(await resJoined.json());
+          if (resCreated.ok) setCreatedSessions(await resCreated.json());
+        } catch (error) {
+          console.error("Veri hatası", error);
+        } finally {
+          setLoading(false);
+        }
+      };
       fetchAllData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token]);
-
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-
-      const resJoined = await fetch(
-        `${apiUrl}/api/distribution/my-sessions?name=${user}`,
-        { headers: headers },
-      );
-      if (resJoined.ok) setMySessions(await resJoined.json());
-
-      const resCreated = await fetch(
-        `${apiUrl}/api/distribution/my-created-sessions?name=${user}`,
-        { headers: headers },
-      );
-      if (resCreated.ok) setCreatedSessions(await resCreated.json());
-    } catch (error) {
-      console.error("Veri hatası", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,482 +67,522 @@ export default function Home() {
     e.stopPropagation();
     const link = `${window.location.origin}/join/${code}`;
     navigator.clipboard.writeText(link);
-
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleDeleteSession = async (
-    e: React.MouseEvent,
-    sessionCode: string,
-  ) => {
-    e.stopPropagation();
-    if (!confirm(t("confirmDeleteSession"))) return;
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(
-        `${apiUrl}/api/distribution/delete-session/${sessionCode}?username=${user}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (res.ok) {
-        setCreatedSessions((prev) =>
-          prev.filter((s) => s.code !== sessionCode),
-        );
-      } else {
-        alert(t("deleteFail"));
-      }
-    } catch (error) {
-      console.error(error);
-      alert(t("errorOccurred"));
-    }
-  };
-
-  const handleLeaveSession = async (
-    e: React.MouseEvent,
-    sessionCode: string,
-  ) => {
-    e.stopPropagation();
-    if (!confirm(t("confirmLeaveSession"))) return;
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(
-        `${apiUrl}/api/distribution/leave-session/${sessionCode}?username=${user}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (res.ok) {
-        setMySessions((prev) => prev.filter((s) => s.code !== sessionCode));
-      } else {
-        alert(t("leaveFail"));
-      }
-    } catch (error) {
-      console.error(error);
-      alert(t("errorOccurred"));
-    }
-  };
-
-   const getDisplayName = (resource: Resource) => {
-     let translation = resource.translations?.find((tr) => tr.langCode === language);
-
-     if (!translation) {
-      translation = resource.translations?.find((tr) => tr.langCode === "tr");
-    }
-    return translation ? translation.name : resource.codeKey;
-  };
-  
-  const handleResetSession = async (
-    e: React.MouseEvent,
-    sessionCode: string,
-  ) => {
-    e.stopPropagation();
-    if (!confirm(t("confirmResetSession"))) return;
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(
-        `${apiUrl}/api/distribution/reset-session/${sessionCode}?username=${user}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (res.ok) {
-        alert(t("resetSuccess"));
-      } else {
-        const msg = await res.text();
-        alert(t("resetFailPrefix") + msg);
-      }
-    } catch (error) {
-      console.error(error);
-      alert(t("errorOccurred"));
-    }
-  };
-
-  return (
-    <main className="min-h-screen flex flex-col items-center p-4 bg-gray-50 text-gray-800 relative overflow-x-hidden">
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-10 pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-400 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="z-10 w-full max-w-6xl mt-10 md:mt-16">
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 mb-4">
-            {t("appTitle")}
-          </h1>
-          <p className="text-xl text-gray-600 font-light">
-            {t("guestSubtitle")}
-          </p>
+  // --- MİSAFİR (LANDING) SAYFASI ---
+  if (!user) {
+    return (
+      <main
+        className="min-h-screen bg-white text-gray-800 font-sans selection:bg-blue-100"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        {/* Dekoratif Arka Plan */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] bg-gradient-to-br from-blue-100/50 to-green-100/50 rounded-full blur-3xl opacity-60"></div>
+          <div className="absolute top-[30%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-tr from-emerald-100/40 to-blue-50/40 rounded-full blur-3xl opacity-50"></div>
         </div>
 
-        {user ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
-            <h2 className="text-center text-2xl font-bold text-gray-700 mb-8">
-              {t("welcome")} <span className="text-blue-600">{user}</span>{" "}
-              <br />
-            </h2>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-24 lg:pt-24 lg:pb-32">
+          {/* HERO SECTION */}
+          <div className="text-center max-w-4xl mx-auto mb-20">
+          
+            <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-8 leading-[1.1]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
+                {t("landingHeroTitle") || "Manevi Birliktelik"}
+              </span>{" "}
+              {t("platform") || "Platformu"}
+            </h1>
+            <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+              {t("landingHeroSubtitle") ||
+                "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin."}
+            </p>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
-              <div
-                onClick={() => router.push("/admin")}
-                className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all cursor-pointer group transform hover:-translate-y-1"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                href="/login"
+                className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg hover:shadow-blue-200/50 flex items-center gap-2 transform hover:-translate-y-1"
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {t("createDistTitle")}
-                  </h3>
-                </div>
-                <p className="text-gray-500 mb-4 text-sm">
-                  {t("createDistDesc")}
-                </p>
-                <button className="w-full py-2 text-white rounded-lg font-bold shadow bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 transition">
-                  {" "}
-                  {t("createButton")}
-                </button>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-green-200 transition-all group transform hover:-translate-y-1">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {t("joinDistTitle")}
-                  </h3>
-                </div>
-                <form onSubmit={handleJoin} className="flex gap-2">
+                {t("getStarted") || "Hemen Başla"}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-5 w-5 ${isRTL ? "rotate-180" : ""}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+              <div className="relative group">
+                <form
+                  onSubmit={handleJoin}
+                  className="flex items-center bg-white border border-gray-200 rounded-xl p-1 ps-4 shadow-sm group-focus-within:border-blue-400 group-focus-within:ring-4 group-focus-within:ring-blue-100 transition"
+                >
                   <input
                     type="text"
-                    placeholder={t("joinInputPlaceholder")}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none transition bg-gray-50"
+                    placeholder={
+                      t("sessionCodePlaceholder") || "Halka Kodu (Örn: XYZ123)"
+                    }
+                    // DÜZELTME: RTL ise text-right, değilse (Kürtçe dahil) text-left
+                    className={`outline-none bg-transparent text-gray-700 placeholder-gray-400 w-48 ${isRTL ? "text-right" : "text-left"}`}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                   />
-                  <button className="px-4 py-2 text-white rounded-lg font-bold shadow bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 transition">
-                    {" "}
-                    {t("joinButton")}{" "}
+                  <button
+                    type="submit"
+                    className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition"
+                  >
+                    {t("join") || "Katıl"}
                   </button>
                 </form>
               </div>
             </div>
-
-            <div className="grid md:grid-cols-2 gap-8 mb-20">
-              <div>
-                <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
-                  <span className="w-2 h-6 bg-blue-600 rounded-full inline-block"></span>
-                  {t("myCreatedTitle")}
-                </h3>
-
-                {loading ? (
-                  <p className="text-gray-400">{t("loading")}</p>
-                ) : createdSessions.length > 0 ? (
-                  <div className="space-y-3">
-                    {createdSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        onClick={() => router.push(`/join/${session.code}`)}
-                        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md hover:border-blue-300 transition cursor-pointer group"
-                      >
-                        <div className="flex-1 min-w-0 mr-2">
-                          <h4 className="font-bold text-gray-800 truncate">
-                            {session.description}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <div className="flex items-center bg-gray-100 rounded-md border border-gray-200 px-2 py-1 max-w-[200px]">
-                              <span className="text-xs text-gray-500 font-mono truncate select-all">
-                                {session.code}
-                              </span>
-                            </div>
-                            <button
-                              onClick={(e) =>
-                                handleCopyLink(e, session.code, session.id)
-                              }
-                              className={`p-1.5 rounded-md transition-all border ${
-                                copiedId === session.id
-                                  ? "bg-green-100 text-green-600 border-green-200"
-                                  : "bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-500"
-                              }`}
-                            >
-                              {copiedId === session.id ? (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  {" "}
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />{" "}
-                                </svg>
-                              ) : (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  {" "}
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                  />{" "}
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => handleResetSession(e, session.code)}
-                            className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                            title={t("reset")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-                              />
-                            </svg>
-                          </button>
-
-                          <button
-                            onClick={(e) =>
-                              handleDeleteSession(e, session.code)
-                            }
-                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title={t("delete")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                              />
-                            </svg>
-                          </button>
-
-                          <Link
-                            href={`/admin/monitor?code=${session.code}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-3 py-1.5 bg-green-50 text-blue-700 text-sm font-bold rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition flex items-center gap-1"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              {" "}
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                              />{" "}
-                            </svg>
-                            {t("trackButton")}
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 bg-white rounded-xl border border-dashed border-gray-300 text-center text-gray-500 text-sm">
-                    {t("noCreatedYet")}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2 border-b pb-2">
-                  <span className="w-2 h-6 bg-green-600 rounded-full inline-block"></span>
-                  {t("myCirclesTitle")}
-                </h3>
-
-                {loading ? (
-                  <p className="text-gray-400">{t("loading")}</p>
-                ) : mySessions.length > 0 ? (
-                  <div className="space-y-3">
-                    {mySessions.map((session) => (
-                      <div
-                        key={session.id}
-                        onClick={() => router.push(`/join/${session.code}`)}
-                        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md hover:border-blue-300 transition cursor-pointer group"
-                      >
-                        <div>
-                          <h4 className="font-bold text-gray-800 group-hover:text-blue-700 transition">
-                            {session.description}
-                          </h4>
-                          <div className="flex gap-2 text-xs mt-1">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                              Code: {session.code}
-                            </span>
-                            <span className="text-green-500">
-                              {t("creatorLabel")}:{" "}
-                            </span>
-                            {session.creatorName && (
-                              <span className="text-green-500">
-                                {session.creatorName}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => handleLeaveSession(e, session.code)}
-                            className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition"
-                            title={t("leave") || "Ayrıl"}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-                              />
-                            </svg>
-                          </button>
-
-                          <div className="bg-blue-50 text-green-600 p-2 rounded-full group-hover:bg-green-600 group-hover:text-white transition">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              {" "}
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M14 5l7 7m0 0l-7 7m7-7H3"
-                              />{" "}
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 bg-white rounded-xl border border-dashed border-gray-300 text-center text-gray-500 text-sm">
-                    {t("noCirclesYet")}
-                  </div>
-                )}
-              </div>
+            <div className="mt-6 text-sm text-gray-500">
+              {t("guestNote") ||
+                "Kayıt olmadan misafir olarak da katılabilirsiniz."}
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
-            <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
-              <p className="text-gray-600 mb-8">{t("guestMessage")}</p>
-              <div className="flex flex-col gap-3">
-                <Link
-                  href="/login"
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow hover:bg-blue-700 transition"
+
+          {/* FEATURES GRID */}
+          <div className="grid md:grid-cols-3 gap-8 mb-24">
+            <FeatureCard
+              icon={
+                <svg
+                  className="w-8 h-8 text-emerald-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  {" "}
-                  {t("guestLogin")}{" "}
-                </Link>
-                <Link
-                  href="/register"
-                  className="w-full py-3 bg-white text-blue-600 border border-blue-600 rounded-lg font-bold shadow hover:bg-blue-50 transition"
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              }
+              title={t("featuresTitle1") || "Kuran & Cevşen Hatimleri"}
+              desc={
+                t("featuresDesc1") ||
+                "Cüzleri veya sayfaları otomatik dağıtın. Kimin nerede kaldığını canlı takip edin."
+              }
+              isRTL={isRTL}
+            />
+            <FeatureCard
+              icon={
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  {" "}
-                  {t("guestRegister")}{" "}
-                </Link>
-              </div>
-              <div className="mt-8 border-t pt-6">
-                <p className="text-sm text-gray-500 mb-2">
-                  {t("guestCheckCode")}
-                </p>
-                <form onSubmit={handleJoin} className="flex gap-2">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              }
+              title={t("featuresTitle2") || "Ortak Zikir Halkaları"}
+              desc={
+                t("featuresDesc2") ||
+                "Salavat, dua ve zikir gibi hayırlarda ortak havuza katkıda bulunun."
+              }
+              isRTL={isRTL}
+            />
+            <FeatureCard
+              icon={
+                <svg
+                  className="w-8 h-8 text-purple-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+              }
+              title={t("featuresTitle3") || "Mobil Uyumlu Okuma"}
+              desc={
+                t("featuresDesc3") ||
+                "Uygulama içinden ayrılmadan Kuran sayfalarını, Cevşen bablarını veya zikirleri okuyun."
+              }
+              isRTL={isRTL}
+            />
+          </div>
+
+          {/* HOW IT WORKS */}
+          <div className="bg-gray-50 rounded-3xl p-8 md:p-12 mb-20 border border-gray-100">
+            <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+              {t("howItWorksTitle") || "Nasıl Çalışır?"}
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Step
+                num="1"
+                title={t("step1Title") || "Oturum Oluştur"}
+                desc={
+                  t("step1Desc") ||
+                  "Okunacak kaynağı (Yasin, Hatim vb.) ve kişi sayısını belirle."
+                }
+              />
+              <Step
+                num="2"
+                title={t("step2Title") || "Davet Et"}
+                desc={t("step2Desc") || "Oluşan kısa kodu veya linki paylaş."}
+              />
+              <Step
+                num="3"
+                title={t("step3Title") || "Tamamla"}
+                desc={
+                  t("step3Desc") ||
+                  "Herkes kendi parçasını alıp okusun, ilerlemeyi anlık gör."
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // --- LOGGED IN USER DASHBOARD ---
+  return (
+    <main
+      className="min-h-screen bg-gray-50 p-3 md:p-8 relative"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="max-w-6xl mx-auto mt-4 md:mt-10">
+        {/* Üst Başlık Alanı */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 md:mb-10 gap-4">
+          <div
+            className={`text-center ${isRTL ? "md:text-right" : "md:text-left"}`}
+          >
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              {t("welcome") || "Hoşgeldin,"}{" "}
+              <span className="text-blue-600">{user}</span> 👋
+            </h1>
+            <p className="text-gray-500 text-sm md:text-base mt-1">
+              {t("dashboardIntro") ||
+                "Bugün manevi yolculuğunda ne yapmak istersin?"}
+            </p>
+          </div>
+          <Link
+            href="/admin"
+            className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700 transition flex justify-center items-center gap-2 transform hover:-translate-y-0.5 active:scale-95 text-sm md:text-base"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {t("createNewSession") || "Yeni Halka Oluştur"}
+          </Link>
+        </div>
+
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-2 gap-3 md:gap-8 items-start">
+          {/* Sol Kolon: Oluşturduklarım */}
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-3 md:p-6 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm">
+              <h2 className="text-sm md:text-xl font-bold text-gray-800 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 md:h-6 md:w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                    />
+                  </svg>
+                </div>
+                <span>{t("managedSessions") || "Yönettiğim Halkalar"}</span>
+              </h2>
+            </div>
+
+            <div className="p-3 md:p-6 pt-2">
+              {loading ? (
+                <div className="animate-pulse space-y-3 mt-2 md:mt-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 md:h-20 bg-gray-100 rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              ) : createdSessions.length > 0 ? (
+                <div className="space-y-2 md:space-y-3 mt-2 md:mt-4">
+                  {createdSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      onClick={() => router.push(`/join/${session.code}`)}
+                      className="group border border-gray-100 hover:border-blue-300 bg-gray-50 hover:bg-blue-50/30 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
+                    >
+                      {/* DÜZELTME: isRTL ise text-right, değilse text-left */}
+                      <div
+                        className={`relative z-10 min-w-0 w-full ${isRTL ? "text-right" : "text-left"}`}
+                      >
+                        <h3 className="font-bold text-gray-800 text-xs md:text-base group-hover:text-blue-700 transition truncate">
+                          {session.description}
+                        </h3>
+                        <div
+                          className={`flex items-center gap-1 mt-1 ${isRTL ? "justify-end" : "justify-start"}`}
+                        >
+                          <span className="text-[10px] md:text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 shadow-sm">
+                            #{session.code}
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        className={`flex gap-1 md:gap-2 relative z-10 w-full md:w-auto ${isRTL ? "justify-start" : "justify-end"}`}
+                      >
+                        <button
+                          onClick={(e) =>
+                            handleCopyLink(e, session.code, session.id)
+                          }
+                          className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition shadow-sm border ${copiedId === session.id ? "bg-green-100 text-green-600 border-green-200" : "bg-white hover:bg-gray-100 text-gray-400 border-gray-200"}`}
+                        >
+                          {copiedId === session.id ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 md:h-5 md:w-5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 md:h-5 md:w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                        <Link
+                          href={`/admin/monitor?code=${session.code}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1.5 md:p-2 text-blue-500 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 rounded-md md:rounded-lg shadow-sm border border-blue-100 transition"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 md:h-5 md:w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"
+                            />
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 md:py-10 bg-gray-50 rounded-lg md:rounded-xl border border-dashed border-gray-200 mt-2 md:mt-4">
+                  <p className="text-gray-500 text-xs md:text-sm mb-2">
+                    {t("noSessionYet") || "Henüz yok."}
+                  </p>
+                  <Link
+                    href="/admin"
+                    className="text-blue-600 text-xs md:text-sm font-bold hover:underline"
+                  >
+                    {t("create") || "Oluştur"}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sağ Kolon: Katıldıklarım */}
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Sticky Header */}
+            <div className="p-3 md:p-6 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm">
+              <h2 className="text-sm md:text-xl font-bold text-gray-800 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 md:h-6 md:w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </div>
+                <span>{t("joinedSessions") || "Katıldığım Halkalar"}</span>
+              </h2>
+            </div>
+
+            <div className="p-3 md:p-6 pt-2">
+              {loading ? (
+                <div className="animate-pulse space-y-3 mt-2 md:mt-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 md:h-20 bg-gray-100 rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              ) : mySessions.length > 0 ? (
+                <div className="space-y-2 md:space-y-3 mt-2 md:mt-4">
+                  {mySessions.map((session) => (
+                    <div
+                      key={session.id}
+                      onClick={() => router.push(`/join/${session.code}`)}
+                      className="group border border-gray-100 hover:border-emerald-300 bg-gray-50 hover:bg-emerald-50/30 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
+                    >
+                      <div
+                        className={`relative z-10 min-w-0 w-full ${isRTL ? "text-right" : "text-left"}`}
+                      >
+                        <h3 className="font-bold text-gray-800 text-xs md:text-base group-hover:text-emerald-600 transition truncate">
+                          {session.description}
+                        </h3>
+                        <div
+                          className={`flex items-center gap-2 mt-1 ${isRTL ? "justify-end" : "justify-start"}`}
+                        >
+                          <span className="text-[10px] md:text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 truncate max-w-full block">
+                            {session.creatorName}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-white p-1.5 md:p-2 rounded-full shadow-sm border border-gray-100 group-hover:border-emerald-200 transition relative z-10 self-end md:self-auto">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 md:h-5 md:w-5 text-gray-400 group-hover:text-emerald-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 md:py-10 bg-gray-50 rounded-lg md:rounded-xl border border-dashed border-gray-200 mt-2 md:mt-4">
+                  <p className="text-gray-500 text-xs md:text-sm">
+                    {t("noSessionYet") || "Henüz yok."}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-gray-100">
+                <form onSubmit={handleJoin} className="flex gap-1 md:gap-2">
                   <input
                     type="text"
-                    placeholder={t("guestCodePlaceholder")}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
+                    placeholder={t("codePlaceholder") || "Kod..."}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
+                    // DÜZELTME: RTL ise text-right
+                    className={`flex-1 bg-gray-50 border border-gray-200 rounded-lg px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition w-full min-w-0 ${isRTL ? "text-right" : "text-left"}`}
                   />
-                  <button className="px-4 py-2 bg-gray-800 text-white rounded text-sm font-bold">
-                    {" "}
-                    {t("joinButton")}{" "}
+                  <button className="px-3 md:px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-emerald-700 shadow-md hover:shadow-lg transition transform active:scale-95 whitespace-nowrap">
+                    {t("join") || "Katıl"}
                   </button>
                 </form>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </main>
+  );
+}
+
+// Yardımcı Component'ler
+function FeatureCard({
+  icon,
+  title,
+  desc,
+  isRTL,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  isRTL: boolean;
+}) {
+  return (
+    // DÜZELTME: isRTL prop'una göre hizalama
+    <div
+      className={`p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isRTL ? "text-right" : "text-left"}`}
+    >
+      <div
+        className={`w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center mb-6 ${isRTL ? "ml-auto" : "mr-auto"}`}
+      >
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+      <p className="text-gray-600 leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+function Step({
+  num,
+  title,
+  desc,
+}: {
+  num: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">
+        {num}
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+      <p className="text-gray-600 text-sm max-w-xs">{desc}</p>
+    </div>
   );
 }
