@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher"; 
 import { useState } from "react";
 
 export default function Header() {
@@ -11,12 +12,11 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm transition-all">
+     <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link
+         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-xl text-slate-800 hover:text-emerald-600 transition"
+          className="flex items-center gap-2 font-bold text-xl text-slate-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition"
         >
           <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-lg flex items-center justify-center shadow-sm">
             <svg
@@ -39,30 +39,30 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop Navigasyon */}
-        <nav className="hidden md:flex items-center gap-6">
+         <nav className="hidden md:flex items-center gap-6">
           <Link
             href="/"
-            className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition"
+            className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
           >
             {t("backHome")}
           </Link>
 
-          {/* Dil Değiştirici */}
-          <LanguageSwitcher />
+           <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            <LanguageSwitcher />
+          </div>
 
-          <div className="h-6 w-px bg-gray-200 mx-2"></div>
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
           {user ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                <span className="text-slate-400 font-normal mr-1">
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                <span className="text-slate-400 dark:text-slate-500 font-normal mr-1">
                   {t("welcome")},
                 </span>
                 {user}
               </span>
 
-              {/* GÜNCELLENEN LOGOUT BUTONU (Desktop) */}
               <button
                 onClick={logout}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-md hover:shadow-lg transition-all transform active:scale-95"
@@ -88,7 +88,7 @@ export default function Header() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-sm font-bold text-slate-600 hover:text-emerald-600 transition"
+                className="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
               >
                 {t("loginButton")}
               </Link>
@@ -102,9 +102,8 @@ export default function Header() {
           )}
         </nav>
 
-        {/* Mobil Menü Butonu */}
-        <button
-          className="md:hidden p-2 text-slate-600"
+         <button
+          className="md:hidden p-2 text-slate-600 dark:text-slate-300"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           <svg
@@ -124,29 +123,32 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Mobil Açılır Menü */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white p-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-5">
+       {isMenuOpen && (
+        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-5">
           <Link
             href="/"
             onClick={() => setIsMenuOpen(false)}
-            className="block py-2 text-slate-600 font-medium border-b border-gray-50"
+            className="block py-2 text-slate-600 dark:text-slate-300 font-medium border-b border-gray-50 dark:border-gray-800"
           >
             {t("backHome")}
           </Link>
 
-          <div className="flex justify-between items-center py-2 border-b border-gray-50">
-            <span className="text-sm text-slate-500">{t("menuLanguage")}</span>
-            <LanguageSwitcher />
+          <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {t("menuLanguage")}
+            </span>
+            <div className="flex items-center gap-2">
+              <ThemeSwitcher />
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {user ? (
             <div className="flex flex-col gap-3 pt-2">
-              <span className="text-sm font-bold text-slate-700">
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
                 {t("welcome")}, {user}
               </span>
 
-              {/* GÜNCELLENEN LOGOUT BUTONU (Mobil) */}
               <button
                 onClick={() => {
                   logout();
@@ -176,7 +178,7 @@ export default function Header() {
               <Link
                 href="/login"
                 onClick={() => setIsMenuOpen(false)}
-                className="w-full text-center py-2 text-slate-600 font-bold bg-slate-50 rounded"
+                className="w-full text-center py-2 text-slate-600 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-800 rounded"
               >
                 {t("loginButton")}
               </Link>

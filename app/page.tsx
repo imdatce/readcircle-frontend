@@ -17,12 +17,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  // --- KRİTİK DÜZELTME ---
-  // Kürtçe (ku) Latin alfabesi kullandığı için RTL grubundan ÇIKARILDI.
-  // Artık sadece Arapça (ar) Sağdan Sola (RTL) davranacak.
   const isRTL = language === "ar";
 
-  // Verileri çekme fonksiyonu
   useEffect(() => {
     if (user && token) {
       const fetchAllData = async () => {
@@ -71,30 +67,26 @@ export default function Home() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // --- MİSAFİR (LANDING) SAYFASI ---
   if (!user) {
     return (
       <main
-        className="min-h-screen bg-white text-gray-800 font-sans selection:bg-blue-100"
+        className="min-h-screen bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-300"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        {/* Dekoratif Arka Plan */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] bg-gradient-to-br from-blue-100/50 to-green-100/50 rounded-full blur-3xl opacity-60"></div>
-          <div className="absolute top-[30%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-tr from-emerald-100/40 to-blue-50/40 rounded-full blur-3xl opacity-50"></div>
+          <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] bg-gradient-to-br from-blue-100/50 to-green-100/50 dark:from-blue-900/20 dark:to-green-900/20 rounded-full blur-3xl opacity-60"></div>
+          <div className="absolute top-[30%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-tr from-emerald-100/40 to-blue-50/40 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-full blur-3xl opacity-50"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-24 lg:pt-24 lg:pb-32">
-          {/* HERO SECTION */}
           <div className="text-center max-w-4xl mx-auto mb-20">
-          
-            <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-8 leading-[1.1]">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
+            <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8 leading-[1.1]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
                 {t("landingHeroTitle") || "Manevi Birliktelik"}
               </span>{" "}
               {t("platform") || "Platformu"}
             </h1>
-            <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto">
               {t("landingHeroSubtitle") ||
                 "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin."}
             </p>
@@ -102,7 +94,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 href="/login"
-                className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg hover:shadow-blue-200/50 flex items-center gap-2 transform hover:-translate-y-1"
+                className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg hover:shadow-blue-200/50 dark:hover:shadow-blue-900/50 flex items-center gap-2 transform hover:-translate-y-1"
               >
                 {t("getStarted") || "Hemen Başla"}
                 <svg
@@ -121,39 +113,35 @@ export default function Home() {
               <div className="relative group">
                 <form
                   onSubmit={handleJoin}
-                  className="flex items-center bg-white border border-gray-200 rounded-xl p-1 ps-4 shadow-sm group-focus-within:border-blue-400 group-focus-within:ring-4 group-focus-within:ring-blue-100 transition"
+                  className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-1 ps-4 shadow-sm group-focus-within:border-blue-400 dark:group-focus-within:border-blue-500 group-focus-within:ring-4 group-focus-within:ring-blue-100 dark:group-focus-within:ring-blue-900/50 transition"
                 >
                   <input
                     type="text"
-                    placeholder={
-                      t("sessionCodePlaceholder") || "Halka Kodu (Örn: XYZ123)"
-                    }
-                    // DÜZELTME: RTL ise text-right, değilse (Kürtçe dahil) text-left
-                    className={`outline-none bg-transparent text-gray-700 placeholder-gray-400 w-48 ${isRTL ? "text-right" : "text-left"}`}
+                    placeholder={t("sessionCodePlaceholder") || "Halka Kodu"}
+                    className={`outline-none bg-transparent text-gray-700 dark:text-gray-200 placeholder-gray-400 w-48 ${isRTL ? "text-right" : "text-left"}`}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                   />
                   <button
                     type="submit"
-                    className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition"
+                    className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition"
                   >
                     {t("join") || "Katıl"}
                   </button>
                 </form>
               </div>
             </div>
-            <div className="mt-6 text-sm text-gray-500">
+            <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
               {t("guestNote") ||
                 "Kayıt olmadan misafir olarak da katılabilirsiniz."}
             </div>
           </div>
 
-          {/* FEATURES GRID */}
           <div className="grid md:grid-cols-3 gap-8 mb-24">
             <FeatureCard
               icon={
                 <svg
-                  className="w-8 h-8 text-emerald-600"
+                  className="w-8 h-8 text-emerald-600 dark:text-emerald-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -168,15 +156,14 @@ export default function Home() {
               }
               title={t("featuresTitle1") || "Kuran & Cevşen Hatimleri"}
               desc={
-                t("featuresDesc1") ||
-                "Cüzleri veya sayfaları otomatik dağıtın. Kimin nerede kaldığını canlı takip edin."
+                t("featuresDesc1") || "Cüzleri veya sayfaları otomatik dağıtın."
               }
               isRTL={isRTL}
             />
             <FeatureCard
               icon={
                 <svg
-                  className="w-8 h-8 text-blue-600"
+                  className="w-8 h-8 text-blue-600 dark:text-blue-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -192,14 +179,14 @@ export default function Home() {
               title={t("featuresTitle2") || "Ortak Zikir Halkaları"}
               desc={
                 t("featuresDesc2") ||
-                "Salavat, dua ve zikir gibi hayırlarda ortak havuza katkıda bulunun."
+                "Salavat, dua ve zikir gibi hayırlarda bulunun."
               }
               isRTL={isRTL}
             />
             <FeatureCard
               icon={
                 <svg
-                  className="w-8 h-8 text-purple-600"
+                  className="w-8 h-8 text-purple-600 dark:text-purple-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -215,38 +202,31 @@ export default function Home() {
               title={t("featuresTitle3") || "Mobil Uyumlu Okuma"}
               desc={
                 t("featuresDesc3") ||
-                "Uygulama içinden ayrılmadan Kuran sayfalarını, Cevşen bablarını veya zikirleri okuyun."
+                "Kuran sayfalarını veya Cevşen bablarını okuyun."
               }
               isRTL={isRTL}
             />
           </div>
 
-          {/* HOW IT WORKS */}
-          <div className="bg-gray-50 rounded-3xl p-8 md:p-12 mb-20 border border-gray-100">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl p-8 md:p-12 mb-20 border border-gray-100 dark:border-gray-800 transition-colors">
+            <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-100">
               {t("howItWorksTitle") || "Nasıl Çalışır?"}
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <Step
                 num="1"
                 title={t("step1Title") || "Oturum Oluştur"}
-                desc={
-                  t("step1Desc") ||
-                  "Okunacak kaynağı (Yasin, Hatim vb.) ve kişi sayısını belirle."
-                }
+                desc={t("step1Desc") || "Okunacak kaynağı belirle."}
               />
               <Step
                 num="2"
                 title={t("step2Title") || "Davet Et"}
-                desc={t("step2Desc") || "Oluşan kısa kodu veya linki paylaş."}
+                desc={t("step2Desc") || "Kodu sevdiklerinle paylaş."}
               />
               <Step
                 num="3"
                 title={t("step3Title") || "Tamamla"}
-                desc={
-                  t("step3Desc") ||
-                  "Herkes kendi parçasını alıp okusun, ilerlemeyi anlık gör."
-                }
+                desc={t("step3Desc") || "İlerlemeyi anlık gör."}
               />
             </div>
           </div>
@@ -255,23 +235,22 @@ export default function Home() {
     );
   }
 
-  // --- LOGGED IN USER DASHBOARD ---
   return (
     <main
-      className="min-h-screen bg-gray-50 p-3 md:p-8 relative"
+      className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 md:p-8 relative transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="max-w-6xl mx-auto mt-4 md:mt-10">
-        {/* Üst Başlık Alanı */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 md:mb-10 gap-4">
           <div
             className={`text-center ${isRTL ? "md:text-right" : "md:text-left"}`}
           >
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
               {t("welcome") || "Hoşgeldin,"}{" "}
-              <span className="text-blue-600">{user}</span> 👋
+              <span className="text-blue-600 dark:text-blue-400">{user}</span>{" "}
+              👋
             </h1>
-            <p className="text-gray-500 text-sm md:text-base mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base mt-1">
               {t("dashboardIntro") ||
                 "Bugün manevi yolculuğunda ne yapmak istersin?"}
             </p>
@@ -296,13 +275,11 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Dashboard Grid */}
         <div className="grid grid-cols-2 gap-3 md:gap-8 items-start">
-          {/* Sol Kolon: Oluşturduklarım */}
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-3 md:p-6 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm">
-              <h2 className="text-sm md:text-xl font-bold text-gray-800 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
-                <div className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
+            <div className="p-3 md:p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 sticky top-0 z-10 backdrop-blur-sm">
+              <h2 className="text-sm md:text-xl font-bold text-gray-800 dark:text-gray-200 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg shadow-sm">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 md:h-6 md:w-6"
@@ -328,7 +305,7 @@ export default function Home() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-16 md:h-20 bg-gray-100 rounded-xl"
+                      className="h-16 md:h-20 bg-gray-100 dark:bg-gray-800 rounded-xl"
                     ></div>
                   ))}
                 </div>
@@ -338,19 +315,18 @@ export default function Home() {
                     <div
                       key={session.id}
                       onClick={() => router.push(`/join/${session.code}`)}
-                      className="group border border-gray-100 hover:border-blue-300 bg-gray-50 hover:bg-blue-50/30 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
+                      className="group border border-gray-100 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 bg-gray-50 dark:bg-gray-800 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
                     >
-                      {/* DÜZELTME: isRTL ise text-right, değilse text-left */}
                       <div
                         className={`relative z-10 min-w-0 w-full ${isRTL ? "text-right" : "text-left"}`}
                       >
-                        <h3 className="font-bold text-gray-800 text-xs md:text-base group-hover:text-blue-700 transition truncate">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 text-xs md:text-base group-hover:text-blue-700 dark:group-hover:text-blue-400 transition truncate">
                           {session.description}
                         </h3>
                         <div
                           className={`flex items-center gap-1 mt-1 ${isRTL ? "justify-end" : "justify-start"}`}
                         >
-                          <span className="text-[10px] md:text-xs font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 shadow-sm">
+                          <span className="text-[10px] md:text-xs font-mono bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 shadow-sm">
                             #{session.code}
                           </span>
                         </div>
@@ -362,7 +338,7 @@ export default function Home() {
                           onClick={(e) =>
                             handleCopyLink(e, session.code, session.id)
                           }
-                          className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition shadow-sm border ${copiedId === session.id ? "bg-green-100 text-green-600 border-green-200" : "bg-white hover:bg-gray-100 text-gray-400 border-gray-200"}`}
+                          className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition shadow-sm border ${copiedId === session.id ? "bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 border-green-200 dark:border-green-800" : "bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 dark:text-gray-300 border-gray-200 dark:border-gray-600"}`}
                         >
                           {copiedId === session.id ? (
                             <svg
@@ -397,7 +373,7 @@ export default function Home() {
                         <Link
                           href={`/admin/monitor?code=${session.code}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="p-1.5 md:p-2 text-blue-500 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 rounded-md md:rounded-lg shadow-sm border border-blue-100 transition"
+                          className="p-1.5 md:p-2 text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-700 dark:hover:text-blue-300 rounded-md md:rounded-lg shadow-sm border border-blue-100 dark:border-blue-900/50 transition"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -419,13 +395,13 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 md:py-10 bg-gray-50 rounded-lg md:rounded-xl border border-dashed border-gray-200 mt-2 md:mt-4">
-                  <p className="text-gray-500 text-xs md:text-sm mb-2">
+                <div className="text-center py-6 md:py-10 bg-gray-50 dark:bg-gray-800 rounded-lg md:rounded-xl border border-dashed border-gray-200 dark:border-gray-700 mt-2 md:mt-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm mb-2">
                     {t("noSessionYet") || "Henüz yok."}
                   </p>
                   <Link
                     href="/admin"
-                    className="text-blue-600 text-xs md:text-sm font-bold hover:underline"
+                    className="text-blue-600 dark:text-blue-400 text-xs md:text-sm font-bold hover:underline"
                   >
                     {t("create") || "Oluştur"}
                   </Link>
@@ -434,12 +410,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Sağ Kolon: Katıldıklarım */}
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Sticky Header */}
-            <div className="p-3 md:p-6 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm">
-              <h2 className="text-sm md:text-xl font-bold text-gray-800 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
-                <div className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
+            <div className="p-3 md:p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 sticky top-0 z-10 backdrop-blur-sm">
+              <h2 className="text-sm md:text-xl font-bold text-gray-800 dark:text-gray-200 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg shadow-sm">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 md:h-6 md:w-6"
@@ -465,7 +439,7 @@ export default function Home() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-16 md:h-20 bg-gray-100 rounded-xl"
+                      className="h-16 md:h-20 bg-gray-100 dark:bg-gray-800 rounded-xl"
                     ></div>
                   ))}
                 </div>
@@ -475,26 +449,26 @@ export default function Home() {
                     <div
                       key={session.id}
                       onClick={() => router.push(`/join/${session.code}`)}
-                      className="group border border-gray-100 hover:border-emerald-300 bg-gray-50 hover:bg-emerald-50/30 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
+                      className="group border border-gray-100 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20 p-3 md:p-4 rounded-lg md:rounded-xl transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden gap-2"
                     >
                       <div
                         className={`relative z-10 min-w-0 w-full ${isRTL ? "text-right" : "text-left"}`}
                       >
-                        <h3 className="font-bold text-gray-800 text-xs md:text-base group-hover:text-emerald-600 transition truncate">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 text-xs md:text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition truncate">
                           {session.description}
                         </h3>
                         <div
                           className={`flex items-center gap-2 mt-1 ${isRTL ? "justify-end" : "justify-start"}`}
                         >
-                          <span className="text-[10px] md:text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 truncate max-w-full block">
+                          <span className="text-[10px] md:text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/50 truncate max-w-full block">
                             {session.creatorName}
                           </span>
                         </div>
                       </div>
-                      <div className="bg-white p-1.5 md:p-2 rounded-full shadow-sm border border-gray-100 group-hover:border-emerald-200 transition relative z-10 self-end md:self-auto">
+                      <div className="bg-white dark:bg-gray-700 p-1.5 md:p-2 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 group-hover:border-emerald-200 dark:group-hover:border-emerald-700 transition relative z-10 self-end md:self-auto">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 md:h-5 md:w-5 text-gray-400 group-hover:text-emerald-500"
+                          className="h-4 w-4 md:h-5 md:w-5 text-gray-400 dark:text-gray-300 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
@@ -509,22 +483,21 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 md:py-10 bg-gray-50 rounded-lg md:rounded-xl border border-dashed border-gray-200 mt-2 md:mt-4">
-                  <p className="text-gray-500 text-xs md:text-sm">
+                <div className="text-center py-6 md:py-10 bg-gray-50 dark:bg-gray-800 rounded-lg md:rounded-xl border border-dashed border-gray-200 dark:border-gray-700 mt-2 md:mt-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm">
                     {t("noSessionYet") || "Henüz yok."}
                   </p>
                 </div>
               )}
 
-              <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-gray-100">
+              <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-gray-100 dark:border-gray-800">
                 <form onSubmit={handleJoin} className="flex gap-1 md:gap-2">
                   <input
                     type="text"
                     placeholder={t("codePlaceholder") || "Kod..."}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    // DÜZELTME: RTL ise text-right
-                    className={`flex-1 bg-gray-50 border border-gray-200 rounded-lg px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition w-full min-w-0 ${isRTL ? "text-right" : "text-left"}`}
+                    className={`flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition w-full min-w-0 text-gray-800 dark:text-gray-200 ${isRTL ? "text-right" : "text-left"}`}
                   />
                   <button className="px-3 md:px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-emerald-700 shadow-md hover:shadow-lg transition transform active:scale-95 whitespace-nowrap">
                     {t("join") || "Katıl"}
@@ -539,8 +512,7 @@ export default function Home() {
   );
 }
 
-// Yardımcı Component'ler
-function FeatureCard({
+ function FeatureCard({
   icon,
   title,
   desc,
@@ -552,17 +524,18 @@ function FeatureCard({
   isRTL: boolean;
 }) {
   return (
-    // DÜZELTME: isRTL prop'una göre hizalama
     <div
-      className={`p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isRTL ? "text-right" : "text-left"}`}
+      className={`p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isRTL ? "text-right" : "text-left"}`}
     >
       <div
-        className={`w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center mb-6 ${isRTL ? "ml-auto" : "mr-auto"}`}
+        className={`w-14 h-14 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center mb-6 ${isRTL ? "ml-auto" : "mr-auto"}`}
       >
         {icon}
       </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{desc}</p>
+      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+        {title}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{desc}</p>
     </div>
   );
 }
@@ -578,11 +551,15 @@ function Step({
 }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">
+      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200 dark:shadow-blue-900/50">
         {num}
       </div>
-      <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm max-w-xs">{desc}</p>
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+        {title}
+      </h3>
+      <p className="text-gray-600 dark:text-gray-300 text-sm max-w-xs">
+        {desc}
+      </p>
     </div>
   );
 }

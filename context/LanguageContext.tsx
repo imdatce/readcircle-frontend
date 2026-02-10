@@ -51,7 +51,7 @@ const translations = {
     landingHeroSubtitle:
       "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin. Sevdiklerinizle birlikte manevi hedeflerinize ulaşın.",
     getStarted: "Hemen Başla",
-    sessionCodePlaceholder: "Halka Kodu (Örn: XYZ123)",
+    sessionCodePlaceholder: "Halka Kodu",
     join: "Katıl",
     guestNote: "Kayıt olmadan misafir olarak da katılabilirsiniz.",
 
@@ -214,7 +214,7 @@ const translations = {
     landingHeroSubtitle:
       "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
     getStarted: "Dest Pê Bike",
-    sessionCodePlaceholder: "Koda Xelekê (Mînak: XYZ123)",
+    sessionCodePlaceholder: "Koda Xelekê",
     join: "Tevlî Bibe",
     guestNote: "Hûn dikarin bêyî qeydkirinê wekî mêvan tevlî bibin.",
 
@@ -404,7 +404,7 @@ const translations = {
     landingHeroSubtitle:
       "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
     getStarted: "Get Started",
-    sessionCodePlaceholder: "Session Code (e.g. XYZ123)",
+    sessionCodePlaceholder: "Session Code",
     join: "Join",
     guestNote: "You can also join as a guest without registering.",
 
@@ -592,7 +592,7 @@ const translations = {
     landingHeroSubtitle:
       "نظم ختمات القرآن وحلقات الجوشن وبرامج الأذكار بسهولة.",
     getStarted: "ابدأ الآن",
-    sessionCodePlaceholder: "رمز الحلقة (مثل: XYZ123)",
+    sessionCodePlaceholder: "رمز الحلقة",
     join: "انضم",
     guestNote: "يمكنك الانضمام كضيف دون التسجيل.",
 
@@ -773,7 +773,7 @@ const translations = {
     landingHeroSubtitle:
       "Organisez facilement des khatms du Coran, des cercles de Cevshen et des programmes de dhikr.",
     getStarted: "Commencer",
-    sessionCodePlaceholder: "Code (ex: XYZ123)",
+    sessionCodePlaceholder: "Session Code",
     join: "Rejoindre",
     guestNote: "Vous pouvez également rejoindre en tant qu'invité.",
 

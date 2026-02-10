@@ -30,24 +30,24 @@ export default function LoginPage() {
       login(data.username, data.token);
       router.push("/");
     } catch (err) {
-      alert(t("loginError"));
+      alert(t("loginError") || "Giriş başarısız!");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-96 border border-gray-200">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg w-96 border border-gray-200 dark:border-gray-800 transition-colors duration-300">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
           {t("loginTitle")}
         </h2>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t("usernameLabel")}
             </label>
             <input
-              className="w-full border border-gray-300 bg-gray-50 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 dark:placeholder-gray-500"
               placeholder={t("placeholderUser")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -55,11 +55,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t("passwordLabel")}
             </label>
             <input
-              className="w-full border border-gray-300 bg-gray-50 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-gray-400 dark:placeholder-gray-500"
               type="password"
               placeholder={t("placeholderPass")}
               value={password}
@@ -67,17 +67,17 @@ export default function LoginPage() {
             />
           </div>
 
-          <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md">
+          <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 dark:hover:bg-blue-500 transition shadow-md">
             {t("loginButton")}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm">
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             {t("noAccount")} <br />
             <Link
               href="/register"
-              className="text-green-600 font-bold hover:underline mt-1 inline-block"
+              className="text-green-600 dark:text-green-400 font-bold hover:underline mt-1 inline-block"
             >
               {t("registerLink")}
             </Link>

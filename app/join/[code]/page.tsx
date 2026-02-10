@@ -21,7 +21,7 @@ const Zikirmatik = ({
   t,
   readOnly = false,
 }: ZikirmatikProps) => {
-  return ( 
+  return (
     <div className={`flex flex-col items-center ${isModal ? "mt-8" : "mt-3"}`}>
       <button
         onClick={readOnly ? undefined : onDecrement}
@@ -34,10 +34,10 @@ const Zikirmatik = ({
                     
                     ${
                       currentCount === 0
-                        ? "bg-green-100 border-green-500 text-green-700 cursor-default"
+                        ? "bg-green-100 border-green-500 text-green-700 cursor-default dark:bg-green-900/30 dark:border-green-600 dark:text-green-400"
                         : readOnly
-                          ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80"
-                          : "bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer active:scale-95"
+                          ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
+                          : "bg-blue-600 border-blue-400 text-white hover:bg-blue-700 cursor-pointer active:scale-95 dark:bg-blue-700 dark:border-blue-500 dark:hover:bg-blue-600"
                     }
                 `}
       >
@@ -51,10 +51,12 @@ const Zikirmatik = ({
         </span>
       </button>
       {currentCount > 0 && (
-        <p className="text-xs text-gray-500 mt-2">{t("remaining")}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          {t("remaining")}
+        </p>
       )}
       {currentCount === 0 && (
-        <p className="text-xs text-green-600 font-bold mt-2">
+        <p className="text-xs text-green-600 dark:text-green-400 font-bold mt-2">
           {t("allahAccept")}
         </p>
       )}
@@ -69,6 +71,7 @@ export default function JoinPage({
 }) {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const router = useRouter();
   const [fontLevel, setFontLevel] = useState(1);
   const { code } = use(params);
@@ -80,9 +83,7 @@ export default function JoinPage({
   };
 
   const [userName, setUserName] = useState<string | null>(null);
-
   const [isClient, setIsClient] = useState(false);
-
   const [session, setSession] = useState<DistributionSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -383,7 +384,7 @@ export default function JoinPage({
             return (
               <span
                 key={index}
-                className="inline-flex items-center justify-center mx-1 w-9 h-9 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xl align-middle shadow-sm"
+                className="inline-flex items-center justify-center mx-1 w-9 h-9 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xl align-middle shadow-sm dark:bg-amber-900/50 dark:text-amber-400 dark:border-amber-700"
               >
                 {part}
               </span>
@@ -395,7 +396,7 @@ export default function JoinPage({
               <span key={index}>
                 {subParts[0]} <br />
                 <div
-                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold shadow-inner text-center ${fontSizes.ARABIC[fontLevel]}`}
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-r-4 border-emerald-500 rounded-l-lg text-emerald-900 font-bold shadow-inner text-center ${fontSizes.ARABIC[fontLevel]} dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-600`}
                 >
                   سُبْحَانَكَ {subParts[1]}
                 </div>
@@ -412,14 +413,14 @@ export default function JoinPage({
     const currentFontClass = fontSizes.LATIN[fontLevel];
     return (
       <div
-        className={`${currentFontClass} text-gray-800 font-serif leading-relaxed`}
+        className={`${currentFontClass} text-gray-800 dark:text-gray-200 font-serif leading-relaxed`}
       >
         {parts.map((part, index) => {
           if (/^\d+\s$/.test(part)) {
             return (
               <span
                 key={index}
-                className="inline-flex items-center justify-center mx-2 w-8 h-8 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-sans font-bold text-lg align-middle shadow-sm"
+                className="inline-flex items-center justify-center mx-2 w-8 h-8 rounded-full bg-amber-100 text-amber-700 border border-amber-300 font-sans font-bold text-lg align-middle shadow-sm dark:bg-amber-900/50 dark:text-amber-400 dark:border-amber-700"
               >
                 {part.trim()}
               </span>
@@ -431,7 +432,7 @@ export default function JoinPage({
               <span key={index}>
                 {subParts[0]} <br />
                 <div
-                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold shadow-inner text-center font-sans ${currentFontClass}`}
+                  className={`mt-6 mb-2 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-900 font-bold shadow-inner text-center font-sans ${currentFontClass} dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-600`}
                 >
                   Sübhâneke {subParts[1]}
                 </div>
@@ -455,10 +456,18 @@ export default function JoinPage({
         {lines.map((line, index) => (
           <div
             key={index}
-            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${type === "LATIN" ? `bg-white border-gray-200 text-gray-800 font-serif italic ${sizeClass}` : `bg-emerald-50 border-emerald-100 text-emerald-900 font-sans ${sizeClass}`}`}
+            className={`relative p-4 rounded-xl border flex gap-4 items-start transition-all hover:shadow-md ${
+              type === "LATIN"
+                ? `bg-white border-gray-200 text-gray-800 font-serif italic ${sizeClass} dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200`
+                : `bg-emerald-50 border-emerald-100 text-emerald-900 font-sans ${sizeClass} dark:bg-emerald-900/10 dark:border-emerald-800 dark:text-emerald-300`
+            }`}
           >
             <div
-              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${type === "LATIN" ? "bg-blue-100 text-blue-700" : "bg-emerald-200 text-emerald-800"}`}
+              className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
+                type === "LATIN"
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                  : "bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200"
+              }`}
             >
               {index + 1}
             </div>
@@ -476,11 +485,11 @@ export default function JoinPage({
       <div className="space-y-4">
         {lines.map((line, index) => (
           <div key={index} className="flex items-start group">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold mt-1 mr-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors dark:bg-emerald-900 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white">
               {index + 1}
             </div>
             <p
-              className={`text-gray-800 leading-relaxed font-medium italic ${sizeClass}`}
+              className={`text-gray-800 dark:text-gray-300 leading-relaxed font-medium italic ${sizeClass}`}
             >
               {line.trim()}
             </p>
@@ -498,22 +507,22 @@ export default function JoinPage({
       ? fontSizes.ARABIC[fontLevel]
       : fontSizes.LATIN[fontLevel];
     const fontClass = isArabic
-      ? `font-serif leading-[3.5rem] text-emerald-950 ${sizeClass}`
-      : `font-serif leading-relaxed text-emerald-900 ${sizeClass}`;
+      ? `font-serif leading-[3.5rem] text-emerald-950 dark:text-emerald-100 ${sizeClass}`
+      : `font-serif leading-relaxed text-emerald-900 dark:text-emerald-200 ${sizeClass}`;
 
     return (
       <div
-        className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner"
+        className="bg-emerald-50/80 rounded-2xl border border-emerald-100 p-2 md:p-4 shadow-inner dark:bg-emerald-900/20 dark:border-emerald-800"
         dir={dir}
       >
-        <div className="space-y-0 divide-y divide-emerald-200/60">
+        <div className="space-y-0 divide-y divide-emerald-200/60 dark:divide-emerald-700/50">
           {lines.map((line, index) => (
             <div
               key={index}
-              className="flex items-start py-3 group hover:bg-emerald-100/80 transition-colors px-3 rounded-lg"
+              className="flex items-start py-3 group hover:bg-emerald-100/80 dark:hover:bg-emerald-800/30 transition-colors px-3 rounded-lg"
             >
               <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border mt-1 ${isArabic ? "ml-4" : "mr-4"} bg-white text-emerald-700 border-emerald-200 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all`}
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border mt-1 ${isArabic ? "ml-4" : "mr-4"} bg-white text-emerald-700 border-emerald-200 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-700`}
               >
                 {index + 1}
               </div>
@@ -677,15 +686,15 @@ export default function JoinPage({
       return (
         <div
           key={resourceName}
-          className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4"
+          className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4 dark:bg-gray-900 dark:border-gray-800 transition-colors duration-300"
         >
           <button
             onClick={() => toggleGroup(resourceName)}
-            className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition duration-200"
+            className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition duration-200 dark:bg-gray-900 dark:hover:bg-gray-800"
           >
             <div className="flex items-center">
               <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${isOpen ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600"}`}
+                className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${isOpen ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -703,10 +712,10 @@ export default function JoinPage({
                 </svg>
               </div>
               <div className="text-left">
-                <h2 className="text-lg font-bold text-gray-800">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
                   {resourceName}
                 </h2>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {assignments.length} {t("person")} / {t("part")}
                 </span>
               </div>
@@ -732,7 +741,7 @@ export default function JoinPage({
           </button>
 
           {isOpen && (
-            <div className="p-4 bg-gray-50 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="p-4 bg-gray-50 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300 dark:bg-gray-950 dark:border-gray-800">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {assignments.map((item) => {
                   const defaultTotal = item.endUnit - item.startUnit + 1;
@@ -758,18 +767,18 @@ export default function JoinPage({
                             relative p-5 rounded-xl border transition-all duration-300 shadow-sm
                             ${
                               isCompleted
-                                ? "bg-green-50 border-green-200 opacity-80"
+                                ? "bg-green-50 border-green-200 opacity-80 dark:bg-green-900/20 dark:border-green-900"
                                 : item.isTaken
                                   ? isAssignedToUser
-                                    ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100"
-                                    : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5]"
-                                  : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200"
+                                    ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100 dark:bg-blue-900/20 dark:border-blue-900 dark:ring-blue-900"
+                                    : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5] dark:bg-gray-800/50 dark:border-gray-700"
+                                  : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-emerald-800"
                             }
                         `}
                     >
                       <div className="absolute top-4 right-4">
                         {isCompleted ? (
-                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 dark:bg-green-900 dark:text-green-300">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               className="h-3 w-3"
@@ -785,11 +794,11 @@ export default function JoinPage({
                             {t("completed")}
                           </span>
                         ) : item.isTaken ? (
-                          <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
+                          <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300">
                             {item.assignedToName}
                           </span>
                         ) : (
-                          <span className="bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                          <span className="bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse dark:bg-emerald-900 dark:text-emerald-300">
                             {t("statusEmpty")}
                           </span>
                         )}
@@ -797,11 +806,11 @@ export default function JoinPage({
 
                       <div className="mb-3">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="font-bold text-gray-800">
+                          <span className="font-bold text-gray-800 dark:text-gray-200">
                             {item.participantNumber}. {t("person")}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
                           {item.resource.type === "JOINT"
                             ? `${t("target")}:`
                             : (item.resource.type === "PAGED"
@@ -822,7 +831,7 @@ export default function JoinPage({
                           )}
 
                           {item.resource.type === "COUNTABLE" && (
-                            <span className="ml-2 font-bold text-blue-600">
+                            <span className="ml-2 font-bold text-blue-600 dark:text-blue-400">
                               ({t("total")}: {item.endUnit - item.startUnit + 1}
                               )
                             </span>
@@ -846,7 +855,7 @@ export default function JoinPage({
                                 {isAssignedToUser && (
                                   <button
                                     onClick={() => handleOpenReading(item)}
-                                    className="mt-2 text-blue-600 text-sm font-semibold underline hover:text-blue-800"
+                                    className="mt-2 text-blue-600 text-sm font-semibold underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                   >
                                     {t("takeRead")} ({t("readText")})
                                   </button>
@@ -863,7 +872,7 @@ export default function JoinPage({
                               ) : (
                                 <button
                                   disabled
-                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400"
+                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600"
                                 >
                                   {t("full")}
                                 </button>
@@ -885,7 +894,7 @@ export default function JoinPage({
                               ) : (
                                 <button
                                   disabled
-                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400"
+                                  className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600"
                                 >
                                   {t("full")}
                                 </button>
@@ -893,7 +902,7 @@ export default function JoinPage({
                             ) : (
                               <button
                                 disabled
-                                className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400"
+                                className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600"
                               >
                                 {t("full")}
                               </button>
@@ -933,7 +942,7 @@ export default function JoinPage({
 
                           <button
                             onClick={() => handleCancelPart(item.id)}
-                            className="w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95"
+                            className="w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95 dark:bg-red-900/10 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -966,7 +975,7 @@ export default function JoinPage({
 
   if (loading)
     return (
-      <div className="p-10 text-center font-bold text-gray-600">
+      <div className="p-10 text-center font-bold text-gray-600 dark:text-gray-300">
         {t("loading")}
       </div>
     );
@@ -979,10 +988,10 @@ export default function JoinPage({
   const { distributed, individual } = getSplitGroups();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 relative">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 relative dark:bg-gray-950 transition-colors duration-300">
       <Link
         href="/"
-        className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm"
+        className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -1003,13 +1012,13 @@ export default function JoinPage({
 
       <div className="max-w-4xl mx-auto">
         {!user && (
-          <div className="bg-white p-6 rounded-lg shadow mb-8 text-center">
-            <h1 className="text-3xl font-bold text-red-800 mb-2">
+          <div className="bg-white p-6 rounded-lg shadow mb-8 text-center dark:bg-gray-900 dark:text-gray-100 transition-colors">
+            <h1 className="text-3xl font-bold text-red-800 mb-2 dark:text-red-400">
               {t("joinTitle")}
             </h1>
             <div className="mb-6">
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm">
-                <p className="text-sm text-red-700 font-bold mb-2">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm dark:bg-blue-900/20 dark:border-blue-600">
+                <p className="text-sm text-red-700 font-bold mb-2 dark:text-red-300">
                   {t("joinIntro")}
                 </p>
                 <input
@@ -1021,7 +1030,7 @@ export default function JoinPage({
                     setUserName(val);
                     localStorage.setItem("guestUserName", val);
                   }}
-                  className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-800 dark:border-blue-700 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -1032,8 +1041,8 @@ export default function JoinPage({
           <div className="w-full">
             {Object.keys(distributed).length > 0 && (
               <div className="mb-6 md:mb-0">
-                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm">
-                  <span className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm">
+                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm dark:text-white dark:border-gray-700 dark:bg-gray-950 transition-colors">
+                  <span className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm dark:bg-blue-900/40 dark:text-blue-400">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 md:h-6 md:w-6"
@@ -1061,8 +1070,8 @@ export default function JoinPage({
           <div className="w-full">
             {Object.keys(individual).length > 0 && (
               <div>
-                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm">
-                  <span className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm">
+                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm dark:text-white dark:border-gray-700 dark:bg-gray-950 transition-colors">
+                  <span className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm dark:bg-emerald-900/40 dark:text-emerald-400">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 md:h-6 md:w-6"
@@ -1091,7 +1100,7 @@ export default function JoinPage({
 
       {readingModalContent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] dark:bg-gray-900">
             <div className="p-4 bg-blue-600 text-white flex flex-col gap-4 shrink-0">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg">
@@ -1173,14 +1182,14 @@ export default function JoinPage({
               )}
             </div>
 
-            <div className="p-6 overflow-y-auto text-gray-700 flex-1 bg-white">
+            <div className="p-6 overflow-y-auto text-gray-700 flex-1 bg-white dark:bg-gray-900 dark:text-gray-200">
               {readingModalContent.type === "SIMPLE" &&
                 readingModalContent.simpleItems && (
                   <ul className="space-y-4 list-decimal list-inside">
                     {readingModalContent.simpleItems.map((item, index) => (
                       <li
                         key={index}
-                        className="pl-2 border-b border-gray-100 pb-2 last:border-0 hover:bg-gray-50 transition text-lg"
+                        className="pl-2 border-b border-gray-100 pb-2 last:border-0 hover:bg-gray-50 transition text-lg dark:border-gray-800 dark:hover:bg-gray-800"
                       >
                         {item}
                       </li>
@@ -1194,10 +1203,10 @@ export default function JoinPage({
                     {readingModalContent.cevsenData.map((bab, index) => (
                       <div
                         key={index}
-                        className="mb-2 pb-2 border-b border-gray-100 last:border-0"
+                        className="mb-2 pb-2 border-b border-gray-100 last:border-0 dark:border-gray-800"
                       >
                         <div className="flex justify-center mb-2">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide uppercase text-xs">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold shadow-sm border border-blue-200 tracking-wide uppercase text-xs dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800">
                             {readingModalContent.codeKey === "CEVSEN"
                               ? `${bab.babNumber}. ${t("chapter")}`
                               : `${bab.babNumber}. ${t("group")}`}
@@ -1245,8 +1254,8 @@ export default function JoinPage({
                           !["BEDIR", "UHUD", "TEVHIDNAME"].includes(
                             readingModalContent.codeKey || "",
                           ) && (
-                            <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner">
-                              <div className="flex items-center mb-2 text-emerald-700">
+                            <div className="bg-gradient-to-br from-emerald-50 to-white p-3 rounded-xl border-l-4 border-emerald-500 shadow-inner dark:from-emerald-900/10 dark:to-gray-900 dark:border-emerald-700">
+                              <div className="flex items-center mb-2 text-emerald-700 dark:text-emerald-400">
                                 <span className="font-bold text-[10px] uppercase tracking-widest">
                                   {t("translationTitle")}
                                 </span>
@@ -1280,7 +1289,7 @@ export default function JoinPage({
                                     key={index}
                                     src={imgSrc.trim()}
                                     alt={`${t("arabicPage")} ${index + 1}`}
-                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
+                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
                                   />
                                 ))}
                             </div>
@@ -1316,7 +1325,7 @@ export default function JoinPage({
                                     key={index}
                                     src={imgSrc.trim()}
                                     alt={`${t("meaningPage")} ${index + 1}`}
-                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200"
+                                    className="w-full h-auto rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
                                   />
                                 ))}
                             </div>
@@ -1331,8 +1340,8 @@ export default function JoinPage({
                     </div>
 
                     {readingModalContent.assignmentId && (
-                      <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0">
-                        <p className="text-gray-500 text-sm mb-2 font-semibold">
+                      <div className="mt-4 pt-4 border-t w-full flex flex-col items-center bg-gray-50 rounded-b-xl pb-4 shrink-0 dark:bg-gray-800 dark:border-gray-700">
+                        <p className="text-gray-500 text-sm mb-2 font-semibold dark:text-gray-400">
                           {t("clickToCount")}
                         </p>
 
@@ -1392,12 +1401,12 @@ export default function JoinPage({
                           readingModalContent.currentUnit ===
                           readingModalContent.startUnit
                         }
-                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors"
+                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
                       >
                         ← {t("previous")}
                       </button>
 
-                      <span className="font-bold text-lg text-gray-700">
+                      <span className="font-bold text-lg text-gray-700 dark:text-gray-200">
                         {t("page")} {readingModalContent.currentUnit}
                       </span>
 
@@ -1419,13 +1428,13 @@ export default function JoinPage({
                           readingModalContent.currentUnit ===
                           readingModalContent.endUnit
                         }
-                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors"
+                        className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
                       >
                         {t("next")} →
                       </button>
                     </div>
 
-                    <div className="flex-1 w-full overflow-y-auto flex flex-col items-center bg-gray-50 rounded-lg border border-gray-200 p-1">
+                    <div className="flex-1 w-full overflow-y-auto flex flex-col items-center bg-gray-50 rounded-lg border border-gray-200 p-1 dark:bg-gray-800 dark:border-gray-700">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(readingModalContent.currentUnit).padStart(3, "0")}.png`}
@@ -1438,7 +1447,7 @@ export default function JoinPage({
                         }}
                       />
 
-                      <div className="flex items-center justify-between w-full p-4 mt-auto border-t border-gray-200 bg-white">
+                      <div className="flex items-center justify-between w-full p-4 mt-auto border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800">
                         <button
                           onClick={() => {
                             setReadingModalContent((prev) =>
@@ -1457,7 +1466,7 @@ export default function JoinPage({
                             readingModalContent.currentUnit ===
                             readingModalContent.startUnit
                           }
-                          className="px-6 py-3 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors flex-1 mr-2"
+                          className="px-6 py-3 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors flex-1 mr-2 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                         >
                           ← {t("previous")}
                         </button>
@@ -1494,10 +1503,10 @@ export default function JoinPage({
                 )}
             </div>
 
-            <div className="p-4 bg-gray-50 text-center border-t border-gray-200 shrink-0">
+            <div className="p-4 bg-gray-50 text-center border-t border-gray-200 shrink-0 dark:bg-gray-900 dark:border-gray-800">
               <button
                 onClick={() => setReadingModalContent(null)}
-                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold"
+                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold dark:bg-gray-700 dark:hover:bg-gray-600"
               >
                 {t("close")}
               </button>
