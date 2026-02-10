@@ -102,7 +102,7 @@ const translations = {
       step3Desc: "Herkes kendi parçasını alıp okusun, ilerlemeyi anlık gör.",
     },
     dashboard: {
-      dashboard: "Panel", // Eski key uyumu için 'title' yerine 'dashboard' olarak bıraktım
+      dashboard: "Panel",
       welcome: "Merhaba",
       dashboardIntro: "Bugün manevi yolculuğunda neler yapmak istersin?",
       myCirclesTitle: "Katıldığım Halkalar",
@@ -213,6 +213,8 @@ const translations = {
       resetFailPrefix: "Sıfırlama başarısız: ",
       deleteSuccess: "Oturum başarıyla silindi.",
       deleteFail: "Silme işlemi başarısız oldu.",
+      featureFree: "Ücretsiz Kullanım",
+      featureNoLogin: "Üyeliksiz Katılım",
       leaveSuccess: "Halkadan ayrıldınız.",
       leaveFail: "Ayrılma işlemi başarısız oldu.",
       cancelFailed: "İptal edilemedi.",
@@ -325,6 +327,8 @@ const translations = {
       create: "Ava Bike",
       join: "Tevlî Bibe",
       trackButton: "Bişopîne",
+      featureFree: "Bêpere bikar bînî",
+      featureNoLogin: "Bê endamî beşdar bibe",
       backToAdmin: "Vegere Panela Admin",
       adminTitle: "Panela Rêveberiyê",
     },
@@ -469,6 +473,8 @@ const translations = {
       leaveSession: "Leave session",
 
       resetSession: "Reset Session",
+      featureFree: "Free to Use",
+      featureNoLogin: "Join Without Login",
       guestSubtitle: "Spiritual connection platform",
       guestMessage:
         "Please login to join circles or create your own distribution.",
@@ -826,6 +832,8 @@ const translations = {
       cancelFailed: "فشل الإلغاء.",
       alertStatus: "الحالة: ",
       errorPrefix: "خطأ: ",
+      featureFree: "استخدام مجاني",
+      featureNoLogin: "الانضمام بدون تسجيل الدخول",
       successLeave: "لقد غادرت الجلسة بنجاح.",
       copyCode: "نسخ الكود",
     },
@@ -998,6 +1006,8 @@ const translations = {
       previous: "Précédent",
       next: "Suivant",
       statusEmpty: "DISPONIBLE",
+      featureFree: "Utilisation gratuite",
+      featureNoLogin: "Participation sans inscription",
       statusTaken: "PRIS",
       full: "PRIS",
       participantName: "Nom du participant",
@@ -1063,16 +1073,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("appLanguage", lang);
   };
 
-  /**
-   * Akıllı 't' fonksiyonu:
-   * 1. Önce nested key (örn: 'auth.loginButton') arar.
-   * 2. Bulamazsa, tüm kategorilerin içinde düz key (örn: 'loginButton') arar.
-   */
   const t = (key: string): string => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const langData = (translations as any)[language];
 
-    // 1. Durum: Noktalı kullanım (örn: t('auth.loginButton'))
     if (key.includes(".")) {
       const keys = key.split(".");
       let value = langData;
@@ -1080,16 +1084,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         if (value && value[k]) {
           value = value[k];
         } else {
-          // Noktalı arama başarısız olursa aşağıya devam etmez, string key'i döner
-          // Ancak belki kullanıcı yanlış kategori yazdı, yine de loop'a sokabiliriz.
-          // Şimdilik direkt dönsün, karışıklık olmasın.
           return key;
         }
       }
       return value as string;
     }
 
-    // 2. Durum: Düz kullanım (örn: t('loginButton')) -> Kategorileri tara
     for (const category in langData) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const value = (langData as any)[category]?.[key];
@@ -1098,7 +1098,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Hiçbir yerde bulunamazsa key'in kendisini döndür
     return key;
   };
 

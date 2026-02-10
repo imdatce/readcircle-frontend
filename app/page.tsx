@@ -562,8 +562,8 @@ export default function Home() {
                   />
                 </svg>
               }
-              title={t("featuresTitle1") || "Kuran & Cevşen"}
-              desc={t("featuresDesc1") || "Otomatik dağıtım ve anlık takip."}
+              title={t("featuresTitle1")}
+              desc={t("featuresDesc1")}
               isRTL={isRTL}
             />
             <FeatureCard
@@ -582,8 +582,8 @@ export default function Home() {
                   />
                 </svg>
               }
-              title={t("featuresTitle2") || "Ortak Zikir"}
-              desc={t("featuresDesc2") || "Sayaçlı toplu zikir halkaları."}
+              title={t("featuresTitle2")}
+              desc={t("featuresDesc2")}
               isRTL={isRTL}
             />
           </div>
@@ -592,13 +592,13 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-4 mb-2">
           <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-6 border border-white/20 dark:border-gray-800 shadow-sm">
             <h2 className="text-xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
-              {t("howItWorksTitle") || "Nasıl Çalışır?"}
+              {t("howItWorksTitle")}
             </h2>
             <div className="grid grid-cols-3 gap-4 relative">
               <div className="hidden md:block absolute top-5 left-[20%] right-[20%] h-px bg-gray-200 dark:bg-gray-700 -z-10"></div>
-              <Step num="1" title="Oluştur" desc="Kaynağı seç." />
-              <Step num="2" title="Davet Et" desc="Kodu paylaş." />
-              <Step num="3" title="Tamamla" desc="Birlikte oku." />
+              <Step num="1" title={t("step1Title")} desc={t("step1Desc")} />
+              <Step num="2" title={t("step2Title")} desc={t("step2Desc")} />
+              <Step num="3" title={t("step3Title")} desc={t("step3Desc")} />
             </div>
           </div>
         </div>
