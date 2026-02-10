@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Read Circle",
-  description: "Distribution Platform",
+  title: "Spiritual Union",
+  description: "Platform Spiritual Union",
 };
 
 export default function RootLayout({

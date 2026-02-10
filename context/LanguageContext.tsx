@@ -22,8 +22,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 const translations = {
   tr: {
     common: {
-      title: "Read Circle",
-      appTitle: "Read Circle",
+      appTitle: "SURA",
       subtitle: "Kaynak Dağıtım Platformu",
       backHome: "Ana Sayfa",
       footerDesc: "Manevi birliktelik ve kaynak dağıtım platformu.",
@@ -78,8 +77,7 @@ const translations = {
       loginOrRegister: "Giriş Yap veya Kayıt Ol",
     },
     landing: {
-      landingHeroTitle: "Manevi Birliktelik Platformu",
-      platform: "Platformu",
+      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
       landingHeroSubtitle:
         "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin. Sevdiklerinizle birlikte manevi hedeflerinize ulaşın.",
       getStarted: "Hemen Başla",
@@ -226,8 +224,7 @@ const translations = {
   },
   ku: {
     common: {
-      title: "Read Circle",
-      appTitle: "Read Circle",
+      appTitle: "SURA",
       subtitle: "Platforma Belavkirina Çavkaniyan",
       backHome: "Mal",
       footerDesc: "Platforma yekîtiya manewî û belavkirina çavkaniyan.",
@@ -288,7 +285,7 @@ const translations = {
       loginOrRegister: "Têkeve an Qeyd Bibe",
     },
     landing: {
-      landingHeroTitle: "Platforma Yekîtiya Manewî",
+      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
       homeVerseContent: "Bi bibîranîna Xwedê re tenê dilan aram dibin.",
       landingHeroSubtitle:
         "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
@@ -434,8 +431,7 @@ const translations = {
   },
   en: {
     common: {
-      title: "Read Circle",
-      appTitle: "Read Circle",
+      appTitle: "SURA",
       subtitle: "Resource Distribution Platform",
       backHome: "Home",
       footerDesc: "Spiritual connection and resource distribution platform.",
@@ -497,7 +493,7 @@ const translations = {
       loginOrRegister: "Login or Register",
     },
     landing: {
-      landingHeroTitle: "Platform Spiritual Union",
+      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
       landingHeroSubtitle:
         "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
       getStarted: "Get Started",
@@ -641,8 +637,7 @@ const translations = {
   },
   ar: {
     common: {
-      title: "Read Circle",
-      appTitle: "Read Circle",
+      appTitle: "SURA",
       subtitle: "منصة توزيع القراءات",
       backHome: "الرئيسية",
       footerDesc: "منصة التواصل الروحي وتوزيع الموارد.",
@@ -697,7 +692,7 @@ const translations = {
       loginOrRegister: "دخول أو تسجيل",
     },
     landing: {
-      landingHeroTitle: "منصة الوحدة الروحية",
+      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
       landingHeroSubtitle:
         "نظم ختمات القرآن وحلقات الجوشن وبرامج الأذكار بسهولة.",
       getStarted: "ابدأ الآن",
@@ -840,8 +835,7 @@ const translations = {
   },
   fr: {
     common: {
-      title: "Read Circle",
-      appTitle: "Read Circle",
+      appTitle: "SURA",
       subtitle: "Plateforme de Distribution de Ressources",
       backHome: "Accueil",
       footerDesc:
@@ -902,7 +896,7 @@ const translations = {
       loginOrRegister: "Connexion ou Inscription",
     },
     landing: {
-      landingHeroTitle: "Plateforme d’unité spirituelle",
+      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
       landingHeroSubtitle:
         "Organisez facilement des khatms du Coran, des cercles de Cevshen et des programmes de dhikr.",
       getStarted: "Commencer",

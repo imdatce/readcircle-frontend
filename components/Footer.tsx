@@ -14,10 +14,9 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
             <h2 className="text-xl font-bold text-white tracking-wider flex items-center gap-2 justify-center md:justify-start">
-              <span className="bg-emerald-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-emerald-900/20 shadow-lg">
-                MG
+              <span className="bg-emerald-600 text-white w-20 h-8 rounded-lg flex items-center justify-center text-sm shadow-emerald-900/20 shadow-lg">
+                {t("appTitle")}
               </span>
-              {t("title")}
             </h2>
             <p className="text-sm text-slate-400 mt-2 max-w-xs leading-relaxed">
               {t("footerDesc")}
@@ -29,7 +28,7 @@ export default function Footer() {
               {t("allahAccept")}
             </p>
             <p className="text-slate-500">
-              &copy; {currentYear} {t("title")} {t("rightsReserved")}
+              &copy; {currentYear} {t("appTitle")} {t("rightsReserved")}
             </p>
 
             <div className="mt-2 text-xs text-slate-600 flex items-center justify-center md:justify-end gap-1">
