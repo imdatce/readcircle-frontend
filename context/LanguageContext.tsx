@@ -31,6 +31,8 @@ const translations = {
       allahAccept: "Allah kabul etsin.",
       loading: "Yükleniyor...",
       close: "Kapat",
+      leaveSession: "Oturumdan ayrıl",
+
       cancel: "İptal",
       delete: "Sil",
       copy: "Kopyala",
@@ -76,7 +78,7 @@ const translations = {
       loginOrRegister: "Giriş Yap veya Kayıt Ol",
     },
     landing: {
-      landingHeroTitle: "Manevi Birliktelik",
+      landingHeroTitle: "Manevi Birliktelik Platformu",
       platform: "Platformu",
       landingHeroSubtitle:
         "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin. Sevdiklerinizle birlikte manevi hedeflerinize ulaşın.",
@@ -125,7 +127,7 @@ const translations = {
       joinDistDesc: "Sana gönderilen kodu aşağıya girerek dahil ol.",
       createButton: "OLUŞTUR",
       joinButton: "Katıl",
-      sessionCodePlaceholder: "Halka Kodu",
+      sessionCodePlaceholder: "Mevcut kod",
       enterCode: "Dağıtım Kodunu Giriniz",
       enterCodePlaceholder: "Dağıtım Kodu (Örn: 12345)",
       guestCheckCode: "Sadece bir koda bakmak mı istiyorsun?",
@@ -133,6 +135,8 @@ const translations = {
       participantCount: "Kaç Kişi Okuyacak?",
       setTargetCounts: "Hedef Sayıları Belirle (Opsiyonel)",
       createDistribution: "DAĞITIMI OLUŞTUR",
+      homeVerseContent:
+        "Bilesiniz ki, kalpler ancak Allah'ı anmakla huzur bulur.",
       linkCreated: "Link Oluşturuldu:",
       monitorTitle: "Dağıtım Takibi",
       monitorSubtitle: "Bir kod girerek kimin ne aldığını kontrol edin.",
@@ -140,6 +144,8 @@ const translations = {
       statusHeader: "Durum",
       assignedTo: "Alan Kişi",
       resource: "Kaynak / Parça",
+      copyCode: "Kodu kopyala",
+
       progress: "İlerleme / Hedef",
       occupancy: "DOLULUK",
       targetLabel: "Hedef",
@@ -210,6 +216,7 @@ const translations = {
       leaveSuccess: "Halkadan ayrıldınız.",
       leaveFail: "Ayrılma işlemi başarısız oldu.",
       cancelFailed: "İptal edilemedi.",
+      successLeave: "Halkadan başarıyla ayrıldınız.",
       resetSession: "Oturumu resetle",
       alertStatus: "Durum: ",
       errorPrefix: "Hata: ",
@@ -279,8 +286,8 @@ const translations = {
       loginOrRegister: "Têkeve an Qeyd Bibe",
     },
     landing: {
-      landingHeroTitle: "Yekîtiya Manewî",
-      platform: "Platforma",
+      landingHeroTitle: "Platforma Yekîtiya Manewî",
+      homeVerseContent: "Bi bibîranîna Xwedê re tenê dilan aram dibin.",
       landingHeroSubtitle:
         "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
       getStarted: "Dest Pê Bike",
@@ -366,6 +373,7 @@ const translations = {
       clickToCount: "HER KU TE XWEND BITIKÎNE",
       decrease: "KÊM BIKE",
       closeWindow: "Pencereyê Bigire",
+      successLeave: "Bi serkeftî ji rûniştinê derketî.",
       chapter: "BEŞ",
       group: "Kom",
       translationTitle: "Wateya Kurdî",
@@ -410,6 +418,7 @@ const translations = {
       resetSuccess:
         "Xelek bi serkeftî hate sifirkirin! Li benda beşdarên nû ye.",
       resetFailPrefix: "Sifirkirin bi ser neket: ",
+      leaveSession: "Ji rûniştinê derkeve",
       deleteSuccess: "Xelek bi serkeftî hate jêbirin.",
       deleteFail: "Jêbirin bi ser neket.",
       leaveSuccess: "Tu ji xelekê derketî.",
@@ -457,6 +466,8 @@ const translations = {
       registerButton: "REGISTER",
       guestRegister: "Register",
       guestLogin: "Login",
+      leaveSession: "Leave session",
+
       resetSession: "Reset Session",
       guestSubtitle: "Spiritual connection platform",
       guestMessage:
@@ -480,8 +491,7 @@ const translations = {
       loginOrRegister: "Login or Register",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union",
-      platform: "Platform",
+      landingHeroTitle: "Platform Spiritual Union",
       landingHeroSubtitle:
         "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
       getStarted: "Get Started",
@@ -590,6 +600,9 @@ const translations = {
       successDelete: "Deleted!",
       errorOccurred: "An error occurred.",
       unexpectedError: "An unexpected error occurred.",
+      homeVerseContent:
+        "Indeed, hearts find peace only in the remembrance of Allah.",
+
       connectionError: "Connection error.",
       errorFetchFailed: "Failed to fetch data. Error Code:",
       errorInvalidCode: "Error: Invalid code or server is down.",
@@ -615,6 +628,7 @@ const translations = {
       leaveSuccess: "You have left the circle.",
       leaveFail: "Failed to leave the circle.",
       cancelFailed: "Could not cancel.",
+      successLeave: "You have successfully left the session.",
       alertStatus: "Status: ",
       errorPrefix: "Error: ",
     },
@@ -677,8 +691,7 @@ const translations = {
       loginOrRegister: "دخول أو تسجيل",
     },
     landing: {
-      landingHeroTitle: "الاتحاد الروحي",
-      platform: "منصة",
+      landingHeroTitle: "منصة الوحدة الروحية",
       landingHeroSubtitle:
         "نظم ختمات القرآن وحلقات الجوشن وبرامج الأذكار بسهولة.",
       getStarted: "ابدأ الآن",
@@ -721,6 +734,8 @@ const translations = {
       createDistDesc: "أنشئ حلقة قرآن أو يس أو ذكر وشارك الرابط.",
       joinDistTitle: "الانضمام لحلقة",
       joinDistDesc: "أدخل الرمز المشارك معك للمشاركة.",
+      homeVerseContent: "",
+
       createButton: "إنشاء",
       joinButton: "انضمام",
       sessionCodePlaceholder: "رمز الحلقة",
@@ -790,6 +805,7 @@ const translations = {
       alertSelectResource: "الرجاء تحديد مورد واحد على الأقل.",
       alertEnterName: "الرجاء إدخال اسمك أعلاه أولاً.",
       alertTakenSuccess: "رائع! لقد أخذت هذا الجزء بنجاح.",
+      leaveSession: "مغادرة الجلسة",
       confirmDelete: "هل أنت متأكد أنك تريد حذف هذا التوزيع؟",
       confirmDeleteSession:
         "هل أنت متأكد من حذف هذه الجلسة نهائياً؟ ستفقد جميع البيانات.",
@@ -810,6 +826,7 @@ const translations = {
       cancelFailed: "فشل الإلغاء.",
       alertStatus: "الحالة: ",
       errorPrefix: "خطأ: ",
+      successLeave: "لقد غادرت الجلسة بنجاح.",
       copyCode: "نسخ الكود",
     },
   },
@@ -827,6 +844,7 @@ const translations = {
       close: "Fermer",
       cancel: "Annuler",
       delete: "Supprimer",
+      successLeave: "Vous avez quitté la session avec succès.",
       copy: "Copier",
       select: "SÉLECTIONNER",
       copyCode: "Copier le code",
@@ -861,6 +879,7 @@ const translations = {
       placeholderUser: "Votre nom d'utilisateur",
       placeholderUserExample: "ex: jean123",
       resetsession: "Réinitialiser la session",
+
       placeholderPass: "******",
       haveAccount: "Vous avez déjà un compte ?",
       noAccount: "Pas de compte ?",
@@ -875,8 +894,7 @@ const translations = {
       loginOrRegister: "Connexion ou Inscription",
     },
     landing: {
-      landingHeroTitle: "Union Spirituelle",
-      platform: "Plateforme",
+      landingHeroTitle: "Plateforme d’unité spirituelle",
       landingHeroSubtitle:
         "Organisez facilement des khatms du Coran, des cercles de Cevshen et des programmes de dhikr.",
       getStarted: "Commencer",
@@ -900,6 +918,8 @@ const translations = {
     dashboard: {
       dashboard: "Tableau de bord",
       welcome: "Bienvenue,",
+      leaveSession: "Quitter la session",
+
       dashboardIntro:
         "Que voulez-vous faire dans votre voyage spirituel aujourd'hui ?",
       myCirclesTitle: "Mes Cercles",
@@ -924,7 +944,6 @@ const translations = {
       joinDistDesc: "Entrez le code partagé avec vous pour participer.",
       createButton: "CRÉER",
       joinButton: "Rejoindre",
-      sessionCodePlaceholder: "Session Code",
       enterCode: "Entrez le code de distribution",
       enterCodePlaceholder: "Code de distribution (ex: 12345)",
       guestCheckCode: "Voulez-vous juste vérifier un code ?",
@@ -952,6 +971,7 @@ const translations = {
     },
     reading: {
       readingTitle: "Lecture",
+      sessionCodePlaceholder: "Le code existant",
       joinTitle: "Rejoindre le cercle",
       joinIntro: "Veuillez entrer votre nom (Invité)",
       yourName: "Votre Nom",
@@ -972,6 +992,9 @@ const translations = {
       tabArabic: "Arabe",
       tabLatin: "Transcription",
       tabMeaning: "Traduction",
+      homeVerseContent:
+        "Sachez que les cœurs ne trouvent la paix que dans le rappel d’Allah.",
+
       previous: "Précédent",
       next: "Suivant",
       statusEmpty: "DISPONIBLE",
