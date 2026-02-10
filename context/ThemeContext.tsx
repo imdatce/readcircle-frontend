@@ -16,7 +16,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // State güncellemelerini asenkron yaparak linter hatasını ve render sorunlarını çözüyoruz
     const timer = setTimeout(() => {
       setMounted(true);
 
@@ -48,9 +47,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  // DÜZELTME: Provider her zaman render edilmeli.
-  // mounted kontrolü sadece içerideki efektleri yönetmeli,
-  // context ağacını kesmemeli.
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}

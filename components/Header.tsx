@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
-import ThemeSwitcher from "./ThemeSwitcher"; 
+import ThemeSwitcher from "./ThemeSwitcher";
 import { useState } from "react";
 
 export default function Header() {
@@ -12,9 +12,10 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-     <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-         <Link
+        {/* LOGO ALANI */}
+        <Link
           href="/"
           className="flex items-center gap-2 font-bold text-xl text-slate-800 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition"
         >
@@ -39,25 +40,30 @@ export default function Header() {
           </span>
         </Link>
 
-         <nav className="hidden md:flex items-center gap-6">
+        {/* MASAÜSTÜ MENÜ */}
+        <nav className="hidden md:flex items-center gap-6">
           <Link
             href="/"
-            className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+            className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
           >
             {t("backHome")}
           </Link>
 
-           <div className="flex items-center gap-2">
+          {/* --- GÜNCELLENEN KISIM: KAPSÜL GÖRÜNÜMÜ --- */}
+          <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
             <ThemeSwitcher />
+            {/* Araya ince bir çizgi ekleyerek ayırdık */}
+            <div className="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
             <LanguageSwitcher />
           </div>
+          {/* ------------------------------------------- */}
 
           <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
           {user ? (
             <div className="flex items-center gap-4">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
-                <span className="text-slate-400 dark:text-slate-500 font-normal mr-1">
+                <span className="text-slate-500 dark:text-slate-400 font-normal mr-1">
                   {t("welcome")},
                 </span>
                 {user}
@@ -88,7 +94,7 @@ export default function Header() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+                className="text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
               >
                 {t("loginButton")}
               </Link>
@@ -102,8 +108,9 @@ export default function Header() {
           )}
         </nav>
 
-         <button
-          className="md:hidden p-2 text-slate-600 dark:text-slate-300"
+        {/* MOBİL MENÜ BUTONU */}
+        <button
+          className="md:hidden p-2 text-slate-700 dark:text-slate-200"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           <svg
@@ -123,7 +130,8 @@ export default function Header() {
         </button>
       </div>
 
-       {isMenuOpen && (
+      {/* MOBİL MENÜ AÇILIR ALANI */}
+      {isMenuOpen && (
         <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-5">
           <Link
             href="/"
@@ -137,8 +145,10 @@ export default function Header() {
             <span className="text-sm text-slate-500 dark:text-slate-400">
               {t("menuLanguage")}
             </span>
-            <div className="flex items-center gap-2">
+            {/* MOBİL İÇİN DE AYNI KAPSÜL YAPISI */}
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700">
               <ThemeSwitcher />
+              <div className="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
               <LanguageSwitcher />
             </div>
           </div>
@@ -156,20 +166,6 @@ export default function Header() {
                 }}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-red-600 text-white rounded-lg font-bold text-sm shadow-md active:scale-95 transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
-                  />
-                </svg>
                 {t("logoutButton")}
               </button>
             </div>

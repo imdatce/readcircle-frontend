@@ -43,7 +43,7 @@ function MonitorContent() {
 
       const initialExpanded: Record<string, boolean> = {};
 
-       if (data.assignments && Array.isArray(data.assignments)) {
+      if (data.assignments && Array.isArray(data.assignments)) {
         data.assignments.forEach((a) => {
           if (a.resource) {
             const name =
@@ -103,14 +103,14 @@ function MonitorContent() {
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
             <span className="w-2 h-8 bg-blue-600 rounded-full inline-block"></span>
             {t("monitorTitle")}
           </h1>
           {session && (
-            <p className="text-gray-500 mt-1 ml-4 font-mono text-sm">
+            <p className="text-gray-500 dark:text-gray-400 mt-1 ml-4 font-mono text-sm">
               {t("distCode")}:{" "}
-              <span className="font-bold text-gray-800">
+              <span className="font-bold text-gray-800 dark:text-gray-200">
                 {session.code}
               </span>
             </p>
@@ -120,7 +120,7 @@ function MonitorContent() {
         <div className="flex gap-3">
           <button
             onClick={() => fetchData(code)}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-full font-bold text-sm hover:bg-blue-50 transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-gray-700 rounded-full font-bold text-sm hover:bg-blue-50 dark:hover:bg-gray-700 transition shadow-sm"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -141,7 +141,7 @@ function MonitorContent() {
 
           <Link
             href="/"
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-full shadow-md hover:bg-gray-900 transition-all font-bold text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-full shadow-md hover:bg-gray-900 transition-all font-bold text-sm dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -163,14 +163,16 @@ function MonitorContent() {
       </div>
 
       {loading && (
-        <div className="text-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="text-center p-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500 font-medium">{t("loading")}</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">
+            {t("loading")}
+          </p>
         </div>
       )}
 
       {error && !session && (
-        <div className="p-6 bg-red-50 text-red-700 rounded-xl mb-6 border border-red-200 font-bold text-center shadow-sm">
+        <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl mb-6 border border-red-200 dark:border-red-800 font-bold text-center shadow-sm">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-8 w-8 mx-auto mb-2 text-red-500"
@@ -208,15 +210,20 @@ function MonitorContent() {
             return (
               <div
                 key={resourceName}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:shadow-md"
               >
                 <button
                   onClick={() => toggleResource(resourceName)}
-                  className="w-full bg-gray-50/50 px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center hover:bg-gray-50 transition duration-150 cursor-pointer gap-4"
+                  className="w-full bg-gray-50/50 dark:bg-gray-800/50 px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 cursor-pointer gap-4"
                 >
                   <div className="flex items-center gap-4 w-full md:w-auto">
                     <div
-                      className={`transition-transform duration-300 p-1 rounded-full bg-white border shadow-sm ${isOpen ? "rotate-90 text-blue-600 border-blue-200" : "rotate-0 text-gray-400 border-gray-200"}`}
+                      className={`transition-transform duration-300 p-1 rounded-full border shadow-sm 
+                        ${
+                          isOpen
+                            ? "rotate-90 text-blue-600 border-blue-200 bg-white dark:bg-gray-700 dark:border-blue-800 dark:text-blue-400"
+                            : "rotate-0 text-gray-400 border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
+                        }`}
                     >
                       <svg
                         className="w-4 h-4"
@@ -233,10 +240,10 @@ function MonitorContent() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="text-lg font-bold text-gray-800">
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
                         {resourceName}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {completedCount} / {totalCount} {t("completed")}
                       </p>
                     </div>
@@ -249,15 +256,15 @@ function MonitorContent() {
                         <span
                           className={
                             percentage === 100
-                              ? "text-green-600"
-                              : "text-blue-600"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-blue-600 dark:text-blue-400"
                           }
                         >
                           %{percentage}
                         </span>
                       </div>
 
-                      <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                      <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
                         <div className="relative w-full h-full">
                           <div
                             className="absolute top-0 left-0 h-full bg-blue-400 rounded-full"
@@ -271,10 +278,15 @@ function MonitorContent() {
                       </div>
                     </div>
 
-                    <div className="hidden md:block h-8 w-px bg-gray-200"></div>
+                    <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
                     <span
-                      className={`px-3 py-1 rounded-lg font-bold text-sm border shadow-sm ${isOpen ? "bg-white text-blue-700 border-blue-200" : "bg-gray-50 text-gray-600 border-gray-200"}`}
+                      className={`px-3 py-1 rounded-lg font-bold text-sm border shadow-sm 
+                        ${
+                          isOpen
+                            ? "bg-white text-blue-700 border-blue-200 dark:bg-gray-700 dark:text-blue-300 dark:border-blue-900"
+                            : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                        }`}
                     >
                       {assignments.length} {t("part")}
                     </span>
@@ -285,7 +297,7 @@ function MonitorContent() {
                   <div className="overflow-x-auto animate-in slide-in-from-top-2 fade-in duration-300">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-50/50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                        <tr className="bg-slate-50/50 dark:bg-gray-900/50 text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                           <th className="px-6 py-3 font-bold w-16">#</th>
                           <th className="px-6 py-3 font-bold">
                             {t("resource")}
@@ -294,25 +306,27 @@ function MonitorContent() {
                             {t("assignedTo")}
                           </th>
                           <th className="px-6 py-3 font-bold text-center">
-                            {t("progress")}
-                          </th>
-                          <th className="px-6 py-3 font-bold text-right">
-                            {t("statusHeader")}
+                            Son Durum
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                         {assignments.map((item) => (
                           <tr
                             key={item.id}
-                            className={`hover:bg-blue-50/30 transition duration-150 ${item.isTaken ? "bg-white" : "bg-slate-50/30"}`}
+                            className={`hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition duration-150 
+                              ${
+                                item.isTaken
+                                  ? "bg-white dark:bg-gray-800"
+                                  : "bg-slate-50/30 dark:bg-gray-800/50"
+                              }`}
                           >
-                            <td className="px-6 py-4 text-gray-400 font-mono text-sm font-semibold">
+                            <td className="px-6 py-4 text-gray-400 dark:text-gray-500 font-mono text-sm font-semibold">
                               {item.participantNumber}
                             </td>
-                            <td className="px-6 py-4 text-gray-700 font-medium">
+                            <td className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium">
                               {item.resource.type === "JOINT"
-                                ? t("target")
+                                ? `${t("targetLabel")}: ${item.endUnit}`
                                 : (item.resource.type === "PAGED"
                                     ? t("page")
                                     : t("part")) +
@@ -322,22 +336,27 @@ function MonitorContent() {
                               {item.isTaken ? (
                                 <div className="flex items-center gap-2.5">
                                   <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-sm border ${
-                                      item.isCompleted
-                                        ? "bg-green-100 text-green-700 border-green-200"
-                                        : "bg-blue-100 text-blue-700 border-blue-200"
-                                    }`}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-sm border 
+                                      ${
+                                        item.isCompleted
+                                          ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+                                          : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                                      }`}
                                   >
                                     {item.assignedToName?.substring(0, 2)}
                                   </div>
                                   <span
-                                    className={`font-bold ${item.isCompleted ? "text-green-900" : "text-gray-900"}`}
+                                    className={`font-bold ${
+                                      item.isCompleted
+                                        ? "text-green-900 dark:text-green-400"
+                                        : "text-gray-900 dark:text-gray-200"
+                                    }`}
                                   >
                                     {item.assignedToName}
                                   </span>
                                 </div>
                               ) : (
-                                <span className="text-gray-300 italic text-sm pl-2">
+                                <span className="text-gray-300 dark:text-gray-600 italic text-sm pl-2">
                                   -
                                 </span>
                               )}
@@ -357,17 +376,29 @@ function MonitorContent() {
                                       current !== undefined && current !== null
                                         ? current
                                         : total;
-                                    const isFinished = displayVal === 0;
+
+                                    if (displayVal === 0) {
+                                      return (
+                                        <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="w-3.5 h-3.5"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                          >
+                                            <path
+                                              fillRule="evenodd"
+                                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                              clipRule="evenodd"
+                                            />
+                                          </svg>
+                                          {t("completed")}
+                                        </span>
+                                      );
+                                    }
 
                                     return (
-                                      <span
-                                        className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold border 
-                                            ${
-                                              isFinished
-                                                ? "bg-green-50 text-green-600 border-green-200"
-                                                : "bg-amber-50 text-amber-600 border-amber-200"
-                                            }`}
-                                      >
+                                      <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold border bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
                                         {displayVal}
                                         <span className="text-[9px] ml-1 opacity-70 uppercase">
                                           {t("remaining")}
@@ -376,36 +407,26 @@ function MonitorContent() {
                                     );
                                   })()}
                                 </div>
+                              ) : item.isCompleted ? (
+                                <div className="flex justify-center">
+                                  <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="w-3.5 h-3.5"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                    {t("completed")}
+                                  </span>
+                                </div>
                               ) : (
                                 <span className="text-gray-300 text-xs">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              {item.isCompleted ? (
-                                <span className="inline-flex items-center gap-1.5 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm shadow-green-200">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-3.5 h-3.5"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  {t("completed")}
-                                </span>
-                              ) : item.isTaken ? (
-                                <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-blue-200">
-                                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                  {t("statusTaken")}
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                                  {t("statusEmpty")}
-                                </span>
                               )}
                             </td>
                           </tr>
@@ -426,10 +447,12 @@ function MonitorContent() {
 export default function MonitorPage() {
   const { t } = useLanguage();
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 transition-colors duration-300">
       <Suspense
         fallback={
-          <div className="text-center p-10 text-gray-500">{t("loading")}</div>
+          <div className="text-center p-10 text-gray-500 dark:text-gray-400">
+            {t("loading")}
+          </div>
         }
       >
         <MonitorContent />

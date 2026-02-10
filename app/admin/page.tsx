@@ -12,7 +12,7 @@ export default function AdminPage() {
   const [resources, setResources] = useState<Resource[]>([]);
 
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
-  const [participants, setParticipants] = useState<number>(10);
+  const [participants, setParticipants] = useState<string>("1");
   const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
   const [createdLink, setCreatedLink] = useState<string>("");
   const [createdCode, setCreatedCode] = useState<string>("");
@@ -67,7 +67,8 @@ export default function AdminPage() {
         const parsed = JSON.parse(savedData);
         if (parsed.selectedResources)
           setSelectedResources(parsed.selectedResources);
-        if (parsed.participants) setParticipants(parsed.participants);
+        // DEĞİŞİKLİK 2: Kayıtlı veriyi string'e çevirerek alıyoruz.
+        if (parsed.participants) setParticipants(String(parsed.participants));
         if (parsed.customTotals) setCustomTotals(parsed.customTotals);
         if (parsed.createdLink) setCreatedLink(parsed.createdLink);
         if (parsed.createdCode) setCreatedCode(parsed.createdCode);
@@ -107,9 +108,12 @@ export default function AdminPage() {
     if (selectedResources.length === 0) return alert(t("alertSelectResource"));
 
     try {
+      // DEĞİŞİKLİK 3: API'ye gönderirken string olan değeri Number'a çeviriyoruz.
+      const participantsNum = parseInt(participants) || 10;
+
       const payload = {
         resourceIds: selectedResources.map((id) => Number(id)),
-        participants: participants,
+        participants: participantsNum,
         customTotals: customTotals,
       };
 
@@ -289,7 +293,8 @@ export default function AdminPage() {
             type="number"
             className="w-full border-2 border-gray-200 p-3 rounded-lg text-black focus:border-blue-500 outline-none transition"
             value={participants}
-            onChange={(e) => setParticipants(Number(e.target.value))}
+            // DEĞİŞİKLİK 4: Number(...) dönüşümünü kaldırdık, doğrudan string değeri alıyoruz.
+            onChange={(e) => setParticipants(e.target.value)}
             placeholder="10"
             min="1"
           />
