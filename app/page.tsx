@@ -12,15 +12,12 @@ export default function Home() {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
   const router = useRouter();
-
   const [code, setCode] = useState("");
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
   const [createdSessions, setCreatedSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
   const [activeTab, setActiveTab] = useState<"managed" | "joined" | null>(null);
-
   const isRTL = language === "ar";
   const sessionsRef = useRef<HTMLDivElement>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -128,6 +125,7 @@ export default function Home() {
       alert(t("connectionError"));
     }
   };
+
   const handleLeaveSession = async (sessionCode: string) => {
     if (!confirm(t("confirmLeave"))) return;
 
@@ -152,6 +150,7 @@ export default function Home() {
       alert(t("connectionError"));
     }
   };
+
   const toggleTab = (tab: "managed" | "joined") => {
     if (activeTab === tab) {
       setActiveTab(null);
@@ -166,7 +165,7 @@ export default function Home() {
     }
   };
 
-  function AyetSonuIcon() {
+  function AyahIcon() {
     return (
       <svg
         width="32"
@@ -267,9 +266,9 @@ export default function Home() {
                   {user ? (
                     <Link
                       href="/admin"
-                      className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap"
+                      className="w-full md:w-auto px-8 py-4 bg-white/40 dark:bg-blue-600/10 hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white rounded-2xl font-bold text-lg border-2 border-blue-600/20 hover:border-blue-600 shadow-lg shadow-blue-500/5 hover:shadow-blue-500/20 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap group"
                     >
-                      <div className="p-1 bg-white/20 rounded-lg">
+                      <div className="p-1 bg-blue-600/10 group-hover:bg-white/20 rounded-lg transition-colors">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"
@@ -336,58 +335,47 @@ export default function Home() {
 
             {user && (
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-100 to-blue-100 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-[1.8rem] blur opacity-40 transition duration-1000"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/20 dark:to-emerald-900/20 rounded-[1.8rem] blur opacity-60 dark:opacity-40 transition duration-1000"></div>
 
                 <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-6 md:p-8 rounded-[1.8rem] shadow-xl">
-                  <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+                  <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-center items-center">
                     <button
                       onClick={() => toggleTab("managed")}
-                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap ${
+                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap border-2 ${
                         activeTab === "managed"
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]"
-                          : "bg-gray-50/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-900"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30"
+                          : "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-blue-600/20 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-md shadow-blue-500/5 hover:shadow-blue-500/20"
                       }`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                        />
+                        <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
                       </svg>
                       {t("managedSessions")}
                     </button>
 
-                    <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-6"></div>
 
+                    {/* KATILDIĞIM HALKALAR (JOINED) */}
                     <button
                       onClick={() => toggleTab("joined")}
-                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap ${
+                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap border-2 ${
                         activeTab === "joined"
-                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
-                          : "bg-gray-50/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-500/30"
+                          : "bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-500 border-emerald-600/20 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 shadow-md shadow-emerald-500/5 hover:shadow-emerald-500/20"
                       }`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z" />
                       </svg>
                       {t("joinedSessions")}
                     </button>
@@ -607,41 +595,21 @@ export default function Home() {
   );
 }
 
-function AyahIcon() {
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 36 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0 opacity-80"
-    >
-      <path
-        d="M18 2L21.5 6.5H26.5L28 11.5L33 14.5L31 19.5L33 24.5L28 27.5L26.5 32.5H21.5L18 37L14.5 32.5H9.5L8 27.5L3 24.5L5 19.5L3 14.5L8 11.5L9.5 6.5H14.5L18 2Z"
-        className="fill-emerald-600/20 stroke-emerald-600 dark:fill-emerald-400/20 dark:stroke-emerald-400"
-        strokeWidth="1.5"
-      />
-      <circle
-        cx="18"
-        cy="19.5"
-        r="5"
-        className="fill-emerald-600 dark:fill-emerald-400"
-      />
-    </svg>
-  );
-}
-
 function DashboardColumn({ title, icon, iconColor, children }: any) {
   return (
-    <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/50 dark:border-gray-800 shadow-xl shadow-gray-100/50 dark:shadow-black/20 h-full flex flex-col">
-      <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-        <div className={`p-3 rounded-2xl ${iconColor}`}>{icon}</div>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          {title}
-        </h2>
+    <div className="relative group h-full">
+      <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/20 dark:to-emerald-900/20 rounded-[1.8rem] blur opacity-50 transition duration-1000"></div>
+
+      <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-6 md:p-8 rounded-[1.8rem] shadow-xl h-full flex flex-col">
+        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+          <div className={`p-3 rounded-2xl ${iconColor}`}>{icon}</div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+            {title}
+          </h2>
+        </div>
+
+        <div className="flex-1 flex flex-col">{children}</div>
       </div>
-      <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
@@ -808,39 +776,63 @@ function SessionCard({
         {type === "managed" && (
           <div className="flex flex-wrap items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-50 dark:border-gray-700/50">
             <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 rounded-lg p-0.5 border border-gray-100 dark:border-gray-700">
-              <ActionButton
-                icon={
-                  copiedId === `${session.id}-link` ? (
-                    <CheckIcon />
-                  ) : (
-                    <LinkIcon />
-                  )
-                }
-                label={t("copyLink")}
-                onClick={(e: any) =>
-                  handleCopyLink(e, session.code, session.id)
-                }
-                isActive={copiedId === `${session.id}-link`}
-                activeClass="text-green-600 bg-white shadow-sm"
-              />
-              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5"></div>
-              <ActionButton
-                icon={
-                  copiedId === `${session.id}-code` ? (
-                    <CheckIcon />
-                  ) : (
-                    <HashIcon />
-                  )
-                }
-                label={t("copyCode")}
-                onClick={(e: any) =>
-                  handleCopyCode(e, session.code, session.id)
-                }
-                isActive={copiedId === `${session.id}-code`}
-                activeClass="text-green-600 bg-white shadow-sm"
-              />
-            </div>
+              {/* LİNKİ KOPYALA BUTONU */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Kartın tıklanmasını engelle
+                  const link = `${window.location.origin}/join/${session.code}`;
+                  navigator.clipboard.writeText(link);
+                  alert(t("copied"));
+                }}
+                className="p-1.5 rounded-md transition-all text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 relative group/btn hover:bg-white dark:hover:bg-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  ></path>
+                </svg>
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] text-white bg-gray-800 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  {t("copyLink") || "Linki kopyala"}
+                </span>
+              </button>
 
+              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5"></div>
+
+              <button
+                onClick={(e) => {
+                  navigator.clipboard.writeText(session.code);
+                  alert(t("copied"));
+                }}
+                className="p-1.5 rounded-md transition-all text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 relative group/btn hover:bg-white dark:hover:bg-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                  ></path>
+                </svg>
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] text-white bg-gray-800 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  {t("copyCode") || "Kodu kopyala"}
+                </span>
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => {

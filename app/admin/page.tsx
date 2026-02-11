@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import { Resource } from "@/types";
+import Link from "next/link";
 
 export default function AdminPage() {
   const { t, language } = useLanguage();
@@ -12,10 +13,11 @@ export default function AdminPage() {
   const [resources, setResources] = useState<Resource[]>([]);
 
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
-  const [participants, setParticipants] = useState<string>("1");
+  const [participants, setParticipants] = useState<string>("10");
   const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
   const [createdLink, setCreatedLink] = useState<string>("");
   const [createdCode, setCreatedCode] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -30,12 +32,9 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (!apiUrl) return;
-    if (!token) return;
+    if (!apiUrl || !token) return;
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+    const headers = { Authorization: `Bearer ${token}` };
 
     fetch(`${apiUrl}/api/distribution/resources`, { headers })
       .then((res) => {
@@ -43,19 +42,15 @@ export default function AdminPage() {
           logout();
           throw new Error(t("sessionExpired") || "Session expired");
         }
-        if (!res.ok) throw new Error("Fetch failed: " + res.status);
+        if (!res.ok) throw new Error("Fetch failed");
         return res.json();
       })
       .then((data) => {
-        if (Array.isArray(data)) {
-          setResources(data);
-        } else {
-          console.error("Unexpected data format:", data);
-          setResources([]);
-        }
+        if (Array.isArray(data)) setResources(data);
+        else setResources([]);
       })
       .catch((err) => {
-        console.error("Fetch error:", err);
+        console.error(err);
         setResources([]);
       });
   }, [apiUrl, token, logout, t]);
@@ -67,13 +62,10 @@ export default function AdminPage() {
         const parsed = JSON.parse(savedData);
         if (parsed.selectedResources)
           setSelectedResources(parsed.selectedResources);
-        // DEĞİŞİKLİK 2: Kayıtlı veriyi string'e çevirerek alıyoruz.
         if (parsed.participants) setParticipants(String(parsed.participants));
         if (parsed.customTotals) setCustomTotals(parsed.customTotals);
-        if (parsed.createdLink) setCreatedLink(parsed.createdLink);
-        if (parsed.createdCode) setCreatedCode(parsed.createdCode);
       } catch (e) {
-        console.error("Storage read error", e);
+        console.error("Storage error", e);
       }
     }
   }, []);
@@ -83,11 +75,9 @@ export default function AdminPage() {
       selectedResources,
       participants,
       customTotals,
-      createdLink,
-      createdCode,
     };
     sessionStorage.setItem("adminState", JSON.stringify(dataToSave));
-  }, [selectedResources, participants, customTotals, createdLink, createdCode]);
+  }, [selectedResources, participants, customTotals]);
 
   const handleCheckboxChange = (id: string) => {
     if (selectedResources.includes(id)) {
@@ -107,10 +97,9 @@ export default function AdminPage() {
     }
     if (selectedResources.length === 0) return alert(t("alertSelectResource"));
 
+    setLoading(true);
     try {
-      // DEĞİŞİKLİK 3: API'ye gönderirken string olan değeri Number'a çeviriyoruz.
       const participantsNum = parseInt(participants) || 10;
-
       const payload = {
         resourceIds: selectedResources.map((id) => Number(id)),
         participants: participantsNum,
@@ -128,13 +117,6 @@ export default function AdminPage() {
 
       if (!res.ok) {
         const errorText = await res.text();
-        try {
-          const errorJson = JSON.parse(errorText);
-          if (typeof errorJson === "object") {
-            const msg = Object.values(errorJson).join("\n");
-            throw new Error(msg || errorText);
-          }
-        } catch (e) {}
         throw new Error(`Error ${res.status}: ${errorText}`);
       }
 
@@ -143,34 +125,14 @@ export default function AdminPage() {
       setCreatedCode(data.code);
       setCreatedLink(link);
       sessionStorage.removeItem("adminState");
+
+      // Başarılı olunca yukarı kaydır
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error(err);
       alert(err.message || t("errorOccurred"));
-    }
-  };
-
-  const handleResetData = async () => {
-    if (!confirm(t("confirmReset") || "Are you sure?")) return;
-    if (!token) return;
-
-    try {
-      const res = await fetch(`${apiUrl}/api/distribution/init`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const text = await res.text();
-        alert(text);
-        sessionStorage.removeItem("adminState");
-        window.location.reload();
-      } else {
-        alert("Reset failed");
-      }
-    } catch (e) {
-      alert("Error during reset");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,6 +140,7 @@ export default function AdminPage() {
   const distributedResources = safeResources.filter((r) => r.type !== "JOINT");
   const individualResources = safeResources.filter((r) => r.type === "JOINT");
 
+  // Input gerektiren kaynakları filtrele (COUNTABLE veya JOINT)
   const selectedResourcesWithInput = selectedResources
     .map((id) => safeResources.find((r) => r.id.toString() === id))
     .filter(
@@ -185,176 +148,338 @@ export default function AdminPage() {
         r !== undefined && (r.type === "COUNTABLE" || r.type === "JOINT"),
     );
 
-  const renderList = (list: Resource[]) => (
-    <div className="space-y-2">
-      {list.map((r) => (
-        <div
-          key={r.id}
-          className="flex items-center p-2 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200 transition"
-        >
-          <input
-            type="checkbox"
-            id={`res-${r.id}`}
-            value={r.id}
-            checked={selectedResources.includes(r.id.toString())}
-            onChange={() => handleCheckboxChange(r.id.toString())}
-            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-          />
-          <label
-            htmlFor={`res-${r.id}`}
-            className="ml-3 text-gray-800 cursor-pointer select-none flex-1"
+  const ResourceItem = ({ r, isSelected, onClick }: any) => (
+    <div
+      onClick={onClick}
+      className={`group flex items-center p-4 rounded-xl border transition-all duration-200 cursor-pointer mb-3 select-none ${
+        isSelected
+          ? "bg-blue-50 border-blue-200 shadow-sm dark:bg-blue-900/20 dark:border-blue-800"
+          : "bg-white border-gray-100 hover:border-blue-100 hover:shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600"
+      }`}
+    >
+      <div
+        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+          isSelected
+            ? "border-blue-500 bg-blue-500 dark:border-blue-400 dark:bg-blue-400"
+            : "border-gray-300 group-hover:border-blue-400 dark:border-gray-600"
+        }`}
+      >
+        {isSelected && (
+          <svg
+            className="w-4 h-4 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            {getDisplayName(r)}
-          </label>
-        </div>
-      ))}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        )}
+      </div>
+      <span
+        className={`ml-3 font-medium text-sm md:text-base ${
+          isSelected
+            ? "text-blue-700 dark:text-blue-300"
+            : "text-gray-700 dark:text-gray-300"
+        }`}
+      >
+        {getDisplayName(r)}
+      </span>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full relative">
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <button
-            onClick={handleResetData}
-            className="text-xs text-red-500 underline hover:text-red-700"
-          >
-            {t("refresh") || "Reset Data"}
-          </button>
-          {user && (
-            <span className="text-xs text-blue-600 font-bold">👤 {user}</span>
-          )}
-        </div>
-
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          {t("createDistTitle") || "Create New Session"}
-        </h2>
-
-        {distributedResources.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wide mb-2 flex items-center">
-              {t("sharedResources") || "Shared Resources"}
-            </h3>
-            <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
-              {renderList(distributedResources)}
-            </div>
-          </div>
-        )}
-
-        {individualResources.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center">
-              {t("fixedResources") || "Fixed Resources"}
-            </h3>
-            <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto">
-              {renderList(individualResources)}
-            </div>
-          </div>
-        )}
-
-        {selectedResourcesWithInput.length > 0 && (
-          <div className="mb-6 animate-in fade-in slide-in-from-top-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="block text-amber-800 font-bold mb-3 text-sm border-b border-amber-200 pb-2">
-              {t("setTargetCounts") || "Set Custom Targets (Optional)"}
-            </p>
-
-            {selectedResourcesWithInput.map((r) => (
-              <div key={r.id} className="mb-3 last:mb-0 flex flex-col">
-                <label className="text-xs font-bold text-gray-700 mb-1">
-                  {getDisplayName(r)}
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    placeholder={r.totalUnits.toString()}
-                    className="w-full border p-2 rounded text-black text-sm focus:border-amber-500 outline-none bg-white"
-                    value={customTotals[r.id.toString()] || ""}
-                    onChange={(e) =>
-                      setCustomTotals({
-                        ...customTotals,
-                        [r.id.toString()]: e.target.value,
-                      })
-                    }
-                  />
-                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
-                    {t("default") || "Def"}: {r.totalUnits}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mb-6">
-          <label className="block text-gray-700 font-bold mb-2">
-            {t("participantCount") || "Participant Count"}
-          </label>
-          <input
-            type="number"
-            className="w-full border-2 border-gray-200 p-3 rounded-lg text-black focus:border-blue-500 outline-none transition"
-            value={participants}
-            // DEĞİŞİKLİK 4: Number(...) dönüşümünü kaldırdık, doğrudan string değeri alıyoruz.
-            onChange={(e) => setParticipants(e.target.value)}
-            placeholder="10"
-            min="1"
-          />
-        </div>
-
-        <button
-          onClick={handleCreate}
-          disabled={!user}
-          className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition font-bold shadow-md active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
+    <div className="min-h-screen pb-20 pt-6 px-4 md:px-8 bg-transparent">
+      {/* --- HEADER --- */}
+      <div className="max-w-2xl mx-auto mb-8 flex items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors font-bold text-sm dark:text-gray-400 dark:hover:text-blue-400"
         >
-          {user
-            ? t("createButton") || "CREATE SESSION"
-            : t("loginRequired") || "Please Login"}
-        </button>
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          {t("backHome")}
+        </Link>
+        <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
+          {t("createDistTitle") || "Yeni Halka"}
+        </h1>
+      </div>
 
+      <div className="max-w-2xl mx-auto space-y-8">
+        {/* --- BAŞARILI OLUŞTURMA KARTI --- */}
         {createdLink && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded text-center">
-            <p className="text-green-800 font-bold mb-2">
-              {t("linkCreated") || "Session Link Created:"}
-            </p>
-            <a
-              href={createdLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline text-sm break-all font-mono block mb-3"
-            >
-              {createdLink}
-            </a>
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-green-200 dark:border-green-900 rounded-[2rem] p-8 shadow-xl shadow-green-900/5 animate-in fade-in slide-in-from-top-4">
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-green-900/30 dark:text-green-400">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-2">
+              {t("sessionCreated")}
+            </h2>
 
-            <div className="flex justify-center gap-3">
+            <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-6 flex flex-col items-center">
+              <span className="text-sm font-bold text-gray-400 mb-1">
+                {t("sessionCodePlaceholder")}:
+              </span>
+              <span className="text-3xl font-mono font-black text-blue-600 dark:text-blue-400 tracking-widest">
+                {createdCode}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(createdLink);
-                  alert(t("copied") || "Copied!");
+                  navigator.clipboard.writeText(createdCode);
+                  alert(t("copied"));
                 }}
-                className="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100 text-black text-sm font-bold transition shadow-sm"
-              >
-                {t("copy") || "Copy"}
-              </button>
-
-              <a
-                href={`/admin/monitor?code=${createdCode}`}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold transition shadow-sm flex items-center gap-2"
+                className="w-full py-4 bg-white text-gray-800 border-2 border-gray-100 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
               >
                 <svg
-                  className="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 text-gray-400"
                   fill="none"
-                  stroke="currentColor"
                   viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
                   />
                 </svg>
-                {t("trackButton") || "Track"}
-              </a>
+                {t("copyCode")}
+              </button>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(createdLink);
+                  alert(t("copied"));
+                }}
+                className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                  />
+                </svg>
+                {t("copyLink")}
+              </button>
+
+              <Link
+                href={`/admin/monitor?code=${createdCode}`}
+                className="w-full py-4 bg-white text-gray-700 border-2 border-gray-200 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                {t("trackButton")}
+              </Link>
             </div>
+
+            <button
+              onClick={() => {
+                setCreatedLink("");
+                setCreatedCode("");
+                setSelectedResources([]);
+                setCustomTotals({});
+              }}
+              className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline w-full text-center"
+            >
+              {t("createNewOne") || "Yeni bir tane daha oluştur"}
+            </button>
+          </div>
+        )}
+
+        {/* --- FORM ALANI (Halka Oluşturulmadıysa Göster) --- */}
+        {!createdLink && (
+          <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 rounded-[2rem] p-6 md:p-8 shadow-xl">
+            {/* KATILIMCI SAYISI */}
+            <div className="mb-8">
+              <label className="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 dark:text-gray-400">
+                {t("participantCount")}
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  value={participants}
+                  onChange={(e) => setParticipants(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold text-gray-800 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+                  placeholder="10"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm pointer-events-none">
+                  {t("person")}
+                </div>
+              </div>
+            </div>
+
+            {/* DAĞITILAN KAYNAKLAR (Checkbox List) */}
+            {distributedResources.length > 0 && (
+              <div className="mb-8">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 dark:text-blue-400">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  {t("sharedResources")}
+                </h3>
+                <div className="grid grid-cols-1 gap-1">
+                  {distributedResources.map((r) => (
+                    <ResourceItem
+                      key={r.id}
+                      r={r}
+                      isSelected={selectedResources.includes(r.id.toString())}
+                      onClick={() => handleCheckboxChange(r.id.toString())}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* BİREYSEL KAYNAKLAR (Checkbox List) */}
+            {individualResources.length > 0 && (
+              <div className="mb-8">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-emerald-600 uppercase tracking-wide mb-4 dark:text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  {t("fixedResources")}
+                </h3>
+                <div className="grid grid-cols-1 gap-1">
+                  {individualResources.map((r) => (
+                    <ResourceItem
+                      key={r.id}
+                      r={r}
+                      isSelected={selectedResources.includes(r.id.toString())}
+                      onClick={() => handleCheckboxChange(r.id.toString())}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ÖZEL HEDEF AYARLARI (Seçilenler için) */}
+            {selectedResourcesWithInput.length > 0 && (
+              <div className="mb-8 animate-in fade-in slide-in-from-top-2">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-4 border-b border-amber-200 dark:border-amber-800/50 pb-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {t("setTargetCounts")}
+                  </h3>
+
+                  <div className="space-y-4">
+                    {selectedResourcesWithInput.map((r) => (
+                      <div
+                        key={r.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      >
+                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                          {getDisplayName(r)}
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-medium text-gray-400">
+                            {t("default")}: {r.totalUnits}
+                          </span>
+                          <input
+                            type="number"
+                            placeholder={r.totalUnits.toString()}
+                            className="w-24 bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-700 rounded-lg px-3 py-1.5 text-sm font-bold text-center focus:ring-2 focus:ring-amber-500/50 outline-none"
+                            value={customTotals[r.id.toString()] || ""}
+                            onChange={(e) =>
+                              setCustomTotals({
+                                ...customTotals,
+                                [r.id.toString()]: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* OLUŞTUR BUTONU */}
+            <button
+              onClick={handleCreate}
+              disabled={loading || selectedResources.length === 0}
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  {t("processing")}
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {t("createButton")}
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>

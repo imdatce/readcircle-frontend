@@ -17,7 +17,6 @@ export default function JoinPage({
   const { t, language } = useLanguage();
   const { code } = use(params);
 
-  // Tüm mantığı hook'tan çekiyoruz
   const {
     session,
     loading,
@@ -30,17 +29,18 @@ export default function JoinPage({
     actions,
   } = useDistributionSession(code);
 
+  const [activeTab, setActiveTab] = useState<"distributed" | "individual">(
+    "distributed",
+  );
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
 
-  const toggleGroup = (groupName: string) => {
-    setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
-  };
+  const [tempName, setTempName] = useState(userName || "");
 
-  // Gruplama mantığı (View Logic olduğu için burada kalabilir veya ayrı bir utils'e alınabilir)
   const getSplitGroups = () => {
     if (!session) return { distributed: {}, individual: {} };
+
     const distributed: Record<string, Assignment[]> = {};
     const individual: Record<string, Assignment[]> = {};
 
@@ -75,399 +75,236 @@ export default function JoinPage({
     return { distributed, individual };
   };
 
-  const renderGroupList = (groups: Record<string, Assignment[]>) => {
-    return Object.entries(groups).map(([resourceName, assignments]) => {
-      const isOpen = expandedGroups[resourceName] || false;
-      return (
-        <div
-          key={resourceName}
-          className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4 dark:bg-gray-900 dark:border-gray-800 transition-colors duration-300"
-        >
-          <button
-            onClick={() => toggleGroup(resourceName)}
-            className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition duration-200 dark:bg-gray-900 dark:hover:bg-gray-800"
-          >
-            <div className="flex items-center">
-              <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${isOpen ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"}`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                  {resourceName}
-                </h2>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {assignments.length} {t("person")} / {t("part")}
-                </span>
-              </div>
-            </div>
-            <div
-              className={`transform transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0"}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 text-gray-400"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                />
-              </svg>
-            </div>
-          </button>
+  const { distributed, individual } = getSplitGroups();
+  const hasDistributed = Object.keys(distributed).length > 0;
+  const hasIndividual = Object.keys(individual).length > 0;
 
-          {isOpen && (
-            <div className="p-4 bg-gray-50 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300 dark:bg-gray-950 dark:border-gray-800">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assignments.map((item) => {
-                  const defaultTotal = item.endUnit - item.startUnit + 1;
-                  const safeCount = localCounts[item.id] ?? defaultTotal;
-                  const isAssignedToUser =
-                    userName && item.assignedToName === userName;
-                  const isCompleted = item.isCompleted || false;
+  if (!hasDistributed && hasIndividual && activeTab === "distributed") {
+    setActiveTab("individual");
+  }
 
-                  let translation = item.resource.translations?.find(
-                    (t) => t.langCode === language,
-                  );
-                  if (!translation)
-                    translation =
-                      item.resource.translations?.find(
-                        (t) => t.langCode === "tr",
-                      ) || item.resource.translations?.[0];
+  const handleNameSubmit = () => {
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
+      localStorage.setItem("guestUserName", tempName.trim());
+    }
+  };
 
-                  return (
-                    <div
-                      key={item.id}
-                      className={`relative p-5 rounded-xl border transition-all duration-300 shadow-sm ${
-                        isCompleted
-                          ? "bg-green-50 border-green-200 opacity-80 dark:bg-green-900/20 dark:border-green-900"
-                          : item.isTaken
-                            ? isAssignedToUser
-                              ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-100 dark:bg-blue-900/20 dark:border-blue-900 dark:ring-blue-900"
-                              : "bg-gray-50 border-gray-200 opacity-75 grayscale-[0.5] dark:bg-gray-800/50 dark:border-gray-700"
-                            : "bg-white border-gray-100 hover:shadow-md hover:border-emerald-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-emerald-800"
-                      }`}
-                    >
-                      <div className="absolute top-4 right-4">
-                        {isCompleted ? (
-                          <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 dark:bg-green-900 dark:text-green-300">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-3 w-3"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>{" "}
-                            {t("completed")}
-                          </span>
-                        ) : item.isTaken ? (
-                          <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300">
-                            {item.assignedToName}
-                          </span>
-                        ) : (
-                          <span className="bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse dark:bg-emerald-900 dark:text-emerald-300">
-                            {t("statusEmpty")}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mb-3">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-bold text-gray-800 dark:text-gray-200">
-                            {item.participantNumber}. {t("person")}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {item.resource.type === "JOINT"
-                            ? `${t("target")}:`
-                            : (item.resource.type === "PAGED"
-                                ? t("page")
-                                : item.resource.type === "COUNTABLE"
-                                  ? t("pieces")
-                                  : translation?.unitName || t("part")) + ":"}
-                          {item.resource.type === "JOINT" ? (
-                            <span className="ml-1 font-bold">
-                              {item.endUnit} {t("pieces")}
-                            </span>
-                          ) : (
-                            <span>
-                              {" "}
-                              {item.startUnit} - {item.endUnit}
-                            </span>
-                          )}
-                          {item.resource.type === "COUNTABLE" && (
-                            <span className="ml-2 font-bold text-blue-600 dark:text-blue-400">
-                              ({t("total")}: {item.endUnit - item.startUnit + 1}
-                              )
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1 items-center w-full">
-                        {item.isTaken ? (
-                          <>
-                            {item.resource.type === "COUNTABLE" ||
-                            item.resource.type === "JOINT" ? (
-                              <div className="w-full flex flex-col items-center">
-                                <Zikirmatik
-                                  currentCount={safeCount}
-                                  onDecrement={() =>
-                                    actions.decrementCount(item.id)
-                                  }
-                                  t={t}
-                                  readOnly={!isAssignedToUser}
-                                />
-                                {isAssignedToUser && (
-                                  <button
-                                    onClick={() =>
-                                      actions.openReadingModal(item)
-                                    }
-                                    className="mt-2 text-blue-600 text-sm font-semibold underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                  >
-                                    {t("takeRead")} ({t("readText")})
-                                  </button>
-                                )}
-                              </div>
-                            ) : // LIST_BASED ve PAGED için butonlar
-                            isAssignedToUser ? (
-                              <button
-                                onClick={() =>
-                                  item.resource.type === "PAGED"
-                                    ? actions.openReadingModal(
-                                        item,
-                                        item.startUnit,
-                                        item.endUnit,
-                                      )
-                                    : actions.openReadingModal(item)
-                                }
-                                className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow transition flex items-center justify-center gap-2"
-                              >
-                                {t("takeRead")}
-                              </button>
-                            ) : (
-                              <button
-                                disabled
-                                className="w-full py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed text-sm font-bold shadow-inner border border-gray-400 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600"
-                              >
-                                {t("full")}
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => actions.handleTakePart(item.id)}
-                            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-sm font-bold transition transform hover:scale-[1.02]"
-                          >
-                            {t("select")}
-                          </button>
-                        )}
-                      </div>
-
-                      {isAssignedToUser && (
-                        <div className="mt-3 w-full space-y-2">
-                          {!isCompleted && (
-                            <button
-                              onClick={() =>
-                                actions.handleCompletePart(item.id)
-                              }
-                              className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all active:scale-95 font-bold text-sm"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>{" "}
-                              {t("finished")}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => actions.handleCancelPart(item.id)}
-                            className="w-full group flex items-center justify-center gap-2 py-2 bg-white border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200 font-bold text-sm shadow-sm active:scale-95 dark:bg-red-900/10 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2.5}
-                              stroke="currentColor"
-                              className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18 18 6M6 6l12 12"
-                              />
-                            </svg>{" "}
-                            {t("cancelRead")}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    });
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
   };
 
   if (loading)
     return (
-      <div className="p-10 text-center font-bold text-gray-600 dark:text-gray-300">
-        {t("loading")}
-      </div>
-    );
-  if (error)
-    return (
-      <div className="p-10 text-center text-red-500 font-bold">{error}</div>
-    );
-  if (!session) return null;
-
-  const { distributed, individual } = getSplitGroups();
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 relative dark:bg-gray-950 transition-colors duration-300">
-      <Link
-        href="/"
-        className="fixed top-24 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-gray-100 hover:text-blue-600 transition-all font-bold text-sm dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
-        <span className="hidden sm:inline">{t("backHome")}</span>
-      </Link>
-
-      <div className="max-w-4xl mx-auto">
-        {!userName && (
-          <div className="bg-white p-6 rounded-lg shadow mb-8 text-center dark:bg-gray-900 dark:text-gray-100 transition-colors">
-            <h1 className="text-3xl font-bold text-red-800 mb-2 dark:text-red-400">
-              {t("joinTitle")}
-            </h1>
-            <div className="mb-6">
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded shadow-sm dark:bg-blue-900/20 dark:border-blue-600">
-                <p className="text-sm text-red-700 font-bold mb-2 dark:text-red-300">
-                  {t("joinIntro")}
-                </p>
-                <input
-                  type="text"
-                  placeholder={t("yourName")}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setUserName(val);
-                    localStorage.setItem("guestUserName", val);
-                  }}
-                  className="w-full p-2 border border-blue-300 rounded font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-800 dark:border-blue-700 dark:text-gray-100"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4 md:gap-8 items-start mt-10">
-          <div className="w-full">
-            {Object.keys(distributed).length > 0 && (
-              <div className="mb-6 md:mb-0">
-                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm dark:text-white dark:border-gray-700 dark:bg-gray-950 transition-colors">
-                  <span className="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded-lg shadow-sm dark:bg-blue-900/40 dark:text-blue-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 md:h-6 md:w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </span>
-                  {t("distributedResources")}
-                </h2>
-                <div className="flex flex-col gap-3 md:gap-5">
-                  {renderGroupList(distributed)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full">
-            {Object.keys(individual).length > 0 && (
-              <div>
-                <h2 className="text-lg md:text-2xl font-extrabold text-gray-800 border-b-2 border-gray-200 pb-2 md:pb-4 mb-4 md:mb-6 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 sticky top-0 bg-gray-50 z-10 pt-2 shadow-sm dark:text-white dark:border-gray-700 dark:bg-gray-950 transition-colors">
-                  <span className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm dark:bg-emerald-900/40 dark:text-emerald-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 md:h-6 md:w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </span>
-                  {t("individualResources")}
-                </h2>
-                <div className="flex flex-col gap-3 md:gap-5">
-                  {renderGroupList(individual)}
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="flex h-screen items-center justify-center bg-transparent">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium animate-pulse">
+            {t("loading")}
+          </p>
         </div>
       </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex h-screen items-center justify-center bg-transparent p-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
+          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/20">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-8 h-8"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+            {t("errorOccurred")}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
+          <Link
+            href="/"
+            className="inline-block w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition"
+          >
+            {t("backHome")}
+          </Link>
+        </div>
+      </div>
+    );
+
+  if (!session) return null;
+
+  return (
+    <div className="min-h-screen bg-transparent pb-20">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 dark:text-gray-300 dark:hover:text-emerald-400 transition-colors group"
+          >
+            <div className="p-2 rounded-full bg-gray-100 group-hover:bg-emerald-50 dark:bg-gray-800 dark:group-hover:bg-emerald-900/20 transition-colors">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+            </div>
+            <span className="font-bold text-sm hidden sm:inline">
+              {t("backHome")}
+            </span>
+          </Link>
+
+          <div className="w-10"></div>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
+        {!userName ? (
+          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-xl shadow-emerald-900/5 border border-emerald-100 dark:border-emerald-900/30 text-center animate-in slide-in-from-bottom-4 duration-500">
+            <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">👋</span>
+            </div>
+            <h2 className="text-2xl font-black text-gray-800 dark:text-white mb-2">
+              {t("joinTitle")}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+              {t("joinIntro")}
+            </p>
+
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                placeholder={t("yourName")}
+                className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-900 rounded-2xl text-lg font-bold text-center outline-none transition-all placeholder:text-gray-400 text-gray-800 dark:text-white"
+                onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+              />
+              <button
+                onClick={handleNameSubmit}
+                disabled={!tempName.trim()}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t("continue") || "Devam Et"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex p-1.5 bg-white dark:bg-gray-900/60 backdrop-blur rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-8 mx-auto max-w-lg">
+              {hasDistributed && (
+                <button
+                  onClick={() => setActiveTab("distributed")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    activeTab === "distributed"
+                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                      : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
+                  </svg>
+                  {t("distributedResources")}
+                </button>
+              )}
+
+              {hasIndividual && (
+                <button
+                  onClick={() => setActiveTab("individual")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    activeTab === "individual"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                      : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  {t("individualResources")}
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              {activeTab === "distributed" && (
+                <ResourceGroupList
+                  groups={distributed}
+                  expandedGroups={expandedGroups}
+                  toggleGroup={toggleGroup}
+                  localCounts={localCounts}
+                  userName={userName}
+                  actions={actions}
+                  language={language}
+                  t={t}
+                  themeColor="emerald"
+                />
+              )}
+
+              {activeTab === "individual" && (
+                <ResourceGroupList
+                  groups={individual}
+                  expandedGroups={expandedGroups}
+                  toggleGroup={toggleGroup}
+                  localCounts={localCounts}
+                  userName={userName}
+                  actions={actions}
+                  language={language}
+                  t={t}
+                  themeColor="blue"
+                />
+              )}
+
+              {((activeTab === "distributed" && !hasDistributed) ||
+                (activeTab === "individual" && !hasIndividual)) && (
+                <div className="text-center py-20 bg-white/50 dark:bg-gray-800/50 rounded-[2rem] border border-dashed border-gray-300 dark:border-gray-700">
+                  <p className="text-gray-400 font-medium">
+                    {t("noContentInTab") || "Bu kategoride içerik bulunmuyor."}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </main>
 
       {readingModalContent && (
         <ReadingModal
@@ -481,6 +318,381 @@ export default function JoinPage({
           t={t}
         />
       )}
+    </div>
+  );
+}
+
+function ResourceGroupList({
+  groups,
+  expandedGroups,
+  toggleGroup,
+  localCounts,
+  userName,
+  actions,
+  language,
+  t,
+  themeColor,
+}: any) {
+  const isEmerald = themeColor === "emerald";
+  const activeColorClass = isEmerald ? "text-emerald-600" : "text-blue-600";
+  const activeBgClass = isEmerald ? "bg-emerald-100" : "bg-blue-100";
+  const darkActiveBgClass = isEmerald
+    ? "dark:bg-emerald-900/40"
+    : "dark:bg-blue-900/40";
+
+  return Object.entries(groups).map(([resourceName, assignments]: any) => {
+    const isOpen = expandedGroups[resourceName] || false;
+    const totalItems = assignments.length;
+    const completedItems = assignments.filter((a: any) => a.isCompleted).length;
+    const progress = Math.round((completedItems / totalItems) * 100);
+
+    return (
+      <div
+        key={resourceName}
+        className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
+      >
+        <button
+          onClick={() => toggleGroup(resourceName)}
+          className="w-full flex items-center justify-between p-5 bg-white hover:bg-gray-50/50 transition duration-200 dark:bg-gray-900 dark:hover:bg-gray-800/50"
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-inner transition-colors duration-300 ${
+                isOpen
+                  ? `${isEmerald ? "bg-emerald-500" : "bg-blue-600"} text-white`
+                  : `${activeBgClass} ${activeColorClass} ${darkActiveBgClass} dark:${isEmerald ? "text-emerald-400" : "text-blue-400"}`
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                {isEmerald ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                )}
+              </svg>
+            </div>
+
+            <div className="text-left">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
+                {resourceName}
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md">
+                  {assignments.length} {t("part")}
+                </span>
+                {progress > 0 && (
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    %{progress} {t("completed")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 transform transition-transform duration-300 ${
+              isOpen ? "rotate-180 bg-gray-200 dark:bg-gray-700" : "rotate-0"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-4 h-4 text-gray-500 dark:text-gray-400"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 8.25-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </div>
+        </button>
+
+        {isOpen && (
+          <div className="p-4 bg-gray-50/50 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-300 dark:bg-black/20 dark:border-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {assignments.map((item: any) => (
+                <AssignmentCard
+                  key={item.id}
+                  item={item}
+                  localCounts={localCounts}
+                  userName={userName}
+                  actions={actions}
+                  language={language}
+                  t={t}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
+function AssignmentCard({
+  item,
+  localCounts,
+  userName,
+  actions,
+  language,
+  t,
+}: any) {
+  const defaultTotal = item.endUnit - item.startUnit + 1;
+  const safeCount = localCounts[item.id] ?? defaultTotal;
+  const isAssignedToUser = userName && item.assignedToName === userName;
+  const isCompleted = item.isCompleted || false;
+
+  let translation = item.resource.translations?.find(
+    (t: any) => t.langCode === language,
+  );
+  if (!translation)
+    translation =
+      item.resource.translations?.find((t: any) => t.langCode === "tr") ||
+      item.resource.translations?.[0];
+
+  let cardStyle =
+    "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700";
+  let glowStyle = "hover:border-blue-300 dark:hover:border-blue-700";
+
+  if (isCompleted) {
+    cardStyle =
+      "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30";
+    glowStyle = "";
+  } else if (isAssignedToUser) {
+    cardStyle =
+      "bg-white border-emerald-400 ring-2 ring-emerald-100 dark:bg-gray-800 dark:border-emerald-500 dark:ring-emerald-900/20 shadow-lg transform scale-[1.01]";
+    glowStyle = "";
+  } else if (item.isTaken) {
+    cardStyle =
+      "bg-gray-50 border-gray-100 opacity-70 grayscale-[0.8] dark:bg-gray-900 dark:border-gray-800";
+    glowStyle = "";
+  }
+
+  return (
+    <div
+      className={`relative p-5 rounded-2xl border transition-all duration-300 shadow-sm ${cardStyle} ${glowStyle}`}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+            {t("part")} {item.participantNumber}
+          </span>
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {item.resource.type === "JOINT"
+              ? `${t("target")}:`
+              : (item.resource.type === "PAGED"
+                  ? t("page")
+                  : item.resource.type === "COUNTABLE"
+                    ? t("pieces")
+                    : translation?.unitName || t("part")) + ":"}
+            {item.resource.type === "JOINT" ? (
+              <span className="ml-1 font-black text-gray-900 dark:text-white">
+                {item.endUnit} {t("pieces")}
+              </span>
+            ) : (
+              <span className="ml-1 font-black text-gray-900 dark:text-white">
+                {item.startUnit} - {item.endUnit}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div>
+          {isCompleted ? (
+            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide dark:bg-emerald-900/40 dark:text-emerald-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-3 h-3"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {t("completed")}
+            </span>
+          ) : item.isTaken ? (
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                isAssignedToUser
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              }`}
+            >
+              {isAssignedToUser ? t("yourTask") : item.assignedToName}
+            </span>
+          ) : (
+            <span className="inline-flex items-center bg-green-50 text-green-600 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30">
+              {t("statusEmpty")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2">
+        {item.isTaken ? (
+          <>
+            {(item.resource.type === "COUNTABLE" ||
+              item.resource.type === "JOINT") && (
+              <div className="mb-4">
+                <Zikirmatik
+                  currentCount={safeCount}
+                  onDecrement={() => actions.decrementCount(item.id)}
+                  t={t}
+                  readOnly={!isAssignedToUser}
+                />
+              </div>
+            )}
+
+            {isAssignedToUser ? (
+              <div className="space-y-3">
+                {item.resource.type !== "PAGED" && (
+                  <button
+                    onClick={() => actions.openReadingModal(item)}
+                    className="w-full py-2 text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline flex items-center justify-center gap-1"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    {t("readText")}
+                  </button>
+                )}
+
+                {item.resource.type === "PAGED" && (
+                  <button
+                    onClick={() =>
+                      actions.openReadingModal(
+                        item,
+                        item.startUnit,
+                        item.endUnit,
+                      )
+                    }
+                    className="w-full py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    {t("takeRead")}
+                  </button>
+                )}
+
+                <div className="flex gap-2 w-full">
+                  <button
+                    onClick={() => actions.handleCompletePart(item.id)}
+                    className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 shrink-0"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>{t("finished")}</span>
+                  </button>
+
+                  <button
+                    onClick={() => actions.handleCancelPart(item.id)}
+                    className="flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-red-500 border-red-100 hover:bg-red-50 dark:bg-transparent dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-4 h-4 shrink-0"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18 18 6M6 6l12 12"
+                      />
+                    </svg>
+                    <span>{t("giveUp")}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-2">
+                <div className="w-full py-2 bg-gray-100 text-gray-400 rounded-lg text-xs font-bold text-center border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500">
+                  {t("full")}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <button
+            onClick={() => actions.handleTakePart(item.id)}
+            className="w-full py-3 bg-white border-2 border-dashed border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 group dark:bg-gray-800/50 dark:border-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+          >
+            <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-200 transition-colors dark:bg-emerald-900 dark:text-emerald-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </span>
+            {t("select")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
