@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -436,6 +435,7 @@ function MonitorContent() {
                                 item.resource.type === "JOINT" ? (
                                   <div className="flex flex-col items-center justify-center">
                                     {(() => {
+                                      // @ts-expect-error - currentCount types fix
                                       const current = item.currentCount;
                                       const total =
                                         item.endUnit - item.startUnit + 1;

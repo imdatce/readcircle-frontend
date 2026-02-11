@@ -246,8 +246,6 @@ const translations = {
 
       copied: "Kopîkirî",
       sessionCreated: "Rûniştin çêbû",
-      codeCopied: "Kod hate kopı kirin",
-
       cancel: "Betal Bike",
       sharedResources: "Çavkaniyên parvekirî",
       delete: "Jê Bibe",
