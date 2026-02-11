@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
+import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "../common/Zikirmatik";
 import {
   formatArabicText,
@@ -46,6 +47,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   t,
 }) => {
   const [fontLevel, setFontLevel] = useState(1);
+  const { language } = useLanguage();
+
+  const getDisplayTitle = () => {
+    if (!content.codeKey) return content.title;
+    return t(`resource_${content.codeKey}`);
+  };
+
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
 
   return (
@@ -53,7 +61,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] dark:bg-gray-900">
         <div className="p-4 bg-blue-600 text-white flex flex-col gap-4 shrink-0">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-lg">{content.title}</h3>
+            <h3 className="font-bold text-lg">{getDisplayTitle()}</h3>
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-blue-700/50 rounded-lg p-1 mr-2 border border-blue-500/30">
                 <button
@@ -391,10 +399,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     {t("next")} →
                   </button>
                 </div>
-              </div>
-
-              <div className="mt-2 text-xs text-gray-400 shrink-0">
-                Kaynak: Open Source Quran Images
               </div>
             </div>
           )}

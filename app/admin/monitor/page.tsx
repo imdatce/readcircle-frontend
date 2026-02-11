@@ -6,9 +6,10 @@ import { useLanguage } from "@/context/LanguageContext";
 import { DistributionSession, Assignment } from "@/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import React, { useMemo } from "react";
 
 function MonitorContent() {
-  const { t, language } = useLanguage(); // language'i buradan alıyoruz
+  const { t, language } = useLanguage();
   const searchParams = useSearchParams();
 
   const [code, setCode] = useState("");
@@ -19,23 +20,44 @@ function MonitorContent() {
     Record<string, boolean>
   >({});
 
+  const stats = useMemo(() => {
+    if (!session || !session.assignments || session.assignments.length === 0) {
+      return {
+        total: 0,
+        distributed: 0,
+        completed: 0,
+        distPercent: 0,
+        compPercent: 0,
+      };
+    }
+
+    const total = session.assignments.length;
+
+    const distributed = session.assignments.filter((a) => a.isTaken).length;
+
+    const completed = session.assignments.filter((a) => a.isCompleted).length;
+
+    return {
+      total,
+      distributed,
+      completed,
+      distPercent: Math.round((distributed / total) * 100) || 0,
+      compPercent: Math.round((completed / total) * 100) || 0,
+    };
+  }, [session]);
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // --- YARDIMCI FONKSİYON: DOĞRU İSMİ BUL ---
   const getResourceName = (resource: any) => {
-    // 1. Önce kullanıcının seçtiği dile bak
     let trans = resource.translations?.find(
       (tr: any) => tr.langCode === language,
     );
-    // 2. Bulamazsan Türkçe'ye bak
     if (!trans) {
       trans = resource.translations?.find((tr: any) => tr.langCode === "tr");
     }
-    // 3. O da yoksa ilk geleni al
     if (!trans) {
       trans = resource.translations?.[0];
     }
-    // Hiçbiri yoksa codeKey'i döndür
     return trans?.name || resource.codeKey;
   };
 
@@ -65,7 +87,6 @@ function MonitorContent() {
         if (data.assignments && Array.isArray(data.assignments)) {
           data.assignments.forEach((a) => {
             if (a.resource) {
-              // DÜZELTME BURADA YAPILDI: getResourceName kullanıldı
               const name = getResourceName(a.resource);
               initialExpanded[name] = true;
             }
@@ -96,7 +117,6 @@ function MonitorContent() {
     const groups: Record<string, Assignment[]> = {};
 
     session.assignments.forEach((a) => {
-      // DÜZELTME BURADA YAPILDI: getResourceName kullanıldı
       const name = getResourceName(a.resource);
 
       if (!groups[name]) groups[name] = [];
@@ -119,7 +139,6 @@ function MonitorContent() {
 
   const groupedData = groupAssignments();
 
-  // --- LOADING ---
   if (loading && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent">
@@ -133,7 +152,6 @@ function MonitorContent() {
     );
   }
 
-  // --- ERROR ---
   if (error && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent p-4">
@@ -171,7 +189,6 @@ function MonitorContent() {
 
   return (
     <div className="min-h-screen bg-transparent pb-20">
-      {/* --- STICKY HEADER --- */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
@@ -234,13 +251,48 @@ function MonitorContent() {
         </div>
       </header>
 
-      {/* --- ANA İÇERİK --- */}
       <main className="max-w-6xl mx-auto px-4 mt-8">
+        {session && (
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                {t("total")}
+              </p>
+              <p className="text-3xl font-black text-gray-800 dark:text-white">
+                {stats.total}
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm text-center">
+              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
+                {t("distributed")}
+              </p>
+              <p className="text-3xl font-black text-blue-600 dark:text-blue-400">
+                {stats.distributed}
+                <span className="text-xs ml-1 opacity-60">
+                  %{stats.distPercent}
+                </span>
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm text-center">
+              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                {t("completed")}
+              </p>
+              <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                {stats.completed}
+                <span className="text-xs ml-1 opacity-60">
+                  %{stats.compPercent}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+
         {session && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {Object.entries(groupedData).map(([resourceName, assignments]) => {
               const isOpen = expandedResources[resourceName];
-
               const totalCount = assignments.length;
               const takenCount = assignments.filter((a) => a.isTaken).length;
               const completedCount = assignments.filter(
@@ -257,19 +309,13 @@ function MonitorContent() {
                   key={resourceName}
                   className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-visible transition-all duration-300 hover:shadow-md"
                 >
-                  {/* --- AKORDİYON BAŞLIĞI --- */}
                   <button
                     onClick={() => toggleResource(resourceName)}
                     className="w-full bg-white dark:bg-gray-900 px-6 py-5 flex flex-col md:flex-row justify-between items-center hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition duration-150 cursor-pointer gap-6 group rounded-[1.5rem]"
                   >
                     <div className="flex items-center gap-4 w-full md:w-auto">
                       <div
-                        className={`transition-all duration-300 p-2.5 rounded-2xl shadow-inner flex items-center justify-center
-                          ${
-                            isOpen
-                              ? "bg-blue-600 text-white shadow-blue-500/30"
-                              : "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
-                          }`}
+                        className={`transition-all duration-300 p-2.5 rounded-2xl shadow-inner flex items-center justify-center ${isOpen ? "bg-blue-600 text-white shadow-blue-500/30" : "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"}`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -299,64 +345,43 @@ function MonitorContent() {
                     </div>
 
                     <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                      {/* --- YENİ UX PROGRESS BAR --- */}
                       <div className="flex flex-col items-end min-w-[180px] flex-1 md:flex-none group relative">
-                        {/* Üst Bilgi */}
                         <div className="flex justify-between w-full items-end mb-2 px-1 gap-4">
                           <div className="flex flex-col items-start">
                             <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider leading-none mb-1">
-                              {t("distributed") || "Alınan"}
+                              {t("distributed")}
                             </span>
                             <span className="text-sm font-black text-blue-600 dark:text-blue-400">
                               %{percentage}
                             </span>
                           </div>
-
                           <div className="flex flex-col items-end">
                             <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider leading-none mb-1">
-                              {t("completed") || "Biten"}
+                              {t("completed")}
                             </span>
                             <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                               %{completedPercentage}
                             </span>
                           </div>
                         </div>
-
-                        {/* Çubuk */}
                         <div className="w-full h-3.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-200 dark:border-gray-700 relative">
-                          {/* Mavi Alan */}
                           <div
                             className="absolute top-0 left-0 h-full bg-blue-100 dark:bg-blue-900/30 rounded-full transition-all duration-500 ease-out border-r border-blue-200 dark:border-blue-800"
                             style={{ width: `${percentage}%` }}
-                          >
-                            <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(59,130,246,0.15)_25%,transparent_25%,transparent_50%,rgba(59,130,246,0.15)_50%,rgba(59,130,246,0.15)_75%,transparent_75%,transparent)] bg-[length:0.5rem_0.5rem]"></div>
-                          </div>
-                          {/* Yeşil Alan */}
+                          />
                           <div
                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                             style={{ width: `${completedPercentage}%` }}
-                          >
-                            <div className="absolute top-0 right-0 bottom-0 w-0.5 bg-white/40"></div>
-                          </div>
-                        </div>
-
-                        {/* ALT BİLGİ */}
-                        <div className="w-full flex justify-between mt-1 px-1 opacity-60">
-                          <span className="text-[9px] font-mono text-gray-500 dark:text-gray-400">
-                            {takenCount}/{totalCount} {t("part") || "parça"}
-                          </span>
+                          />
                         </div>
                       </div>
-
                       <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
-
                       <span className="px-3 py-1 rounded-lg font-bold text-sm bg-gray-50 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 whitespace-nowrap">
                         {assignments.length} {t("part")}
                       </span>
                     </div>
                   </button>
 
-                  {/* --- AKORDİYON İÇERİĞİ --- */}
                   {isOpen && (
                     <div className="overflow-x-auto animate-in slide-in-from-top-2 fade-in duration-300 border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-black/20">
                       <table className="w-full text-left border-collapse min-w-[600px]">
@@ -380,13 +405,11 @@ function MonitorContent() {
                           {assignments.map((item) => (
                             <tr
                               key={item.id}
-                              className={`transition duration-150 hover:bg-white dark:hover:bg-gray-800/50
-                                ${item.isTaken ? "" : "bg-gray-50/50 dark:bg-gray-900/30"}`}
+                              className={`transition duration-150 hover:bg-white dark:hover:bg-gray-800/50 ${item.isTaken ? "" : "bg-gray-50/50 dark:bg-gray-900/30"}`}
                             >
                               <td className="px-6 py-4 text-gray-400 dark:text-gray-500 font-mono text-sm font-bold text-center">
                                 {item.participantNumber}
                               </td>
-
                               <td className="px-6 py-4">
                                 <div className="text-sm font-bold text-gray-700 dark:text-gray-200">
                                   {item.resource.type === "PAGED"
@@ -394,114 +417,29 @@ function MonitorContent() {
                                     : t("part")}{" "}
                                   {item.startUnit} - {item.endUnit}
                                 </div>
-                                {item.resource.type === "JOINT" && (
-                                  <div className="text-xs text-blue-500 mt-0.5 font-medium bg-blue-50 dark:bg-blue-900/20 inline-block px-1.5 py-0.5 rounded">
-                                    {t("targetLabel")}: {item.endUnit}
-                                  </div>
-                                )}
                               </td>
-
                               <td className="px-6 py-4">
                                 {item.isTaken ? (
                                   <div className="flex items-center gap-3">
                                     <div
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-sm border 
-                                        ${
-                                          item.isCompleted
-                                            ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-                                            : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
-                                        }`}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs uppercase shadow-sm border ${item.isCompleted ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30" : "bg-blue-100 text-blue-700 border-blue-200"}`}
                                     >
                                       {item.assignedToName?.substring(0, 2)}
                                     </div>
                                     <span
-                                      className={`font-bold text-sm ${
-                                        item.isCompleted
-                                          ? "text-green-900 dark:text-green-400"
-                                          : "text-gray-900 dark:text-gray-200"
-                                      }`}
+                                      className={`font-bold text-sm ${item.isCompleted ? "text-green-900 dark:text-green-400" : "text-gray-900 dark:text-gray-200"}`}
                                     >
                                       {item.assignedToName}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 dark:text-gray-500 border border-gray-200 dark:border-gray-700">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                                     {t("statusEmpty")}
                                   </span>
                                 )}
                               </td>
-
                               <td className="px-6 py-4 text-center">
-                                {item.resource.type === "COUNTABLE" ||
-                                item.resource.type === "JOINT" ? (
-                                  <div className="flex flex-col items-center justify-center">
-                                    {(() => {
-                                      const current = item.currentCount;
-                                      const total =
-                                        item.endUnit - item.startUnit + 1;
-                                      const displayVal =
-                                        current !== undefined &&
-                                        current !== null
-                                          ? current
-                                          : total;
-
-                                      if (displayVal === 0) {
-                                        return (
-                                          <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800">
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              className="w-3.5 h-3.5"
-                                              viewBox="0 0 20 20"
-                                              fill="currentColor"
-                                            >
-                                              <path
-                                                fillRule="evenodd"
-                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                clipRule="evenodd"
-                                              />
-                                            </svg>
-                                            {t("completed")}
-                                          </span>
-                                        );
-                                      }
-
-                                      return (
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-bold text-gray-400">
-                                            KALAN:
-                                          </span>
-                                          <span className="inline-block px-2.5 py-1 rounded-md text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
-                                            {displayVal}
-                                          </span>
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                ) : item.isCompleted ? (
-                                  <div className="flex justify-center">
-                                    <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-3.5 h-3.5"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      {t("completed")}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex justify-center">
-                                    <span className="text-gray-300 dark:text-gray-700 text-xs font-bold tracking-widest">
-                                      ---
-                                    </span>
-                                  </div>
-                                )}
+                                {item.isCompleted ? "✅" : "---"}
                               </td>
                             </tr>
                           ))}

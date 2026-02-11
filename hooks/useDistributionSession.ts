@@ -3,7 +3,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { DistributionSession, Assignment, CevsenBab } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { ReadingModalContent } from "@/components/modals/ReadingModal";
+import { ReadingModalContent } from "@/components/modals/ReadingModal"
 
 export function useDistributionSession(code: string) {
     const { t, language } = useLanguage();
@@ -20,7 +20,6 @@ export function useDistributionSession(code: string) {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    // Kullanıcı adını belirle
     useEffect(() => {
         if (user) {
             setUserName(user);
@@ -80,7 +79,6 @@ export function useDistributionSession(code: string) {
 
         setLocalCounts((prev) => ({ ...prev, [assignmentId]: newCount }));
 
-        // DÜZELTME: let yerine const kullanıldı ve logic tek satıra indi.
         const nameToUse = userName || localStorage.getItem("guestUserName");
 
         try {
@@ -152,7 +150,6 @@ export function useDistributionSession(code: string) {
     const handleCancelPart = async (assignmentId: number) => {
         if (!confirm(t("confirmCancel"))) return;
 
-        // DÜZELTME: let yerine const
         const nameToUse = userName || localStorage.getItem("guestUserName");
         if (!nameToUse) return;
 
@@ -163,17 +160,29 @@ export function useDistributionSession(code: string) {
             if (!token) url += `?name=${encodeURIComponent(nameToUse)}`;
 
             const res = await fetch(url, { method: "POST", headers });
+
             if (res.ok) {
+                const assignment = session?.assignments.find(a => a.id === assignmentId);
+                if (assignment) {
+                    const initialCount = assignment.endUnit - assignment.startUnit + 1;
+
+                    setLocalCounts(prev => ({
+                        ...prev,
+                        [assignmentId]: initialCount
+                    }));
+                }
+
                 dataFetchedRef.current = false;
                 fetchSession();
             } else {
                 alert(t("cancelFailed"));
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const handleCompletePart = async (assignmentId: number) => {
-        // DÜZELTME: let yerine const
         const nameToUse = userName || localStorage.getItem("guestUserName");
 
         if (!nameToUse) return;
@@ -285,7 +294,8 @@ export function useDistributionSession(code: string) {
             handleTakePart,
             handleCancelPart,
             handleCompletePart,
-            openReadingModal
+            openReadingModal,
+            updateLocalCount: (id: number, count: number) => setLocalCounts(prev => ({ ...prev, [id]: count }))
         }
     };
 }

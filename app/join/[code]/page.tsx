@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { use, useState } from "react";
+import React, { use, useState, useMemo } from "react";
 import Link from "next/link";
 import { Assignment } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
-import ReadingModal from "@/components/modals/ReadingModal"
+import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
 
 export default function JoinPage({
@@ -38,6 +38,32 @@ export default function JoinPage({
 
   const [tempName, setTempName] = useState(userName || "");
 
+  const stats = useMemo(() => {
+    if (!session || !session.assignments || session.assignments.length === 0) {
+      return {
+        total: 0,
+        distributed: 0,
+        completed: 0,
+        distPercent: 0,
+        compPercent: 0,
+      };
+    }
+
+    const total = session.assignments.length;
+
+    const distributed = session.assignments.filter((a) => a.isTaken).length;
+
+    const completed = session.assignments.filter((a) => a.isCompleted).length;
+
+    return {
+      total,
+      distributed,
+      completed,
+      distPercent: Math.round((distributed / total) * 100) || 0,
+      compPercent: Math.round((completed / total) * 100) || 0,
+    };
+  }, [session]);
+
   const getSplitGroups = () => {
     if (!session) return { distributed: {}, individual: {} };
 
@@ -64,12 +90,6 @@ export default function JoinPage({
         if (!distributed[resourceName]) distributed[resourceName] = [];
         distributed[resourceName].push(assignment);
       }
-    });
-
-    [distributed, individual].forEach((group) => {
-      Object.keys(group).forEach((key) => {
-        group[key].sort((a, b) => a.participantNumber - b.participantNumber);
-      });
     });
 
     return { distributed, individual };
@@ -108,31 +128,15 @@ export default function JoinPage({
 
   if (error)
     return (
-      <div className="flex h-screen items-center justify-center bg-transparent p-4">
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
-          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/20">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-8 h-8"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-              />
-            </svg>
-          </div>
+      <div className="flex h-screen items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
             {t("errorOccurred")}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
+          <p className="text-gray-500 mb-6">{error}</p>
           <Link
             href="/"
-            className="inline-block w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition"
+            className="inline-block w-full py-3 bg-gray-800 text-white rounded-xl font-bold"
           >
             {t("backHome")}
           </Link>
@@ -148,9 +152,9 @@ export default function JoinPage({
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 dark:text-gray-300 dark:hover:text-emerald-400 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 dark:text-gray-300 transition-colors group"
           >
-            <div className="p-2 rounded-full bg-gray-100 group-hover:bg-emerald-50 dark:bg-gray-800 dark:group-hover:bg-emerald-900/20 transition-colors">
+            <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-emerald-50 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform"
@@ -170,95 +174,96 @@ export default function JoinPage({
               {t("backHome")}
             </span>
           </Link>
-
-          <div className="w-10"></div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
         {!userName ? (
-          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-xl shadow-emerald-900/5 border border-emerald-100 dark:border-emerald-900/30 text-center animate-in slide-in-from-bottom-4 duration-500">
+          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-xl border border-emerald-100 dark:border-emerald-900/30 text-center">
             <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">👋</span>
             </div>
             <h2 className="text-2xl font-black text-gray-800 dark:text-white mb-2">
               {t("joinTitle")}
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+            <p className="text-gray-500 dark:text-gray-400 mb-8">
               {t("joinIntro")}
             </p>
-
             <div className="space-y-4">
               <input
                 type="text"
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 placeholder={t("yourName")}
-                className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-900 rounded-2xl text-lg font-bold text-center outline-none transition-all placeholder:text-gray-400 text-gray-800 dark:text-white"
+                className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-lg font-bold text-center outline-none transition-all text-gray-800 dark:text-white"
                 onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
               />
               <button
                 onClick={handleNameSubmit}
                 disabled={!tempName.trim()}
-                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50"
               >
-                {t("continue") || "Devam Et"}
+                {t("continue")}
               </button>
             </div>
           </div>
         ) : (
           <>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  {t("total")}
+                </p>
+                <p className="text-2xl font-black text-gray-800 dark:text-white">
+                  {stats.total}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm text-center">
+                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
+                  {t("distributed")}
+                </p>
+                <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
+                  {stats.distributed}
+                  <span className="text-xs ml-1 opacity-60">
+                    %{stats.distPercent}
+                  </span>
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm text-center">
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                  {t("completed")}
+                </p>
+                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {stats.completed}
+                  <span className="text-xs ml-1 opacity-60">
+                    %{stats.compPercent}
+                  </span>
+                </p>
+              </div>
+            </div>
+
             <div className="flex p-1.5 bg-white dark:bg-gray-900/60 backdrop-blur rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-8 mx-auto max-w-lg">
               {hasDistributed && (
                 <button
                   onClick={() => setActiveTab("distributed")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
                     activeTab === "distributed"
-                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
-                      : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "text-gray-500 dark:text-gray-400"
                   }`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                    />
-                  </svg>
                   {t("distributedResources")}
                 </button>
               )}
-
               {hasIndividual && (
                 <button
                   onClick={() => setActiveTab("individual")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
                     activeTab === "individual"
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-500 dark:text-gray-400"
                   }`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
                   {t("individualResources")}
                 </button>
               )}
@@ -278,7 +283,6 @@ export default function JoinPage({
                   themeColor="emerald"
                 />
               )}
-
               {activeTab === "individual" && (
                 <ResourceGroupList
                   groups={individual}
@@ -291,15 +295,6 @@ export default function JoinPage({
                   t={t}
                   themeColor="blue"
                 />
-              )}
-
-              {((activeTab === "distributed" && !hasDistributed) ||
-                (activeTab === "individual" && !hasIndividual)) && (
-                <div className="text-center py-20 bg-white/50 dark:bg-gray-800/50 rounded-[2rem] border border-dashed border-gray-300 dark:border-gray-700">
-                  <p className="text-gray-400 font-medium">
-                    {t("noContentInTab") || "Bu kategoride içerik bulunmuyor."}
-                  </p>
-                </div>
               )}
             </div>
           </>
@@ -342,22 +337,26 @@ function ResourceGroupList({
 
   return Object.entries(groups).map(([resourceName, assignments]: any) => {
     const isOpen = expandedGroups[resourceName] || false;
-    const totalItems = assignments.length;
-    const completedItems = assignments.filter((a: any) => a.isCompleted).length;
-    const progress = Math.round((completedItems / totalItems) * 100);
+
+    const totalCount = assignments.length;
+    const takenCount = assignments.filter((a: any) => a.isTaken).length;
+    const completedCount = assignments.filter((a: any) => a.isCompleted).length;
+
+    const percentage = Math.round((takenCount / totalCount) * 100);
+    const completedPercentage = Math.round((completedCount / totalCount) * 100);
 
     return (
       <div
         key={resourceName}
-        className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
+        className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md mb-4"
       >
         <button
           onClick={() => toggleGroup(resourceName)}
-          className="w-full flex items-center justify-between p-5 bg-white hover:bg-gray-50/50 transition duration-200 dark:bg-gray-900 dark:hover:bg-gray-800/50"
+          className="w-full flex flex-col md:flex-row items-center justify-between p-5 bg-white hover:bg-gray-50/50 transition duration-200 dark:bg-gray-900 dark:hover:bg-gray-800/50 gap-4"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <div
-              className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-inner transition-colors duration-300 ${
+              className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-inner transition-colors duration-300 shrink-0 ${
                 isOpen
                   ? `${isEmerald ? "bg-emerald-500" : "bg-blue-600"} text-white`
                   : `${activeBgClass} ${activeColorClass} ${darkActiveBgClass} dark:${isEmerald ? "text-emerald-400" : "text-blue-400"}`
@@ -391,38 +390,70 @@ function ResourceGroupList({
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
                 {resourceName}
               </h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md">
-                  {assignments.length} {t("part")}
-                </span>
-                {progress > 0 && (
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    %{progress} {t("completed")}
-                  </span>
-                )}
-              </div>
+              <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-tight">
+                {totalCount} {t("part")}
+              </p>
             </div>
           </div>
 
-          <div
-            className={`w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 transform transition-transform duration-300 ${
-              isOpen ? "rotate-180 bg-gray-200 dark:bg-gray-700" : "rotate-0"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2.5}
-              stroke="currentColor"
-              className="w-4 h-4 text-gray-500 dark:text-gray-400"
+          <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+            <div className="flex flex-col items-end min-w-[180px] flex-1 md:flex-none group relative">
+              <div className="flex justify-between w-full items-end mb-1.5 px-1 gap-4">
+                <div className="flex flex-col items-start">
+                  <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider leading-none mb-1">
+                    {t("distributed")}
+                  </span>
+                  <span className="text-sm font-black text-blue-600 dark:text-blue-400">
+                    %{percentage}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-end">
+                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider leading-none mb-1">
+                    {t("completed")}
+                  </span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    %{completedPercentage}
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-200 dark:border-gray-700 relative">
+                <div
+                  className="absolute top-0 left-0 h-full bg-blue-100 dark:bg-blue-900/40 transition-all duration-500 ease-out border-r border-blue-200 dark:border-blue-800"
+                  style={{ width: `${percentage}%` }}
+                />
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                  style={{ width: `${completedPercentage}%` }}
+                >
+                  <div className="absolute top-0 right-0 bottom-0 w-0.5 bg-white/30"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
+
+            <div
+              className={`w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 transform transition-transform duration-300 shrink-0 ${
+                isOpen ? "rotate-180 bg-gray-200 dark:bg-gray-700" : "rotate-0"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 8.25-7.5 7.5-7.5-7.5"
-              />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="w-4 h-4 text-gray-500 dark:text-gray-400"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                />
+              </svg>
+            </div>
           </div>
         </button>
 
@@ -469,7 +500,6 @@ function AssignmentCard({
       item.resource.translations?.find((t: any) => t.langCode === "tr") ||
       item.resource.translations?.[0];
 
-  // --- KART STİLLERİ (Tamamlandıysa Yeşil, Seçildiyse Beyaz) ---
   let cardStyle =
     "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700";
   let glowStyle = "hover:border-blue-300 dark:hover:border-blue-700";
@@ -492,7 +522,6 @@ function AssignmentCard({
     <div
       className={`relative p-5 rounded-[1.5rem] border transition-all duration-300 shadow-sm ${cardStyle} ${glowStyle}`}
     >
-      {/* --- KART BAŞLIĞI --- */}
       <div className="flex justify-between items-start mb-6">
         <div>
           <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
@@ -515,7 +544,6 @@ function AssignmentCard({
           </div>
         </div>
 
-        {/* --- ROZETLER --- */}
         <div>
           {isCompleted ? (
             <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
@@ -549,7 +577,6 @@ function AssignmentCard({
         </div>
       </div>
 
-      {/* --- ORTA ALAN (ZİKİRMATİK & OKU) --- */}
       <div className="flex flex-col items-center justify-center gap-4 mb-4">
         {item.isTaken && (
           <>
@@ -565,7 +592,6 @@ function AssignmentCard({
               </div>
             )}
 
-            {/* OKU BUTONU */}
             {isAssignedToUser && (
               <button
                 onClick={() =>
@@ -599,18 +625,24 @@ function AssignmentCard({
           </>
         )}
 
-        {!item.isTaken && (
-          <div className="py-8">{/* Boş durum ikonu eklenebilir */}</div>
-        )}
+        {!item.isTaken && <div className="py-8"></div>}
       </div>
 
-      {/* --- ALT BUTONLAR --- */}
       {isAssignedToUser && (
         <div className="flex gap-3 w-full mt-auto pt-2">
-          {/* TAMAMLA BUTONU (Sadece tamamlanmamışsa görünür) */}
           {!isCompleted && (
             <button
-              onClick={() => actions.handleCompletePart(item.id)}
+              onClick={() => {
+                actions.handleCompletePart(item.id);
+
+                if (
+                  (item.resource.type === "COUNTABLE" ||
+                    item.resource.type === "JOINT") &&
+                  actions.updateLocalCount
+                ) {
+                  actions.updateLocalCount(item.id, 0);
+                }
+              }}
               className="flex-1 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <svg
@@ -625,13 +657,23 @@ function AssignmentCard({
                   clipRule="evenodd"
                 />
               </svg>
-              {t("finish") || "Tamamla"}
+              {t("finish")}
             </button>
           )}
 
-          {/* VAZGEÇ / GERİ AL BUTONU */}
           <button
-            onClick={() => actions.handleCancelPart(item.id)}
+            onClick={() => {
+              actions.handleCancelPart(item.id);
+
+              if (
+                (item.resource.type === "COUNTABLE" ||
+                  item.resource.type === "JOINT") &&
+                actions.updateLocalCount
+              ) {
+                const initialValue = item.endUnit - item.startUnit + 1;
+                actions.updateLocalCount(item.id, initialValue);
+              }
+            }}
             className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap
               ${
                 isCompleted
@@ -640,7 +682,6 @@ function AssignmentCard({
               }`}
           >
             {isCompleted ? (
-              // Tamamlandıysa "Geri Al" ikonu ve yazısı
               <>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -659,7 +700,6 @@ function AssignmentCard({
                 {t("undo") || "Geri Al"}
               </>
             ) : (
-              // Devam ediyorsa "Vazgeç" ikonu ve yazısı
               <>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -682,7 +722,6 @@ function AssignmentCard({
         </div>
       )}
 
-      {/* --- SEÇ BUTONU (Eğer alınmamışsa) --- */}
       {!item.isTaken && (
         <button
           onClick={() => actions.handleTakePart(item.id)}
