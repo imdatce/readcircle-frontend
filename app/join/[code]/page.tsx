@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Assignment } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
-import ReadingModal from "@/components/modals/ReadingModal";
+import ReadingModal from "@/components/modals/ReadingModal"
 import { useDistributionSession } from "@/hooks/useDistributionSession";
 
 export default function JoinPage({
@@ -469,44 +469,43 @@ function AssignmentCard({
       item.resource.translations?.find((t: any) => t.langCode === "tr") ||
       item.resource.translations?.[0];
 
+  // --- KART STİLLERİ (Tamamlandıysa Yeşil, Seçildiyse Beyaz) ---
   let cardStyle =
     "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700";
   let glowStyle = "hover:border-blue-300 dark:hover:border-blue-700";
 
   if (isCompleted) {
     cardStyle =
-      "bg-emerald-50/50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30";
+      "bg-emerald-50/80 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800";
     glowStyle = "";
   } else if (isAssignedToUser) {
     cardStyle =
-      "bg-white border-emerald-400 ring-2 ring-emerald-100 dark:bg-gray-800 dark:border-emerald-500 dark:ring-emerald-900/20 shadow-lg transform scale-[1.01]";
+      "bg-white border-blue-200 ring-2 ring-blue-50 dark:bg-gray-800 dark:border-blue-900 dark:ring-blue-900/20 shadow-lg transform scale-[1.01]";
     glowStyle = "";
   } else if (item.isTaken) {
     cardStyle =
-      "bg-gray-50 border-gray-100 opacity-70 grayscale-[0.8] dark:bg-gray-900 dark:border-gray-800";
+      "bg-gray-50 border-gray-100 opacity-60 grayscale-[0.8] dark:bg-gray-900 dark:border-gray-800";
     glowStyle = "";
   }
 
   return (
     <div
-      className={`relative p-5 rounded-2xl border transition-all duration-300 shadow-sm ${cardStyle} ${glowStyle}`}
+      className={`relative p-5 rounded-[1.5rem] border transition-all duration-300 shadow-sm ${cardStyle} ${glowStyle}`}
     >
-      <div className="flex justify-between items-start mb-4">
+      {/* --- KART BAŞLIĞI --- */}
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-            {t("part")} {item.participantNumber}
+          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+            {t("part") || "PARÇA"} {item.participantNumber}
           </span>
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="text-sm font-bold text-gray-800 dark:text-gray-200">
             {item.resource.type === "JOINT"
               ? `${t("target")}:`
-              : (item.resource.type === "PAGED"
-                  ? t("page")
-                  : item.resource.type === "COUNTABLE"
-                    ? t("pieces")
-                    : translation?.unitName || t("part")) + ":"}
+              : (item.resource.type === "PAGED" ? t("page") : t("pieces")) +
+                ":"}
             {item.resource.type === "JOINT" ? (
-              <span className="ml-1 font-black text-gray-900 dark:text-white">
-                {item.endUnit} {t("pieces")}
+              <span className="ml-1 font-black text-blue-600 dark:text-blue-400">
+                {item.endUnit}
               </span>
             ) : (
               <span className="ml-1 font-black text-gray-900 dark:text-white">
@@ -516,9 +515,10 @@ function AssignmentCard({
           </div>
         </div>
 
+        {/* --- ROZETLER --- */}
         <div>
           {isCompleted ? (
-            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide dark:bg-emerald-900/40 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -531,32 +531,31 @@ function AssignmentCard({
                   clipRule="evenodd"
                 />
               </svg>
-              {t("completed")}
+              {t("completed") || "TAMAMLANDI"}
             </span>
           ) : item.isTaken ? (
             <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                isAssignedToUser
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-              }`}
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${isAssignedToUser ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/30" : "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"}`}
             >
-              {isAssignedToUser ? t("yourTask") : item.assignedToName}
+              {isAssignedToUser
+                ? t("yourTask") || "SENİN GÖREVİN"
+                : item.assignedToName}
             </span>
           ) : (
-            <span className="inline-flex items-center bg-green-50 text-green-600 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30">
-              {t("statusEmpty")}
+            <span className="inline-flex items-center bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30">
+              {t("statusEmpty") || "BOŞ"}
             </span>
           )}
         </div>
       </div>
 
-      <div className="mt-2">
-        {item.isTaken ? (
+      {/* --- ORTA ALAN (ZİKİRMATİK & OKU) --- */}
+      <div className="flex flex-col items-center justify-center gap-4 mb-4">
+        {item.isTaken && (
           <>
             {(item.resource.type === "COUNTABLE" ||
               item.resource.type === "JOINT") && (
-              <div className="mb-4">
+              <div className="scale-110">
                 <Zikirmatik
                   currentCount={safeCount}
                   onDecrement={() => actions.decrementCount(item.id)}
@@ -566,133 +565,132 @@ function AssignmentCard({
               </div>
             )}
 
-            {isAssignedToUser ? (
-              <div className="space-y-3">
-                {item.resource.type !== "PAGED" && (
-                  <button
-                    onClick={() => actions.openReadingModal(item)}
-                    className="w-full py-2 text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline flex items-center justify-center gap-1"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
-                    {t("readText")}
-                  </button>
-                )}
-
-                {item.resource.type === "PAGED" && (
-                  <button
-                    onClick={() =>
-                      actions.openReadingModal(
+            {/* OKU BUTONU */}
+            {isAssignedToUser && (
+              <button
+                onClick={() =>
+                  item.resource.type === "PAGED"
+                    ? actions.openReadingModal(
                         item,
                         item.startUnit,
                         item.endUnit,
                       )
-                    }
-                    className="w-full py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
-                    {t("takeRead")}
-                  </button>
-                )}
-
-                <div className="flex gap-2 w-full">
-                  <button
-                    onClick={() => actions.handleCompletePart(item.id)}
-                    className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-md transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-1.5 whitespace-nowrap"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span>{t("finished")}</span>
-                  </button>
-
-                  <button
-                    onClick={() => actions.handleCancelPart(item.id)}
-                    className="flex-1 py-2.5 rounded-xl border font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-red-500 border-red-100 hover:bg-red-50 dark:bg-transparent dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-4 h-4 shrink-0"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18 18 6M6 6l12 12"
-                      />
-                    </svg>
-                    <span>{t("giveUp")}</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-2">
-                <div className="w-full py-2 bg-gray-100 text-gray-400 rounded-lg text-xs font-bold text-center border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500">
-                  {t("full")}
-                </div>
-              </div>
+                    : actions.openReadingModal(item)
+                }
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                {t("readText") || "Metni Oku"}
+              </button>
             )}
           </>
-        ) : (
-          <button
-            onClick={() => actions.handleTakePart(item.id)}
-            className="w-full py-3 bg-white border-2 border-dashed border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 group dark:bg-gray-800/50 dark:border-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-          >
-            <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-200 transition-colors dark:bg-emerald-900 dark:text-emerald-300">
+        )}
+
+        {!item.isTaken && (
+          <div className="py-8">{/* Boş durum ikonu eklenebilir */}</div>
+        )}
+      </div>
+
+      {/* --- ALT BUTONLAR --- */}
+      {isAssignedToUser && (
+        <div className="flex gap-3 w-full mt-auto pt-2">
+          {/* TAMAMLA BUTONU (Sadece tamamlanmamışsa görünür) */}
+          {!isCompleted && (
+            <button
+              onClick={() => actions.handleCompletePart(item.id)}
+              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 whitespace-nowrap"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-5 w-5"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
                 />
               </svg>
-            </span>
-            {t("select")}
+              {t("finish") || "Tamamla"}
+            </button>
+          )}
+
+          {/* VAZGEÇ / GERİ AL BUTONU */}
+          <button
+            onClick={() => actions.handleCancelPart(item.id)}
+            className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap
+              ${
+                isCompleted
+                  ? "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+                  : "bg-white text-red-500 border-red-100 hover:bg-red-50 hover:border-red-200 dark:bg-transparent dark:text-red-400 dark:border-red-900/30 dark:hover:bg-red-900/10"
+              }`}
+          >
+            {isCompleted ? (
+              // Tamamlandıysa "Geri Al" ikonu ve yazısı
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                  />
+                </svg>
+                {t("undo") || "Geri Al"}
+              </>
+            ) : (
+              // Devam ediyorsa "Vazgeç" ikonu ve yazısı
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18 18 6M6 6l12 12"
+                  />
+                </svg>
+                {t("giveUp") || "Vazgeç"}
+              </>
+            )}
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* --- SEÇ BUTONU (Eğer alınmamışsa) --- */}
+      {!item.isTaken && (
+        <button
+          onClick={() => actions.handleTakePart(item.id)}
+          className="w-full py-3 bg-white border-2 border-dashed border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 mt-4 dark:bg-gray-800/50 dark:border-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+        >
+          {t("select") || "Seç"}
+        </button>
+      )}
     </div>
   );
 }

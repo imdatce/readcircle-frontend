@@ -256,7 +256,7 @@ export default function AdminPage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(createdCode);
-                  alert(t("copied"));
+                  alert(t("codeCopied"));
                 }}
                 className="w-full py-4 bg-white text-gray-800 border-2 border-gray-100 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-200 transition-all active:scale-95 flex items-center justify-center gap-2 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
               >
@@ -349,7 +349,10 @@ export default function AdminPage() {
                   min="1"
                   value={participants}
                   onChange={(e) => setParticipants(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold text-gray-800 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+                  // GÜNCELLEME:
+                  // 1. 'pr-16': Yazı için sağdan boşluk bırakıldı.
+                  // 2. '[appearance:textfield]...': Varsayılan tarayıcı okları gizlendi.
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-16 py-3 text-lg font-bold text-gray-800 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="10"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm pointer-events-none">

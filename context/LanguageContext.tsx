@@ -33,6 +33,7 @@ const translations = {
       leaveSession: "Oturumdan ayrıl",
 
       cancel: "İptal",
+      codeCopied: "Kod kopyalandı",
       delete: "Sil",
       fixedResources: "Bireysel Kaynaklar",
       copy: "Kopyala",
@@ -236,6 +237,7 @@ const translations = {
       backHome: "Mal",
       giveUp: "Dev jê bibe",
       fixedResources: "Çavkaniyên taybetî",
+      codeCopied: "Kod hat kopîkirin",
       footerDesc: "Platforma yekîtiya manewî û belavkirina çavkaniyan.",
       rightsReserved: "Hemû maf parastî ne.",
       allahAccept: "Xwedê qebûl bike.",
@@ -244,6 +246,8 @@ const translations = {
 
       copied: "Kopîkirî",
       sessionCreated: "Rûniştin çêbû",
+      codeCopied: "Kod hate kopı kirin",
+
       cancel: "Betal Bike",
       sharedResources: "Çavkaniyên parvekirî",
       delete: "Jê Bibe",
@@ -662,6 +666,7 @@ const translations = {
       appTitle: "SURA",
       subtitle: "منصة توزيع القراءات",
       backHome: "الرئيسية",
+      codeCopied: "تم نسخ الكود",
       footerDesc: "منصة التواصل الروحي وتوزيع الموارد.",
       rightsReserved: "جميع الحقوق محفوظة.",
       allahAccept: "تقبل الله.",
@@ -992,7 +997,8 @@ const translations = {
       setTargetCounts: "Définir les objectifs (Optionnel)",
       createDistribution: "CRÉER UNE DISTRIBUTION",
       linkCreated: "Lien créé :",
-      copyLink: "Copier le lien الرابط",
+      copyLink: "Copier le link",
+      codeCopied: "Code copié",
 
       monitorTitle: "Moniteur de Distribution",
       monitorSubtitle: "Entrez un code pour voir qui a pris quoi.",
