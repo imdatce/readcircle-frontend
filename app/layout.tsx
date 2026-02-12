@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SURA - Spiritual Union",
-  description: "Manevi birliktelik ve tefekkür platformu",
+  description: "Resource Distribution Platform for Spiritual Union for Reflection & Affinity "
 };
 
 export default function RootLayout({

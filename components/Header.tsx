@@ -5,12 +5,35 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeSwitcher from "./ThemeSwitcher";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isMenuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
@@ -49,10 +72,13 @@ export default function Header() {
 
             {user ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                 <Link
+                  href="/?tab=managed"
+                  className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap transition-colors"
+                >
                   {user}
-                </span>
-                <button
+                </Link>
+                 <button
                   onClick={logout}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-md transition-all active:scale-95"
                 >
@@ -78,6 +104,7 @@ export default function Header() {
           </nav>
 
           <button
+            ref={buttonRef}
             className="md:hidden p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
@@ -99,12 +126,19 @@ export default function Header() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-5">
+        <div
+          ref={menuRef}
+          className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-5"
+        >
           {user ? (
             <div className="flex flex-col gap-3">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 text-center py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                {t("welcome")}, {user}
-              </span>
+              <Link
+                href="/?tab=managed"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-sm font-bold text-slate-700 dark:text-slate-200 text-center py-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              >
+                {user}
+              </Link>
               <button
                 onClick={() => {
                   logout();

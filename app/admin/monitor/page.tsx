@@ -1,17 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { DistributionSession, Assignment } from "@/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { useMemo } from "react";
+import React from "react";
+import { useAuth } from "@/context/AuthContext";
 
 function MonitorContent() {
   const { t, language } = useLanguage();
+  const { token } = useAuth();
   const searchParams = useSearchParams();
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [allResources, setAllResources] = useState<any[]>([]);
+  const [selectedResourceId, setSelectedResourceId] = useState<string>("");
+  const [addingResource, setAddingResource] = useState(false);
   const [code, setCode] = useState("");
   const [session, setSession] = useState<DistributionSession | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,9 +38,7 @@ function MonitorContent() {
     }
 
     const total = session.assignments.length;
-
     const distributed = session.assignments.filter((a) => a.isTaken).length;
-
     const completed = session.assignments.filter((a) => a.isCompleted).length;
 
     return {
@@ -111,6 +115,44 @@ function MonitorContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/distribution/resources`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setAllResources(data))
+        .catch(console.error);
+    }
+  }, [token]);
+
+  const handleAddResource = async () => {
+    if (!selectedResourceId) return;
+    setAddingResource(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/distribution/${code}/add-resource?resourceId=${selectedResourceId}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (res.ok) {
+        alert("Kaynak eklendi!");
+        setIsAddModalOpen(false);
+        fetchData(code);
+      } else {
+        const msg = await res.text();
+        alert("Hata: " + msg);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Bir hata oluştu.");
+    } finally {
+      setAddingResource(false);
+    }
+  };
 
   const groupAssignments = () => {
     if (!session) return {};
@@ -189,7 +231,6 @@ function MonitorContent() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-black/90 pb-20 font-sans">
-      {/* --- HEADER --- */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
         <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
           <Link
@@ -231,35 +272,58 @@ function MonitorContent() {
             )}
           </div>
 
-          <button
-            onClick={() => fetchData(code)}
-            disabled={loading}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-xs hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:border-emerald-900 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors ${loading ? "animate-spin text-emerald-500" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div className="flex items-center">
+            <button
+              onClick={() => fetchData(code)}
+              disabled={loading}
+              className="group flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-xs hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:border-emerald-900 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            <span className="hidden sm:inline">{t("refresh")}</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors ${loading ? "animate-spin text-emerald-500" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span className="hidden sm:inline">{t("refresh")}</span>
+            </button>
+
+            {session && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-sm active:scale-95 ml-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span>Kaynak Ekle</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 mt-8">
         {session && (
-          // --- STATS CARDS ---
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {/* TOTAL */}
             <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <svg
@@ -285,7 +349,6 @@ function MonitorContent() {
               </p>
             </div>
 
-            {/* DISTRIBUTED */}
             <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30 shadow-sm overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 text-blue-500 opacity-5 group-hover:opacity-10 transition-opacity">
                 <svg
@@ -324,7 +387,6 @@ function MonitorContent() {
               </div>
             </div>
 
-            {/* COMPLETED */}
             <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 text-emerald-500 opacity-5 group-hover:opacity-10 transition-opacity">
                 <svg
@@ -385,7 +447,6 @@ function MonitorContent() {
                   key={resourceName}
                   className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg"
                 >
-                  {/* --- ACCORDION HEADER --- */}
                   <button
                     onClick={() => toggleResource(resourceName)}
                     className="w-full bg-white dark:bg-gray-900 px-6 py-6 flex flex-col md:flex-row justify-between items-center hover:bg-gray-50/80 dark:hover:bg-gray-800/30 transition duration-200 cursor-pointer gap-6 group"
@@ -462,7 +523,6 @@ function MonitorContent() {
                     </div>
                   </button>
 
-                  {/* --- TABLE CONTENT --- */}
                   {isOpen && (
                     <div className="animate-in slide-in-from-top-2 fade-in duration-300 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20">
                       <div className="overflow-x-auto p-2 md:p-6">
@@ -483,14 +543,12 @@ function MonitorContent() {
                                 key={item.id}
                                 className={`group transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-900/40 rounded-lg ${item.isCompleted ? "bg-emerald-50/30 dark:bg-emerald-900/10" : ""}`}
                               >
-                                {/* SIRA NO */}
                                 <td className="px-4 py-4 text-center">
                                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono text-sm font-bold group-hover:bg-white dark:group-hover:bg-gray-700 shadow-sm transition-colors">
                                     {item.participantNumber}
                                   </span>
                                 </td>
 
-                                {/* PARÇA BİLGİSİ */}
                                 <td className="px-4 py-4">
                                   <div className="flex flex-col">
                                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
@@ -501,15 +559,12 @@ function MonitorContent() {
                                         {item.startUnit} - {item.endUnit}
                                       </span>
                                     </span>
-                                    {/* Eğer Countable ise ilerlemeyi de buraya ekleyebiliriz opsiyonel olarak */}
                                   </div>
                                 </td>
 
-                                {/* KİŞİ BİLGİSİ */}
                                 <td className="px-4 py-4">
                                   {item.isTaken ? (
                                     <div className="flex items-center gap-3">
-                                      {/* Avatar */}
                                       <div
                                         className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ring-2 ring-white dark:ring-gray-900 ${
                                           item.isCompleted
@@ -537,7 +592,6 @@ function MonitorContent() {
                                   )}
                                 </td>
 
-                                {/* DURUM BADGE */}
                                 <td className="px-4 py-4 text-right">
                                   {item.isCompleted ? (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 shadow-sm">
@@ -578,6 +632,65 @@ function MonitorContent() {
           </div>
         )}
       </main>
+
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+              Halkaya Kaynak Ekle
+            </h3>
+
+            <div className="space-y-4">
+              <label
+                htmlFor="resourceSelect"
+                className="block text-sm font-medium text-gray-500 dark:text-gray-400"
+              >
+                Eklemek istediğiniz kaynağı seçin:
+              </label>
+
+              <select
+                id="resourceSelect"
+                aria-label="Kaynak Seçimi"
+                className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedResourceId}
+                onChange={(e) => setSelectedResourceId(e.target.value)}
+              >
+                <option value="">Seçiniz...</option>
+                {allResources.map((res) => {
+                  const translation =
+                    res.translations?.find(
+                      (t: any) => t.langCode === language,
+                    ) ||
+                    res.translations?.find((t: any) => t.langCode === "tr") ||
+                    res.translations?.[0];
+                  const name = translation ? translation.name : res.codeKey;
+                  return (
+                    <option key={res.id} value={res.id}>
+                      {name}
+                    </option>
+                  );
+                })}
+              </select>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-400"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleAddResource}
+                  disabled={!selectedResourceId || addingResource}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                >
+                  {addingResource ? "Ekleniyor..." : "Ekle"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

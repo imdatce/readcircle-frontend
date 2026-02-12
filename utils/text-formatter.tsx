@@ -2,36 +2,33 @@ import React from "react";
 import { CevsenBab } from "@/types";
 
 export const fontSizes = {
-  // Arapça için çok daha büyük seçenekler eklendi
-  ARABIC: [
-    "text-lg", // 0 (Yeni En Küçük)
-    "text-xl", // 1
-    "text-2xl", // 2
-    "text-3xl", // 3 (Varsayılan - Eski seviye 1'e denk)
-    "text-4xl", // 4
-    "text-5xl", // 5
-    "text-6xl", // 6
-    "text-7xl", // 7 (Yeni Büyük)
-    "text-8xl", // 8 (Yeni En Büyük)
+   ARABIC: [
+    "text-lg",  
+    "text-xl",  
+    "text-2xl",  
+    "text-3xl",  
+    "text-4xl",  
+    "text-5xl",  
+    "text-6xl",  
+    "text-7xl",  
+    "text-8xl",  
   ],
-  // Latince okunuş için geniş aralık
-  LATIN: [
+   LATIN: [
     "text-sm",
     "text-base",
     "text-lg",
-    "text-xl", // (Varsayılan)
+    "text-xl",  
     "text-2xl",
     "text-3xl",
     "text-4xl",
     "text-5xl",
     "text-6xl",
   ],
-  // Meal için geniş aralık
-  MEANING: [
+   MEANING: [
     "text-xs",
     "text-sm",
     "text-base",
-    "text-lg", // (Varsayılan)
+    "text-lg",  
     "text-xl",
     "text-2xl",
     "text-3xl",

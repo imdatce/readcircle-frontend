@@ -318,7 +318,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           {content.type === "QURAN" && content.currentUnit && (
             <div className="flex flex-col items-center h-full">
               <div className="flex items-center justify-between w-full mb-4 px-2 shrink-0">
-                <button
+                 <button
                   onClick={() => {
                     onUpdateContent({
                       ...content,
@@ -329,7 +329,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     });
                   }}
                   disabled={content.currentUnit === content.startUnit}
-                  className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
+                  className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                 >
                   ← {t("previous")}
                 </button>
@@ -338,7 +338,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   {t("page")} {content.currentUnit}
                 </span>
 
-                <button
+                 <button
                   onClick={() => {
                     onUpdateContent({
                       ...content,
@@ -349,11 +349,12 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     });
                   }}
                   disabled={content.currentUnit === content.endUnit}
-                  className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-30 hover:bg-blue-700 font-bold transition-colors"
                 >
                   {t("next")} →
                 </button>
               </div>
+
 
               <div className="flex-1 w-full overflow-y-auto flex flex-col items-center bg-gray-50 rounded-lg border border-gray-200 p-1 dark:bg-gray-800 dark:border-gray-700">
                 <img
@@ -367,39 +368,43 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   }}
                 />
 
-                <div className="flex items-center justify-between w-full p-4 mt-auto border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800">
-                  <button
-                    onClick={() => {
-                      onUpdateContent({
-                        ...content,
-                        currentUnit: Math.max(
-                          content.startUnit!,
-                          content.currentUnit! - 1,
-                        ),
-                      });
-                    }}
-                    disabled={content.currentUnit === content.startUnit}
-                    className="px-6 py-3 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors flex-1 mr-2 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                  >
-                    ← {t("previous")}
-                  </button>
+                <div className="flex items-center justify-between w-full mb-4 px-2 shrink-0">
+                 <button
+                  onClick={() => {
+                    onUpdateContent({
+                      ...content,
+                      currentUnit: Math.max(
+                        content.startUnit!,
+                        content.currentUnit! - 1,
+                      ),
+                    });
+                  }}
+                  disabled={content.currentUnit === content.startUnit}
+                  className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-30 hover:bg-gray-200 font-bold text-gray-700 transition-colors dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  ← {t("previous")}
+                </button>
 
-                  <button
-                    onClick={() => {
-                      onUpdateContent({
-                        ...content,
-                        currentUnit: Math.min(
-                          content.endUnit!,
-                          content.currentUnit! + 1,
-                        ),
-                      });
-                    }}
-                    disabled={content.currentUnit === content.endUnit}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg disabled:opacity-30 hover:bg-blue-700 font-bold transition-colors flex-1 ml-2"
-                  >
-                    {t("next")} →
-                  </button>
-                </div>
+                <span className="font-bold text-lg text-gray-700 dark:text-gray-200">
+                  {t("page")} {content.currentUnit}
+                </span>
+
+                 <button
+                  onClick={() => {
+                    onUpdateContent({
+                      ...content,
+                      currentUnit: Math.min(
+                        content.endUnit!,
+                        content.currentUnit! + 1,
+                      ),
+                    });
+                  }}
+                  disabled={content.currentUnit === content.endUnit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-30 hover:bg-blue-700 font-bold transition-colors"
+                >
+                  {t("next")} →
+                </button>
+              </div>
               </div>
             </div>
           )}

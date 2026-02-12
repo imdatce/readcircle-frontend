@@ -7,10 +7,11 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { SessionSummary } from "@/types";
-
+import { useSearchParams } from "next/navigation";
 export default function Home() {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
@@ -54,8 +55,22 @@ export default function Home() {
     }
   }, [user, token, apiUrl]);
 
-  // State tanımların muhtemelen şöyledir:
-  // const [code, setCode] = useState("");
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+
+    if (tabParam === "managed" || tabParam === "joined") {
+      setActiveTab(tabParam);
+
+      setTimeout(() => {
+        if (sessionsRef.current) {
+          sessionsRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 300);
+    }
+  }, [searchParams]);
 
   const handleJoin = () => {
     if (!code.trim()) return;
@@ -370,7 +385,6 @@ export default function Home() {
 
                     <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-6"></div>
 
-                    {/* KATILDIĞIM HALKALAR (JOINED) */}
                     <button
                       onClick={() => toggleTab("joined")}
                       className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap border-2 ${
@@ -786,10 +800,9 @@ function SessionCard({
         {type === "managed" && (
           <div className="flex flex-wrap items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-50 dark:border-gray-700/50">
             <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 rounded-lg p-0.5 border border-gray-100 dark:border-gray-700">
-              {/* LİNKİ KOPYALA BUTONU */}
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // Kartın tıklanmasını engelle
+                  e.stopPropagation();
                   const link = `${window.location.origin}/join/${session.code}`;
                   navigator.clipboard.writeText(link);
                   alert(t("copied"));
@@ -895,64 +908,6 @@ function SessionCard({
   );
 }
 
-const ActionButton = ({ icon, onClick, isActive, activeClass, label }: any) => (
-  <button
-    onClick={onClick}
-    className={`p-1.5 rounded-md transition-all text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 relative group/btn ${isActive ? activeClass : "hover:bg-white dark:hover:bg-gray-700"}`}
-  >
-    {icon}
-    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] text-white bg-gray-800 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-      {label}
-    </span>
-  </button>
-);
-
-const CheckIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-4 w-4"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path
-      fillRule="evenodd"
-      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
-const LinkIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-    />
-  </svg>
-);
-const HashIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-    />
-  </svg>
-);
 const RefreshIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

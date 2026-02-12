@@ -7,8 +7,7 @@ export default function LogoutButton() {
     const { user, logout } = useAuth();
     const { t } = useLanguage();
 
-    // Kullanıcı giriş yapmamışsa butonu gösterme
-    if (!user) return null;
+     if (!user) return null;
 
     return (
         <button

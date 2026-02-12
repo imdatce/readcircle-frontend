@@ -8,9 +8,7 @@ export default function ThemeSwitcher() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // setTimeout kullanarak state güncellemesini asenkron yapıyoruz.
-    // Bu, "cascading render" uyarısını engeller ve Context dosyanızla uyumlu çalışır.
-    const timer = setTimeout(() => {
+     const timer = setTimeout(() => {
       setMounted(true);
     }, 0);
 
@@ -18,8 +16,7 @@ export default function ThemeSwitcher() {
   }, []);
 
   if (!mounted) {
-    // Layout kaymasını (CLS) önlemek için aynı boyutta boş bir div
-    return <div className="w-9 h-9" />;
+     return <div className="w-9 h-9" />;
   }
 
   const isDark = theme === "dark";
@@ -31,8 +28,7 @@ export default function ThemeSwitcher() {
       aria-label="Temayı Değiştir"
       title={isDark ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}
     >
-      {/* Güneş İkonu */}
-      <svg
+       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -53,8 +49,7 @@ export default function ThemeSwitcher() {
         />
       </svg>
 
-      {/* Ay İkonu */}
-      <svg
+       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"

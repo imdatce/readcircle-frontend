@@ -43,13 +43,10 @@ export default function RegisterPage() {
   };
 
   return (
-    // Ana kapsayıcı: Dark mode arka planı eklendi
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 transition-colors duration-300">
-      {/* Kart: Dark mode arka planı ve kenarlığı eklendi */}
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-sm border border-gray-100 dark:border-gray-800 transition-colors duration-300">
+     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 transition-colors duration-300">
+       <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-sm border border-gray-100 dark:border-gray-800 transition-colors duration-300">
         <div className="text-center mb-6">
-          {/* Başlık ve Alt Başlık renkleri */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
             {t("registerTitle")}
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
@@ -62,8 +59,7 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t("usernameLabel")}
             </label>
-            {/* Input: Dark mode arka planı, border'ı ve yazı rengi */}
-            <input
+             <input
               className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-2.5 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
               placeholder={t("placeholderUserExample")}
               value={username}

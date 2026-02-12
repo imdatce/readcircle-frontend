@@ -141,7 +141,6 @@ export default function AdminPage() {
   const distributedResources = safeResources.filter((r) => r.type !== "JOINT");
   const individualResources = safeResources.filter((r) => r.type === "JOINT");
 
-  // Input gerektiren kaynakları filtrele (COUNTABLE veya JOINT)
   const selectedResourcesWithInput = selectedResources
     .map((id) => safeResources.find((r) => r.id.toString() === id))
     .filter(
@@ -195,7 +194,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen pb-20 pt-6 px-4 md:px-8 bg-transparent">
-      {/* --- HEADER --- */}
       <div className="max-w-2xl mx-auto mb-8 flex items-center justify-between">
         <Link
           href="/"
@@ -222,7 +220,6 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-2xl mx-auto space-y-8">
-        {/* --- BAŞARILI OLUŞTURMA KARTI --- */}
         {createdLink && (
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-green-200 dark:border-green-900 rounded-[2rem] p-8 shadow-xl shadow-green-900/5 animate-in fade-in slide-in-from-top-4">
             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-green-900/30 dark:text-green-400">
@@ -243,13 +240,11 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-2">
               {t("sessionCreated")}:
             </h2>
-            {/* --- EKLENECEK KISIM --- */}
             {createdSessionName && (
               <p className="text-4xl font-medium text-blue-600 dark:text-blue-400 text-center -mt-1 mb-6">
                 {createdSessionName}
               </p>
             )}
-            {/* ----------------------- */}
 
             <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-6 flex flex-col items-center">
               <span className="text-sm font-bold text-gray-400 mb-1">
@@ -329,7 +324,6 @@ export default function AdminPage() {
               </Link>
             </div>
 
-            {/* --- YENİ EKLENEN KISIM: OKUMAYA BAŞLA BUTONU --- */}
             <Link
               href={`/join/${createdCode}`}
               className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -350,7 +344,6 @@ export default function AdminPage() {
               </svg>
               {t("startReading") || "Okumaya Başla"}
             </Link>
-            {/* --- EKLENEN KISIM SONU --- */}
             <button
               onClick={() => {
                 setCreatedLink("");
@@ -365,7 +358,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* --- FORM ALANI (Halka Oluşturulmadıysa Göster) --- */}
         {!createdLink && (
           <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 rounded-[2rem] p-6 md:p-8 shadow-xl">
             <div className="mb-4">
@@ -381,7 +373,6 @@ export default function AdminPage() {
               />
             </div>
 
-            {/* KATILIMCI SAYISI */}
             <div className="mb-8">
               <label className="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 dark:text-gray-400">
                 {t("participantCount")}
@@ -392,9 +383,6 @@ export default function AdminPage() {
                   min="1"
                   value={participants}
                   onChange={(e) => setParticipants(e.target.value)}
-                  // GÜNCELLEME:
-                  // 1. 'pr-16': Yazı için sağdan boşluk bırakıldı.
-                  // 2. '[appearance:textfield]...': Varsayılan tarayıcı okları gizlendi.
                   className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl pl-4 pr-16 py-3 text-lg font-bold text-gray-800 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="10"
                 />
@@ -404,7 +392,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* DAĞITILAN KAYNAKLAR (Checkbox List) */}
             {distributedResources.length > 0 && (
               <div className="mb-8">
                 <h3 className="flex items-center gap-2 text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 dark:text-blue-400">
@@ -424,7 +411,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* BİREYSEL KAYNAKLAR (Checkbox List) */}
             {individualResources.length > 0 && (
               <div className="mb-8">
                 <h3 className="flex items-center gap-2 text-sm font-bold text-emerald-600 uppercase tracking-wide mb-4 dark:text-emerald-400">
@@ -444,7 +430,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* ÖZEL HEDEF AYARLARI (Seçilenler için) */}
             {selectedResourcesWithInput.length > 0 && (
               <div className="mb-8 animate-in fade-in slide-in-from-top-2">
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5">
@@ -497,8 +482,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* OLUŞTUR BUTONU */}
-            <button
+             <button
               onClick={handleCreate}
               disabled={loading || selectedResources.length === 0}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
