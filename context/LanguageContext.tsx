@@ -181,7 +181,7 @@ const translations = {
       takeRead: "AL",
       readText: "Oku",
       completed: "Tamamlandı",
-      finish: "Tamamladıysan tıkla",
+      finish: "Bittiyse tıkla",
       selectAndRead: "SEÇ & OKU",
       clickToCount: "OKUDUKÇA TIKLAYINIZ",
       decrease: "AZALT",
@@ -328,7 +328,7 @@ const translations = {
     landing: {
       landingHeroTitle: "Platforma yekîtiya manewî",
 
-      homeVerseContent: "Bi bîranîna Xwedê re tenê dilan aram dibin.",
+      homeVerseContent: "Dil tenê bi bîranîna Xwedê re aram dibin.",
       landingHeroSubtitle:
         "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
       getStarted: "Dest Pê Bike",
@@ -356,7 +356,7 @@ const translations = {
     },
     dashboard: {
       dashboard: "Panel",
-      welcome: "Bi xêr hatî,",
+      welcome: "Bi xêr hatî",
       dashboardIntro: "Îro di rêwîtiya xwe ya manewî de dixwazî çi bikî?",
       myCirclesTitle: "Xelekên Ez Tevlî Bûm",
       myCreatedTitle: "Belavkirinên Min ên Rêvebir",

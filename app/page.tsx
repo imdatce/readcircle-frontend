@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";  
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -9,10 +9,10 @@ import Link from "next/link";
 import { SessionSummary } from "@/types";
 import { useSearchParams } from "next/navigation";
 
- function HomeContent() {
+function HomeContent() {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
-  const searchParams = useSearchParams();  
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
@@ -122,8 +122,7 @@ import { useSearchParams } from "next/navigation";
         alert(t("errorOccurred") + msg);
       }
     } catch (error) {
-      console.error(error);
-      alert(t("connectionError"));
+      console.error("Data error", error);
     }
   };
 
@@ -243,11 +242,9 @@ import { useSearchParams } from "next/navigation";
                 lang="ar"
               >
                 <AyahIcon />
-
                 <span className="leading-tight">
                   اَلَا بِذِكْرِ اللّٰهِ تَطْمَئِنُّ الْقُلُوبُ
                 </span>
-
                 <AyahIcon />
               </h2>
 
@@ -259,19 +256,8 @@ import { useSearchParams } from "next/navigation";
                   &quot;
                 </p>
                 <span className="text-xs text-emerald-600 dark:text-emerald-500 font-bold tracking-widest uppercase opacity-80">
-                  {"Ra'd, 28"}
+                  Ra&apos;d, 28
                 </span>
-              </div>
-
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-50 dark:bg-gray-950 px-2 text-rose-500 dark:text-rose-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-6 h-6 animate-pulse"
-                >
-                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                </svg>
               </div>
             </div>
           </div>
@@ -282,10 +268,10 @@ import { useSearchParams } from "next/navigation";
               : t("landingHeroSubtitle")}
           </p>
 
-          <div className="flex flex-col gap-8 w-full max-w-4xl mx-auto">
+          {/* JOIN SESSION SECTION */}
+          <div className="flex flex-col gap-8 w-full max-w-4xl mx-auto mb-16">
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-
               <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-6 md:p-8 rounded-[1.8rem] shadow-xl">
                 <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
                   {user ? (
@@ -317,9 +303,7 @@ import { useSearchParams } from "next/navigation";
                       {t("getStarted")}
                     </Link>
                   )}
-
                   <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
-
                   <form
                     onSubmit={handleJoin}
                     className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all"
@@ -360,90 +344,103 @@ import { useSearchParams } from "next/navigation";
             </div>
 
             {user && (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/20 dark:to-emerald-900/20 rounded-[1.8rem] blur opacity-60 dark:opacity-40 transition duration-1000"></div>
+              <div
+                id="circles-section"
+                className="relative group mt-20 scroll-mt-28 animate-in fade-in slide-in-from-bottom-8 duration-1000"
+              >
+                {/* Arka Plan Glow Efekti (Daha yumuşak ve geniş) */}
+                <div className="absolute -inset-10 bg-gradient-to-r from-blue-500/5 via-emerald-500/5 to-teal-500/5 dark:from-blue-500/10 dark:via-emerald-500/10 dark:to-teal-500/10 rounded-[5rem] blur-3xl opacity-100 transition duration-1000 group-hover:opacity-100"></div>
 
-                <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-6 md:p-8 rounded-[1.8rem] shadow-xl">
-                  <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-center items-center">
+                {/* Ana Kart Kapsayıcı */}
+                <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border border-white/50 dark:border-gray-800/50 p-4 md:p-6 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                  {/* ORTALANMIŞ MODERN BAŞLIK */}
+                  <div className="flex items-center justify-center gap-6 mb-8">
+                    <div className="h-[2px] w-12 md:w-20 bg-gradient-to-l from-transparent to-blue-500 rounded-full"></div>
+
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-[0.2em] uppercase">
+                      {t("circles") || "Circles"}
+                    </h2>
+
+                    <div className="h-[2px] w-12 md:w-20 bg-gradient-to-r from-transparent to-emerald-500 rounded-full"></div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-3 justify-center items-stretch">
+                    {/* Managed Circles Butonu */}
                     <button
                       onClick={() => toggleTab("managed")}
-                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap border-2 ${
+                      className={`flex-1 group/btn relative px-8 py-6 rounded-[2.2rem] font-bold text-lg transition-all duration-500 overflow-hidden ${
                         activeTab === "managed"
-                          ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30"
-                          : "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-blue-600/20 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-md shadow-blue-500/5 hover:shadow-blue-500/20"
+                          ? "bg-blue-600 text-white shadow-xl shadow-blue-500/25 scale-[1.02]"
+                          : "bg-gray-50/50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                       }`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-                      </svg>
-                      {t("managedSessions")}
+                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-4">
+                        <div
+                          className={`p-3 rounded-2xl transition-all duration-500 shadow-sm ${
+                            activeTab === "managed"
+                              ? "bg-white/20 rotate-12"
+                              : "bg-white dark:bg-gray-800 text-blue-600"
+                          }`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+                          </svg>
+                        </div>
+                        <span className="tracking-wide">
+                          {t("managedSessions")}
+                        </span>
+                      </div>
                     </button>
 
-                    <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-6"></div>
+                    {/* Ayırıcı (Görsel Denge İçin) */}
+                    <div className="hidden md:flex items-center justify-center px-2">
+                      <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
 
+                    {/* Joined Circles Butonu */}
                     <button
                       onClick={() => toggleTab("joined")}
-                      className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap border-2 ${
+                      className={`flex-1 group/btn relative px-8 py-6 rounded-[2.2rem] font-bold text-lg transition-all duration-500 overflow-hidden ${
                         activeTab === "joined"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-500/30"
-                          : "bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-500 border-emerald-600/20 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 shadow-md shadow-emerald-500/5 hover:shadow-emerald-500/20"
+                          ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/25 scale-[1.02]"
+                          : "bg-gray-50/50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                       }`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z" />
-                      </svg>
-                      {t("joinedSessions")}
+                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-4">
+                        <div
+                          className={`p-3 rounded-2xl transition-all duration-500 shadow-sm ${
+                            activeTab === "joined"
+                              ? "bg-white/20 -rotate-12"
+                              : "bg-white dark:bg-gray-800 text-emerald-600"
+                          }`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z" />
+                          </svg>
+                        </div>
+                        <span className="tracking-wide">
+                          {t("joinedSessions")}
+                        </span>
+                      </div>
                     </button>
                   </div>
                 </div>
               </div>
             )}
           </div>
-
-          {!user && (
-            <div className="mt-8 flex justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 font-medium">
-              <span className="flex items-center gap-1">
-                <svg
-                  className="w-4 h-4 text-emerald-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {t("featureFree")}
-              </span>
-              <span className="flex items-center gap-1">
-                <svg
-                  className="w-4 h-4 text-emerald-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {t("featureNoLogin")}
-              </span>
-            </div>
-          )}
         </div>
 
+        {/* DASHBOARD LISTS */}
         {user && activeTab && (
           <div
             ref={sessionsRef}
@@ -504,7 +501,6 @@ import { useSearchParams } from "next/navigation";
                 </DashboardColumn>
               </div>
             )}
-
             {activeTab === "joined" && (
               <div className="max-w-4xl mx-auto">
                 <DashboardColumn
@@ -556,8 +552,8 @@ import { useSearchParams } from "next/navigation";
           </div>
         )}
 
+        {/* FEATURES & STEPS */}
         <div className="max-w-3xl mx-auto px-4 my-6">
-          {" "}
           <div className="grid md:grid-cols-2 gap-4">
             <FeatureCard
               icon={
@@ -601,7 +597,6 @@ import { useSearchParams } from "next/navigation";
             />
           </div>
         </div>
-
         <div className="max-w-3xl mx-auto px-4 mb-2">
           <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-6 border border-white/20 dark:border-gray-800 shadow-sm">
             <h2 className="text-xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
@@ -638,7 +633,6 @@ function DashboardColumn({ title, icon, iconColor, children }: any) {
   return (
     <div className="relative group h-full">
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/20 dark:to-emerald-900/20 rounded-[1.8rem] blur opacity-50 transition duration-1000"></div>
-
       <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-6 md:p-8 rounded-[1.8rem] shadow-xl h-full flex flex-col">
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
           <div className={`p-3 rounded-2xl ${iconColor}`}>{icon}</div>
@@ -646,7 +640,6 @@ function DashboardColumn({ title, icon, iconColor, children }: any) {
             {title}
           </h2>
         </div>
-
         <div className="flex-1 flex flex-col">{children}</div>
       </div>
     </div>
@@ -768,7 +761,6 @@ function SessionCard({
               </span>
             </div>
           </div>
-
           {type !== "managed" && (
             <div className="shrink-0 flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg text-xs border border-indigo-100 dark:border-indigo-800/50 shadow-sm">
               <span className="opacity-70 font-medium">
@@ -811,7 +803,6 @@ function SessionCard({
             </div>
           )}
         </div>
-
         {type === "managed" && (
           <div className="flex flex-wrap items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-50 dark:border-gray-700/50">
             <div className="flex items-center bg-gray-50 dark:bg-gray-900/50 rounded-lg p-0.5 border border-gray-100 dark:border-gray-700">
@@ -842,9 +833,7 @@ function SessionCard({
                   {t("copyLink") || "Linki kopyala"}
                 </span>
               </button>
-
               <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5"></div>
-
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -884,7 +873,6 @@ function SessionCard({
               >
                 <RefreshIcon />
               </button>
-
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -895,7 +883,6 @@ function SessionCard({
               >
                 <TrashIcon />
               </button>
-
               <Link
                 href={`/admin/monitor?code=${session.code}`}
                 onClick={(e) => e.stopPropagation()}

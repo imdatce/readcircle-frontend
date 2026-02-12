@@ -525,102 +525,153 @@ function MonitorContent() {
 
                   {isOpen && (
                     <div className="animate-in slide-in-from-top-2 fade-in duration-300 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20">
+                      {/* Tablonun taşmasını engelleyen ve kaydırma sağlayan kapsayıcı */}
                       <div className="overflow-x-auto p-2 md:p-6">
-                        <table className="w-full text-left border-collapse min-w-[600px]">
+                        <table className="w-full text-left border-collapse min-w-full md:min-w-0 table-auto">
                           <thead>
                             <tr className="text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-gray-100 dark:border-gray-800">
-                              <th className="px-4 py-3 text-center w-16">#</th>
-                              <th className="px-4 py-3">{t("resource")}</th>
-                              <th className="px-4 py-3">{t("assignedTo")}</th>
-                              <th className="px-4 py-3 text-right">
+                              <th className="px-2 md:px-4 py-3 text-center w-12">
+                                #
+                              </th>
+                              <th className="px-2 md:px-4 py-3">
+                                {t("resource") || "Parça"}
+                              </th>
+                              <th className="px-2 md:px-4 py-3">
+                                {t("assignedTo")}
+                              </th>
+                              <th className="px-2 md:px-4 py-3 text-right">
                                 {t("status") || "Durum"}
                               </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                            {assignments.map((item) => (
-                              <tr
-                                key={item.id}
-                                className={`group transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-900/40 rounded-lg ${item.isCompleted ? "bg-emerald-50/30 dark:bg-emerald-900/10" : ""}`}
-                              >
-                                <td className="px-4 py-4 text-center">
-                                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono text-sm font-bold group-hover:bg-white dark:group-hover:bg-gray-700 shadow-sm transition-colors">
-                                    {item.participantNumber}
-                                  </span>
-                                </td>
+                            {assignments.map((item) => {
+                              // Zikirmatik hesaplamaları
+                              const totalTarget =
+                                item.endUnit - item.startUnit + 1;
+                              const currentCount = item.currentCount || 0;
+                              const remaining = totalTarget - currentCount;
+                              const isCountable =
+                                item.resource.type === "COUNTABLE" ||
+                                item.resource.type === "JOINT";
 
-                                <td className="px-4 py-4">
-                                  <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                      {item.resource.type === "PAGED"
-                                        ? t("page")
-                                        : t("part")}{" "}
-                                      <span className="text-emerald-600 dark:text-emerald-400">
-                                        {item.startUnit} - {item.endUnit}
-                                      </span>
+                              return (
+                                <tr
+                                  key={item.id}
+                                  className={`group transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-900/40 rounded-lg ${
+                                    item.isCompleted
+                                      ? "bg-emerald-50/30 dark:bg-emerald-900/10"
+                                      : ""
+                                  }`}
+                                >
+                                  {/* 1. SÜTUN: Numara */}
+                                  <td className="px-2 md:px-4 py-4 text-center">
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono text-xs font-bold shadow-sm">
+                                      {item.participantNumber}
                                     </span>
-                                  </div>
-                                </td>
+                                  </td>
 
-                                <td className="px-4 py-4">
-                                  {item.isTaken ? (
-                                    <div className="flex items-center gap-3">
-                                      <div
-                                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ring-2 ring-white dark:ring-gray-900 ${
-                                          item.isCompleted
-                                            ? "bg-gradient-to-br from-emerald-400 to-green-600 text-white"
-                                            : "bg-gradient-to-br from-blue-400 to-indigo-600 text-white"
-                                        }`}
-                                      >
-                                        {item.assignedToName
-                                          ?.substring(0, 2)
-                                          .toUpperCase()}
+                                  {/* 2. SÜTUN: Parça Bilgisi ve Zikir Durumu */}
+                                  <td className="px-2 md:px-4 py-4">
+                                    <div className="flex flex-col">
+                                      {/* Sadece "Parça X" yazan kısım */}
+                                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                                        {t("part") || "Parça"}{" "}
+                                        {item.participantNumber}
+                                      </span>
+
+                                      {/* Zikir ise altta durum göster (Okunan/Toplam) */}
+                                      {isCountable && (
+                                        <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 mt-0.5">
+                                          {item.isCompleted ? (
+                                            <span className="text-emerald-500">
+                                              Tamamlandı
+                                            </span>
+                                          ) : (
+                                            <>
+                                              {t("remaining") || "Kalan"}:{" "}
+                                              {remaining} / {totalTarget}
+                                            </>
+                                          )}
+                                        </span>
+                                      )}
+
+                                      {/* Sayfalı ise sayfa aralığını küçük göster */}
+                                      {!isCountable &&
+                                        item.resource.type === "PAGED" && (
+                                          <span className="text-[10px] text-gray-400 mt-0.5">
+                                            Sayfa: {item.startUnit}-
+                                            {item.endUnit}
+                                          </span>
+                                        )}
+                                    </div>
+                                  </td>
+
+                                  {/* 3. SÜTUN: Atanan Kişi */}
+                                  <td className="px-2 md:px-4 py-4">
+                                    {item.isTaken ? (
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-sm shrink-0 ${
+                                            item.isCompleted
+                                              ? "bg-emerald-500"
+                                              : "bg-blue-500"
+                                          }`}
+                                        >
+                                          {item.assignedToName
+                                            ?.substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
+                                        <span
+                                          className={`text-xs font-bold truncate max-w-[80px] md:max-w-[150px] ${
+                                            item.isCompleted
+                                              ? "text-emerald-700 dark:text-emerald-400"
+                                              : "text-gray-700 dark:text-gray-300"
+                                          }`}
+                                        >
+                                          {item.assignedToName}
+                                        </span>
                                       </div>
-                                      <span
-                                        className={`font-bold text-sm ${item.isCompleted ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
-                                      >
-                                        {item.assignedToName}
+                                    ) : (
+                                      <span className="text-xs text-gray-400 italic opacity-60">
+                                        --
                                       </span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-2 opacity-50">
-                                      <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-700 bg-transparent"></div>
-                                      <span className="text-xs font-medium text-gray-400 italic">
-                                        {t("statusEmpty") || "Henüz alınmadı"}
-                                      </span>
-                                    </div>
-                                  )}
-                                </td>
+                                    )}
+                                  </td>
 
-                                <td className="px-4 py-4 text-right">
-                                  {item.isCompleted ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 shadow-sm">
-                                      <svg
-                                        className="w-3.5 h-3.5"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      Tamamlandı
-                                    </span>
-                                  ) : item.isTaken ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                      Okunuyor
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold text-gray-400 bg-gray-50 border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
-                                      Boşta
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
+                                  {/* 4. SÜTUN: Durum (Okuyor / Bitti) */}
+                                  <td className="px-2 md:px-4 py-4 text-right">
+                                    {item.isCompleted ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
+                                        <svg
+                                          className="w-3 h-3"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        <span className="hidden xs:inline">
+                                          Bitti
+                                        </span>
+                                      </span>
+                                    ) : item.isTaken ? (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                        Okuyor
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+                                        Boşta
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

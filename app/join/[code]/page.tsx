@@ -179,14 +179,14 @@ export default function JoinPage({
 
       <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
         {!userName ? (
-            <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
             <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <span className="text-5xl animate-wave">👋</span>
             </div>
 
-             <h2 className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3">
+            <h2 className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3">
               {session.description || t("joinTitle")}
             </h2>
 
@@ -215,8 +215,8 @@ export default function JoinPage({
             </div>
           </div>
         ) : (
-           <>
-             <div className="text-center mb-10">
+          <>
+            <div className="text-center mb-10">
               <span className="inline-block py-1 px-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wider mb-3 border border-gray-200 dark:border-gray-700">
                 #{session.code}
               </span>
@@ -225,7 +225,7 @@ export default function JoinPage({
               </h1>
             </div>
 
-             <div className="grid grid-cols-3 gap-3 md:gap-6 mb-10">
+            <div className="grid grid-cols-3 gap-3 md:gap-6 mb-10">
               <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow text-center group">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-gray-600 transition-colors">
                   {t("total")}
@@ -235,7 +235,7 @@ export default function JoinPage({
                 </p>
               </div>
 
-               <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden">
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
                 <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">
                   {t("distributed")}
@@ -248,7 +248,7 @@ export default function JoinPage({
                 </p>
               </div>
 
-               <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden">
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">
                   {t("completed")}
@@ -262,7 +262,7 @@ export default function JoinPage({
               </div>
             </div>
 
-             <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur rounded-2xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 mb-8 mx-auto max-w-lg">
+            <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur rounded-2xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 mb-8 mx-auto max-w-lg">
               {hasDistributed && (
                 <button
                   onClick={() => setActiveTab("distributed")}
@@ -289,7 +289,7 @@ export default function JoinPage({
               )}
             </div>
 
-             <div className="space-y-6">
+            <div className="space-y-6">
               {activeTab === "distributed" && (
                 <ResourceGroupList
                   groups={distributed}
@@ -298,7 +298,7 @@ export default function JoinPage({
                   localCounts={localCounts}
                   userName={userName}
                   isCreator={isCreator}
-                   actions={actions}
+                  actions={actions}
                   language={language}
                   t={t}
                   themeColor="emerald"
@@ -311,8 +311,8 @@ export default function JoinPage({
                   toggleGroup={toggleGroup}
                   localCounts={localCounts}
                   userName={userName}
-                  isCreator={isCreator} 
-                   actions={actions}
+                  isCreator={isCreator}
+                  actions={actions}
                   language={language}
                   t={t}
                   themeColor="blue"
@@ -358,7 +358,55 @@ function ResourceGroupList({
     ? "dark:bg-emerald-900/40"
     : "dark:bg-blue-900/40";
 
-  return Object.entries(groups).map(([resourceName, assignments]: any) => {
+  // --- 1. SIRALAMA AYARLARI ---
+  // Buradaki kelimelerden hangisi kaynak isminin içinde geçiyorsa o sırayı alır.
+  // Listede olmayanlar en sona atılır.
+  const sortOrder = [
+    "kuran", // 1
+    "cevşen", // 2 (veya cevsen)
+    "tefriciye", // 3
+    "münciye", // 4 (veya munciye)
+    "tevhidname", // 5
+    "bedir", // 6 (ashab-ı bedir)
+    "fatiha", // 7
+    "yasin", // 8
+    "uhud", // 9
+    "salavat", // 10
+    "latif", // 11
+    "hafız", // 12 (veya hafiz)
+    "fettah", // 13
+    "lahavle", // 14
+    "hasbunallah", // 15
+  ];
+
+  // Sıralama Fonksiyonu (Hem Türkçe karakter hem normal karakter kontrolü yapar)
+  const getPriority = (name: string) => {
+    const lowerName = name.toLocaleLowerCase("tr"); // Türkçe küçük harfe çevir
+
+    // Listede kaçıncı sırada olduğunu bul
+    const index = sortOrder.findIndex(
+      (key) =>
+        lowerName.includes(key) ||
+        lowerName.includes(
+          key
+            .replace("ş", "s")
+            .replace("ı", "i")
+            .replace("ü", "u")
+            .replace("ç", "c")
+            .replace("ö", "o"),
+        ),
+    );
+
+    // Eğer listede varsa index'i (+1 çünkü 0 olmasın), yoksa 999 (en sona at) döndür
+    return index !== -1 ? index + 1 : 999;
+  };
+
+  // Grupları (Resource Names) önce sıralıyoruz
+  const sortedEntries = Object.entries(groups).sort(([nameA], [nameB]) => {
+    return getPriority(nameA) - getPriority(nameB);
+  });
+
+  return sortedEntries.map(([resourceName, assignments]: any) => {
     const isOpen = expandedGroups[resourceName] || false;
 
     const totalCount = assignments.length;
@@ -483,18 +531,22 @@ function ResourceGroupList({
         {isOpen && (
           <div className="p-4 bg-gray-50/50 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-300 dark:bg-black/20 dark:border-gray-800">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assignments.map((item: any) => (
-                <AssignmentCard
-                  key={item.id}
-                  item={item}
-                  localCounts={localCounts}
-                  userName={userName}
-                  isCreator={isCreator} 
-                   actions={actions}
-                  language={language}
-                  t={t}
-                />
-              ))}
+              {assignments
+                .sort(
+                  (a: any, b: any) => a.participantNumber - b.participantNumber,
+                )
+                .map((item: any) => (
+                  <AssignmentCard
+                    key={item.id}
+                    item={item}
+                    localCounts={localCounts}
+                    userName={userName}
+                    isCreator={isCreator}
+                    actions={actions}
+                    language={language}
+                    t={t}
+                  />
+                ))}
             </div>
           </div>
         )}
@@ -517,7 +569,7 @@ function AssignmentCard({
   const isAssignedToUser = userName && item.assignedToName === userName;
   const isCompleted = item.isCompleted || false;
 
-   const canViewDetails = isAssignedToUser || isCreator;
+  const canViewDetails = isAssignedToUser || isCreator;
 
   let translation = item.resource.translations?.find(
     (t: any) => t.langCode === language,
@@ -531,16 +583,16 @@ function AssignmentCard({
     "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700";
   let glowStyle = "hover:border-blue-300 dark:hover:border-blue-700";
 
-   if (isCompleted && canViewDetails) {
-     cardStyle =
+  if (isCompleted && canViewDetails) {
+    cardStyle =
       "bg-emerald-50/80 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800";
     glowStyle = "";
   } else if (isAssignedToUser) {
-     cardStyle =
+    cardStyle =
       "bg-white border-blue-200 ring-2 ring-blue-50 dark:bg-gray-800 dark:border-blue-900 dark:ring-blue-900/20 shadow-lg transform scale-[1.01]";
     glowStyle = "";
   } else if (item.isTaken) {
-     cardStyle =
+    cardStyle =
       "bg-gray-50 border-gray-100 opacity-60 grayscale-[0.8] dark:bg-gray-900 dark:border-gray-800";
     glowStyle = "";
   }
@@ -572,9 +624,9 @@ function AssignmentCard({
         </div>
 
         <div>
-           {item.isTaken ? (
+          {item.isTaken ? (
             isCompleted && canViewDetails ? (
-               <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
@@ -590,20 +642,18 @@ function AssignmentCard({
                 {t("completed") || "TAMAMLANDI"}
               </span>
             ) : (
-               <span
+              <span
                 className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                   isAssignedToUser
                     ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/30"
                     : "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
                 }`}
               >
-                {
-                  isAssignedToUser
-                    ? t("yourTask") || "SENİN GÖREVİN"
-                    : isCreator
-                      ? item.assignedToName 
-                       : t("taken") || "ALINDI"
-                }
+                {isAssignedToUser
+                  ? t("yourTask") || "SENİN GÖREVİN"
+                  : isCreator
+                    ? item.assignedToName
+                    : t("taken") || "ALINDI"}
               </span>
             )
           ) : (
@@ -619,7 +669,7 @@ function AssignmentCard({
           <>
             {(item.resource.type === "COUNTABLE" ||
               item.resource.type === "JOINT") &&
-                 (canViewDetails ? (
+              (canViewDetails ? (
                 <div className="scale-110">
                   <Zikirmatik
                     currentCount={safeCount}
