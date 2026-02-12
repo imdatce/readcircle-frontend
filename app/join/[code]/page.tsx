@@ -28,7 +28,7 @@ export default function JoinPage({
     setReadingModalContent,
     actions,
   } = useDistributionSession(code);
-
+  const isCreator = session?.creatorName === userName;
   const [activeTab, setActiveTab] = useState<"distributed" | "individual">(
     "distributed",
   );
@@ -177,165 +177,166 @@ export default function JoinPage({
         </div>
       </header>
 
-     <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
-  {!userName ? (
-    // ----------------------------------------------------------------
-    // 1. DURUM: KULLANICI HENÜZ İSİM GİRMEMİŞ (LOGIN EKRANI)
-    // ----------------------------------------------------------------
-    <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden">
-      
-      {/* Arka plan süslemesi (Opsiyonel estetik dokunuş) */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+      <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
+        {!userName ? (
+          // ----------------------------------------------------------------
+          // 1. DURUM: KULLANICI HENÜZ İSİM GİRMEMİŞ (LOGIN EKRANI)
+          // ----------------------------------------------------------------
+          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden">
+            {/* Arka plan süslemesi (Opsiyonel estetik dokunuş) */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
-      <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-        <span className="text-5xl animate-wave">👋</span>
-      </div>
+            <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <span className="text-5xl animate-wave">👋</span>
+            </div>
 
-      {/* Başlık - Gradient Efektli */}
-      <h2 className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3">
-        {session.description || t("joinTitle")}
-      </h2>
+            {/* Başlık - Gradient Efektli */}
+            <h2 className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3">
+              {session.description || t("joinTitle")}
+            </h2>
 
-      <p className="text-gray-500 dark:text-gray-400 mb-8 font-medium leading-relaxed">
-        {t("joinIntro")}
-      </p>
+            <p className="text-gray-500 dark:text-gray-400 mb-8 font-medium leading-relaxed">
+              {t("joinIntro")}
+            </p>
 
-      <div className="space-y-4">
-        <div className="relative group">
-          <input
-            type="text"
-            value={tempName}
-            onChange={(e) => setTempName(e.target.value)}
-            placeholder={t("yourName")}
-            className="w-full px-6 py-5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500 rounded-2xl text-lg font-bold text-center outline-none transition-all text-gray-800 dark:text-white group-hover:bg-white dark:group-hover:bg-gray-800 shadow-sm focus:shadow-md"
-            onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
-          />
-        </div>
-        <button
-          onClick={handleNameSubmit}
-          disabled={!tempName.trim()}
-          className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none"
-        >
-          {t("continue")}
-        </button>
-      </div>
-    </div>
-  ) : (
-    // ----------------------------------------------------------------
-    // 2. DURUM: İÇERİDE (DASHBOARD)
-    // ----------------------------------------------------------------
-    <>
-      {/* Halka İsmi ve Bilgisi - Hero Alanı */}
-      <div className="text-center mb-10">
-        <span className="inline-block py-1 px-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wider mb-3 border border-gray-200 dark:border-gray-700">
-          #{session.code}
-        </span>
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
-          {session.description || t("joinTitle")}
-        </h1>
-      </div>
+            <div className="space-y-4">
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder={t("yourName")}
+                  className="w-full px-6 py-5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500 rounded-2xl text-lg font-bold text-center outline-none transition-all text-gray-800 dark:text-white group-hover:bg-white dark:group-hover:bg-gray-800 shadow-sm focus:shadow-md"
+                  onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+                />
+              </div>
+              <button
+                onClick={handleNameSubmit}
+                disabled={!tempName.trim()}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none"
+              >
+                {t("continue")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          // ----------------------------------------------------------------
+          // 2. DURUM: İÇERİDE (DASHBOARD)
+          // ----------------------------------------------------------------
+          <>
+            {/* Halka İsmi ve Bilgisi - Hero Alanı */}
+            <div className="text-center mb-10">
+              <span className="inline-block py-1 px-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wider mb-3 border border-gray-200 dark:border-gray-700">
+                #{session.code}
+              </span>
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
+                {session.description || t("joinTitle")}
+              </h1>
+            </div>
 
-      {/* İstatistikler Grid */}
-      <div className="grid grid-cols-3 gap-3 md:gap-6 mb-10">
-        {/* Toplam */}
-        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow text-center group">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-gray-600 transition-colors">
-            {t("total")}
-          </p>
-          <p className="text-3xl font-black text-gray-800 dark:text-white">
-            {stats.total}
-          </p>
-        </div>
-        
-        {/* Dağıtılan */}
-        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">
-            {t("distributed")}
-          </p>
-          <p className="text-3xl font-black text-blue-600 dark:text-blue-400 flex flex-col items-center leading-none gap-1">
-            {stats.distributed}
-            <span className="text-[10px] font-bold text-blue-400/60 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
-              %{stats.distPercent}
-            </span>
-          </p>
-        </div>
+            {/* İstatistikler Grid */}
+            <div className="grid grid-cols-3 gap-3 md:gap-6 mb-10">
+              {/* Toplam */}
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow text-center group">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-gray-600 transition-colors">
+                  {t("total")}
+                </p>
+                <p className="text-3xl font-black text-gray-800 dark:text-white">
+                  {stats.total}
+                </p>
+              </div>
 
-        {/* Tamamlanan */}
-        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
-          <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">
-            {t("completed")}
-          </p>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 flex flex-col items-center leading-none gap-1">
-            {stats.completed}
-            <span className="text-[10px] font-bold text-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-              %{stats.compPercent}
-            </span>
-          </p>
-        </div>
-      </div>
+              {/* Dağıtılan */}
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
+                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">
+                  {t("distributed")}
+                </p>
+                <p className="text-3xl font-black text-blue-600 dark:text-blue-400 flex flex-col items-center leading-none gap-1">
+                  {stats.distributed}
+                  <span className="text-[10px] font-bold text-blue-400/60 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                    %{stats.distPercent}
+                  </span>
+                </p>
+              </div>
 
-      {/* Sekmeler (Tabs) */}
-      <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur rounded-2xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 mb-8 mx-auto max-w-lg">
-        {hasDistributed && (
-          <button
-            onClick={() => setActiveTab("distributed")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-              activeTab === "distributed"
-                ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm scale-[1.02]"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-            }`}
-          >
-            {t("distributedResources")}
-          </button>
+              {/* Tamamlanan */}
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                  {t("completed")}
+                </p>
+                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 flex flex-col items-center leading-none gap-1">
+                  {stats.completed}
+                  <span className="text-[10px] font-bold text-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                    %{stats.compPercent}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Sekmeler (Tabs) */}
+            <div className="flex p-1.5 bg-gray-100/80 dark:bg-gray-800/60 backdrop-blur rounded-2xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 mb-8 mx-auto max-w-lg">
+              {hasDistributed && (
+                <button
+                  onClick={() => setActiveTab("distributed")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    activeTab === "distributed"
+                      ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm scale-[1.02]"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {t("distributedResources")}
+                </button>
+              )}
+              {hasIndividual && (
+                <button
+                  onClick={() => setActiveTab("individual")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    activeTab === "individual"
+                      ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm scale-[1.02]"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {t("individualResources")}
+                </button>
+              )}
+            </div>
+
+            {/* Listeler */}
+            <div className="space-y-6">
+              {activeTab === "distributed" && (
+                <ResourceGroupList
+                  groups={distributed}
+                  expandedGroups={expandedGroups}
+                  toggleGroup={toggleGroup}
+                  localCounts={localCounts}
+                  userName={userName}
+                  isCreator={isCreator} // <--- 2. EKLENECEK SATIR (Prop olarak gönder)
+                  actions={actions}
+                  language={language}
+                  t={t}
+                  themeColor="emerald"
+                />
+              )}
+              {activeTab === "individual" && (
+                <ResourceGroupList
+                  groups={individual}
+                  expandedGroups={expandedGroups}
+                  toggleGroup={toggleGroup}
+                  localCounts={localCounts}
+                  userName={userName}
+                  isCreator={isCreator} // <--- 2. EKLENECEK SATIR (Prop olarak gönder)
+                  actions={actions}
+                  language={language}
+                  t={t}
+                  themeColor="blue"
+                />
+              )}
+            </div>
+          </>
         )}
-        {hasIndividual && (
-          <button
-            onClick={() => setActiveTab("individual")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-              activeTab === "individual"
-                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm scale-[1.02]"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-            }`}
-          >
-            {t("individualResources")}
-          </button>
-        )}
-      </div>
-
-      {/* Listeler */}
-      <div className="space-y-6">
-        {activeTab === "distributed" && (
-          <ResourceGroupList
-            groups={distributed}
-            expandedGroups={expandedGroups}
-            toggleGroup={toggleGroup}
-            localCounts={localCounts}
-            userName={userName}
-            actions={actions}
-            language={language}
-            t={t}
-            themeColor="emerald"
-          />
-        )}
-        {activeTab === "individual" && (
-          <ResourceGroupList
-            groups={individual}
-            expandedGroups={expandedGroups}
-            toggleGroup={toggleGroup}
-            localCounts={localCounts}
-            userName={userName}
-            actions={actions}
-            language={language}
-            t={t}
-            themeColor="blue"
-          />
-        )}
-      </div>
-    </>
-  )}
-</main>
+      </main>
 
       {readingModalContent && (
         <ReadingModal
@@ -359,6 +360,7 @@ function ResourceGroupList({
   toggleGroup,
   localCounts,
   userName,
+  isCreator,
   actions,
   language,
   t,
@@ -502,6 +504,7 @@ function ResourceGroupList({
                   item={item}
                   localCounts={localCounts}
                   userName={userName}
+                  isCreator={isCreator} // <--- 4. EKLENECEK SATIR (Kart bileşenine ilet)
                   actions={actions}
                   language={language}
                   t={t}
@@ -519,6 +522,7 @@ function AssignmentCard({
   item,
   localCounts,
   userName,
+  isCreator, // Parametre olarak geldiğinden emin ol
   actions,
   language,
   t,
@@ -527,6 +531,10 @@ function AssignmentCard({
   const safeCount = localCounts[item.id] ?? defaultTotal;
   const isAssignedToUser = userName && item.assignedToName === userName;
   const isCompleted = item.isCompleted || false;
+
+  // --- YENİ: Kimler detayları (sayı, tamamlanma durumu) görebilir? ---
+  // Sadece görevi alan kişi VE halkayı oluşturan yönetici görebilir.
+  const canViewDetails = isAssignedToUser || isCreator;
 
   let translation = item.resource.translations?.find(
     (t: any) => t.langCode === language,
@@ -540,15 +548,19 @@ function AssignmentCard({
     "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700";
   let glowStyle = "hover:border-blue-300 dark:hover:border-blue-700";
 
-  if (isCompleted) {
+  // --- STİL MANTIĞI GÜNCELLENDİ ---
+  if (isCompleted && canViewDetails) {
+    // Tamamlandıysa VE görme yetkimiz varsa Yeşil yap
     cardStyle =
       "bg-emerald-50/80 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800";
     glowStyle = "";
   } else if (isAssignedToUser) {
+    // Bizim görevimizse Mavi yap
     cardStyle =
       "bg-white border-blue-200 ring-2 ring-blue-50 dark:bg-gray-800 dark:border-blue-900 dark:ring-blue-900/20 shadow-lg transform scale-[1.01]";
     glowStyle = "";
   } else if (item.isTaken) {
+    // Başkası aldıysa (veya tamamladı ama biz göremiyorsak) Gri/Pasif yap
     cardStyle =
       "bg-gray-50 border-gray-100 opacity-60 grayscale-[0.8] dark:bg-gray-900 dark:border-gray-800";
     glowStyle = "";
@@ -581,31 +593,45 @@ function AssignmentCard({
         </div>
 
         <div>
-          {isCompleted ? (
-            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="w-3 h-3"
+          {/* --- ROZET MANTIĞI GÜNCELLENDİ --- */}
+          {item.isTaken ? (
+            isCompleted && canViewDetails ? (
+              // Tamamlandı ve görme yetkimiz var -> YEŞİL ROZET
+              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-3 h-3"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {t("completed") || "TAMAMLANDI"}
+              </span>
+            ) : (
+              // Alındı (veya tamamlandı ama gizli) -> GRİ/MAVİ ROZET
+              <span
+                className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                  isAssignedToUser
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/30"
+                    : "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                }`}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {t("completed") || "TAMAMLANDI"}
-            </span>
-          ) : item.isTaken ? (
-            <span
-              className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${isAssignedToUser ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/30" : "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"}`}
-            >
-              {isAssignedToUser
-                ? t("yourTask") || "SENİN GÖREVİN"
-                : item.assignedToName}
-            </span>
+                {
+                  isAssignedToUser
+                    ? t("yourTask") || "SENİN GÖREVİN"
+                    : isCreator
+                      ? item.assignedToName // Yönetici isen ismi gör
+                      : t("taken") || "ALINDI" // Değilsen sadece "ALINDI" gör
+                }
+              </span>
+            )
           ) : (
+            // Boş -> YEŞİL ÇERÇEVELİ ROZET
             <span className="inline-flex items-center bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30">
               {t("statusEmpty") || "BOŞ"}
             </span>
@@ -617,16 +643,20 @@ function AssignmentCard({
         {item.isTaken && (
           <>
             {(item.resource.type === "COUNTABLE" ||
-              item.resource.type === "JOINT") && (
-              <div className="scale-110">
-                <Zikirmatik
-                  currentCount={safeCount}
-                  onDecrement={() => actions.decrementCount(item.id)}
-                  t={t}
-                  readOnly={!isAssignedToUser}
-                />
-              </div>
-            )}
+              item.resource.type === "JOINT") &&
+              // --- ZİKİRMATİK GİZLİLİĞİ ---
+              // Sadece yetkisi olan (sahibi veya yönetici) sayacı görebilir.
+              // Diğerleri için burası boş render edilir.
+              (canViewDetails ? (
+                <div className="scale-110">
+                  <Zikirmatik
+                    currentCount={safeCount}
+                    onDecrement={() => actions.decrementCount(item.id)}
+                    t={t}
+                    readOnly={!isAssignedToUser}
+                  />
+                </div>
+              ) : null)}
 
             {isAssignedToUser && (
               <button
@@ -670,7 +700,6 @@ function AssignmentCard({
             <button
               onClick={() => {
                 actions.handleCompletePart(item.id);
-
                 if (
                   (item.resource.type === "COUNTABLE" ||
                     item.resource.type === "JOINT") &&
@@ -699,10 +728,7 @@ function AssignmentCard({
 
           <button
             onClick={() => {
-              // Hook içindeki handleCancelPart artık sayacı kendisi başlangıca döndürüyor
               actions.handleCancelPart(item.id);
-
-              // Manuel müdahale istersen (isteğe bağlı):
               if (
                 (item.resource.type === "COUNTABLE" ||
                   item.resource.type === "JOINT") &&
@@ -712,9 +738,12 @@ function AssignmentCard({
                 actions.updateLocalCount(item.id, initialValue);
               }
             }}
-            className={`flex-1 py-3 rounded-xl border-2 ...`}
+            className={`flex-1 py-3 rounded-xl border-2 text-sm font-bold transition-all active:scale-95 ${
+              isCompleted
+                ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                : "bg-red-50 border-red-100 text-red-600 hover:bg-red-100 hover:border-red-200 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400"
+            }`}
           >
-            {/* İkonlar ve t("undo") yazısı */}
             {isCompleted ? t("undo") : t("giveUp")}
           </button>
         </div>
