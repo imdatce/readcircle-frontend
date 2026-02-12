@@ -11,14 +11,14 @@ export default function AdminPage() {
   const { t, language } = useLanguage();
   const { user, token, logout } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
-
+  const [description, setDescription] = useState("");
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [participants, setParticipants] = useState<string>("10");
   const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
   const [createdLink, setCreatedLink] = useState<string>("");
   const [createdCode, setCreatedCode] = useState<string>("");
   const [loading, setLoading] = useState(false);
-
+  const [createdSessionName, setCreatedSessionName] = useState<string>("");
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
   const getDisplayName = (resource: Resource) => {
@@ -104,6 +104,7 @@ export default function AdminPage() {
         resourceIds: selectedResources.map((id) => Number(id)),
         participants: participantsNum,
         customTotals: customTotals,
+        description: description,
       };
 
       const res = await fetch(`${apiUrl}/api/distribution/create`, {
@@ -124,9 +125,9 @@ export default function AdminPage() {
       const link = `${window.location.origin}/join/${data.code}`;
       setCreatedCode(data.code);
       setCreatedLink(link);
+      setCreatedSessionName(data.description || "");
       sessionStorage.removeItem("adminState");
 
-      // Başarılı olunca yukarı kaydır
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error(err);
@@ -240,8 +241,15 @@ export default function AdminPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-2">
-              {t("sessionCreated")}
+              {t("sessionCreated")}:
             </h2>
+            {/* --- EKLENECEK KISIM --- */}
+            {createdSessionName && (
+              <p className="text-4xl font-medium text-blue-600 dark:text-blue-400 text-center -mt-1 mb-6">
+                {createdSessionName}
+              </p>
+            )}
+            {/* ----------------------- */}
 
             <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-6 flex flex-col items-center">
               <span className="text-sm font-bold text-gray-400 mb-1">
@@ -321,6 +329,28 @@ export default function AdminPage() {
               </Link>
             </div>
 
+            {/* --- YENİ EKLENEN KISIM: OKUMAYA BAŞLA BUTONU --- */}
+            <Link
+              href={`/join/${createdCode}`}
+              className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              {t("startReading") || "Okumaya Başla"}
+            </Link>
+            {/* --- EKLENEN KISIM SONU --- */}
             <button
               onClick={() => {
                 setCreatedLink("");
@@ -338,6 +368,19 @@ export default function AdminPage() {
         {/* --- FORM ALANI (Halka Oluşturulmadıysa Göster) --- */}
         {!createdLink && (
           <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 rounded-[2rem] p-6 md:p-8 shadow-xl">
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+                Halka İsmi (İsteğe Bağlı)
+              </label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Örn: Ramazan Hatmi, Aile Salavatı..."
+                className="w-full p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700"
+              />
+            </div>
+
             {/* KATILIMCI SAYISI */}
             <div className="mb-8">
               <label className="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 dark:text-gray-400">

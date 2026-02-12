@@ -9,6 +9,7 @@ import {
   formatMeaningText,
   formatStyledText,
   renderUhudList,
+  fontSizes,
 } from "@/utils/text-formatter";
 
 export interface ReadingModalContent {
@@ -46,7 +47,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   onDecrementCount,
   t,
 }) => {
-  const [fontLevel, setFontLevel] = useState(1);
+  const [fontLevel, setFontLevel] = useState(3);
   const { language } = useLanguage();
 
   const getDisplayTitle = () => {
@@ -73,8 +74,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 </button>
                 <div className="w-px h-4 bg-blue-400/50 mx-1"></div>
                 <button
-                  onClick={() => setFontLevel((prev) => Math.min(4, prev + 1))}
-                  disabled={fontLevel === 4}
+                  onClick={() => setFontLevel((prev) => Math.min(8, prev + 1))}
+                  disabled={fontLevel === 8}
                   className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded disabled:opacity-30 transition font-serif font-bold text-xl"
                 >
                   A+
@@ -231,7 +232,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       </div>
                     ) : (
                       <div
-                        className="text-center font-serif text-3xl leading-[4.5rem] py-4"
+                        className={`text-center font-serif leading-[4.5rem] py-4 ${fontSizes.ARABIC[fontLevel]}`}
                         dir="rtl"
                       >
                         {content.salavatData.arabic}

@@ -54,11 +54,20 @@ export default function Home() {
     }
   }, [user, token, apiUrl]);
 
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.trim()) {
-      router.push(`/join/${code.trim()}`);
+  // State tanımların muhtemelen şöyledir:
+  // const [code, setCode] = useState("");
+
+  const handleJoin = () => {
+    if (!code.trim()) return;
+
+    let sessionCode = code.trim();
+    if (sessionCode.includes("/join/")) {
+      const parts = sessionCode.split("/join/");
+      if (parts.length > 1) {
+        sessionCode = parts[1].split("?")[0];
+      }
     }
+    router.push(`/join/${sessionCode}`);
   };
 
   const handleCopyLink = (e: React.MouseEvent, code: string, id: number) => {
@@ -317,10 +326,11 @@ export default function Home() {
                     </div>
                     <input
                       type="text"
-                      placeholder={t("sessionCodePlaceholder") || "Halka Kodu"}
-                      className={`flex-1 bg-transparent border-none outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400 py-2.5 w-32 md:w-40 font-medium ${isRTL ? "text-right" : "text-left"}`}
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
+                      placeholder={t("pasteCodeOrLink")}
+                      className="..."
+                      onKeyDown={(e) => e.key === "Enter" && handleJoin()}
                     />
                     <button
                       type="submit"
@@ -809,6 +819,8 @@ function SessionCard({
 
               <button
                 onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   navigator.clipboard.writeText(session.code);
                   alert(t("copied"));
                 }}

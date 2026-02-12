@@ -22,7 +22,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 const translations = {
   tr: {
     common: {
-      appTitle: "SURA",
+      appTitle: "Spiritual Union for Reflection & Affinity",
       subtitle: "Kaynak Dağıtım Platformu",
       backHome: "Ana Sayfa",
       footerDesc: "Manevi birliktelik ve kaynak dağıtım platformu.",
@@ -34,6 +34,7 @@ const translations = {
 
       cancel: "İptal",
       codeCopied: "Kod kopyalandı",
+      distributed: "Dağıtıldı",
       delete: "Sil",
       fixedResources: "Bireysel Kaynaklar",
       copy: "Kopyala",
@@ -50,6 +51,8 @@ const translations = {
       resource_BEDIR: "Bedir Şehitleri",
       resource_SALAVAT: "Salavat-ı Şerife",
       page: "Sayfa",
+      startReading: "Okumaya Başla",
+
       part: "Parça",
       person: "Kişi",
       total: "Toplam",
@@ -93,7 +96,7 @@ const translations = {
       loginOrRegister: "Giriş Yap veya Kayıt Ol",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
+      landingHeroTitle: "Manevî Birlik Platformu",
       landingHeroSubtitle:
         "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin. Sevdiklerinizle birlikte manevi hedeflerinize ulaşın.",
       getStarted: "Hemen Başla",
@@ -143,7 +146,7 @@ const translations = {
       yourTask: "Senin gorevin",
       joinButton: "Katıl",
       sessionCodePlaceholder: "Mevcut kod",
-      enterCode: "Dağıtım Kodunu Giriniz",
+      pasteCodeOrLink: "Kodu veya linki yapıştır",
       enterCodePlaceholder: "Dağıtım Kodu (Örn: 12345)",
       guestCheckCode: "Sadece bir koda bakmak mı istiyorsun?",
       guestCodePlaceholder: "Kod giriniz",
@@ -178,7 +181,7 @@ const translations = {
       takeRead: "AL",
       readText: "Oku",
       completed: "Tamamlandı",
-      finished: "Tamamladıysan tıkla",
+      finish: "Tamamladıysan tıkla",
       selectAndRead: "SEÇ & OKU",
       clickToCount: "OKUDUKÇA TIKLAYINIZ",
       decrease: "AZALT",
@@ -241,14 +244,17 @@ const translations = {
   },
   ku: {
     common: {
-      appTitle: "SURA",
+      appTitle: "Spiritual Union for Reflection & Affinity",
       subtitle: "Platforma Belavkirina Çavkaniyan",
       backHome: "Mal",
       giveUp: "Dev jê bibe",
+      pasteCodeOrLink: "Kod an girêdanê biçeşîne",
       fixedResources: "Çavkaniyên taybetî",
       codeCopied: "Kod hat kopîkirin",
       footerDesc: "Platforma yekîtiya manewî û belavkirina çavkaniyan.",
       rightsReserved: "Hemû maf parastî ne.",
+
+      distributed: "Belav kirin",
       allahAccept: "Xwedê qebûl bike.",
       loading: "Tê barkirin...",
       close: "Bigire",
@@ -320,7 +326,8 @@ const translations = {
       loginOrRegister: "Têkeve an Qeyd Bibe",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
+      landingHeroTitle: "Platforma yekîtiya manewî",
+
       homeVerseContent: "Bi bîranîna Xwedê re tenê dilan aram dibin.",
       landingHeroSubtitle:
         "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
@@ -332,6 +339,8 @@ const translations = {
       featuresDesc1:
         "Cuz an rûpelan bixweber belav bikin. Zindî bişopînin kî li ku maye.",
       featuresTitle2: "Xelekên Zikrê Yên Hevpar",
+      startReading: "Dest bi xwendinê bike",
+
       featuresDesc2:
         "Di zikran de mîna Selewat û duayan beşdarî hewza hevpar bibin.",
       featuresTitle3: "Xwendina Li Gorî Mobîlê",
@@ -405,7 +414,7 @@ const translations = {
       takeRead: "BIGIRE",
       readText: "Bixwîne",
       completed: "Temam Bû",
-      finished: "Heke te xelas kir, bitikîne",
+      finish: "Heke te xelas kir, bitikîne",
       selectAndRead: "HILBIJÊRE & BIXWÎNE",
       clickToCount: "HER KU TE XWEND BITIKÎNE",
       decrease: "KÊM BIKE",
@@ -467,12 +476,14 @@ const translations = {
   },
   en: {
     common: {
-      appTitle: "SURA",
+      appTitle: "Spiritual Union for Reflection & Affinity",
       subtitle: "Resource Distribution Platform",
       backHome: "Home",
+      distributed: "Distributed",
       footerDesc: "Spiritual connection and resource distribution platform.",
       rightsReserved: "All rights reserved.",
       sessionCreated: "Session created",
+      pasteCodeOrLink: "Paste code or link",
       allahAccept: "May Allah accept it.",
       fixedResources: "Fixed Resources",
       loading: "Loading...",
@@ -506,6 +517,8 @@ const translations = {
       otherResource: "Other",
       imageMode: "Image Mode",
       continueButton: "CONTINUE",
+      startReading: "Start Reading",
+
       adminButton: "Login as Admin!",
     },
     auth: {
@@ -544,7 +557,7 @@ const translations = {
       loginOrRegister: "Login or Register",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
+      landingHeroTitle: "Spiritual Union Platform",
       landingHeroSubtitle:
         "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
       getStarted: "Get Started",
@@ -627,7 +640,7 @@ const translations = {
       takeRead: "TAKE",
       readText: "Read",
       completed: "Completed",
-      finished: "If you finished, click",
+      finish: "If you finished, click",
       selectAndRead: "SELECT & READ",
       clickToCount: "CLICK AS YOU READ",
       decrease: "DECREASE",
@@ -689,16 +702,20 @@ const translations = {
   },
   ar: {
     common: {
-      appTitle: "SURA",
+      appTitle: "Spiritual Union for Reflection & Affinity",
       subtitle: "منصة توزيع القراءات",
       backHome: "الرئيسية",
       codeCopied: "تم نسخ الكود",
+      pasteCodeOrLink: "رمز أو الصق الرابط",
       footerDesc: "منصة التواصل الروحي وتوزيع الموارد.",
       rightsReserved: "جميع الحقوق محفوظة.",
       allahAccept: "تقبل الله.",
       fixedResources: "الموارد الفردية",
       sessionCreated: "تم إنشاء الجلسة",
       resource_YASIN: "سورة يس",
+
+      distributed: "تم التوزيع",
+
       resource_FETIH: "سورة الفتح",
       resource_CEVSEN: "جوشن الكبير",
       resource_TEFRICIYE: "الصلاة التفريجية",
@@ -726,6 +743,8 @@ const translations = {
       pieces: "قطع",
       menuLanguage: "إعدادات اللغة",
       default: "افتراضي",
+      startReading: "ابدأ القراءة",
+
       otherResource: "آخر",
       imageMode: "وضع الصورة",
       continueButton: "متابعة",
@@ -760,7 +779,7 @@ const translations = {
       loginOrRegister: "دخول أو تسجيل",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
+      landingHeroTitle: "منصة الاتحاد الروحي",
       landingHeroSubtitle:
         "نظم ختمات القرآن وحلقات الجوشن وبرامج الأذكار بسهولة.",
       getStarted: "ابدأ الآن",
@@ -840,7 +859,7 @@ const translations = {
       takeRead: "أخذ",
       readText: "اقرأ",
       completed: "مكتمل",
-      finished: "إذا انتهيت، اضغط هنا",
+      finish: "إذا انتهيت، اضغط هنا",
       selectAndRead: "تحديد وقراءة",
       clickToCount: "انقر أثناء القراءة",
       decrease: "إنقاص",
@@ -905,9 +924,10 @@ const translations = {
   },
   fr: {
     common: {
-      appTitle: "SURA",
+      appTitle: "Spiritual Union for Reflection & Affinity",
       subtitle: "Plateforme de Distribution de Ressources",
       backHome: "Accueil",
+      pasteCodeOrLink: "Collez le code ou le lien",
       footerDesc:
         "Plateforme de connexion spirituelle et de distribution de ressources.",
       rightsReserved: "Tous droits réservés.",
@@ -916,6 +936,7 @@ const translations = {
       close: "Fermer",
       fixedResources: "Ressources fixes",
       resource_YASIN: "Sourate Yasin",
+      distributed: "Distribué",
       resource_FETIH: "Sourate Al-Fath",
       resource_CEVSEN: "Jawshan Kabir",
       resource_TEFRICIYE: "Salat al-Tefriciye",
@@ -983,7 +1004,7 @@ const translations = {
       loginOrRegister: "Connexion ou Inscription",
     },
     landing: {
-      landingHeroTitle: "Spiritual Union for Reflection & Affinity",
+      landingHeroTitle: "Plateforme d’union spirituelle",
       landingHeroSubtitle:
         "Organisez facilement des khatms du Coran, des cercles de Cevshen et des programmes de dhikr.",
       getStarted: "Commencer",
@@ -1023,6 +1044,7 @@ const translations = {
       noSessionYet: "Pas encore.",
       create: "Créer",
       join: "Rejoindre",
+      startReading: "Commencer la lecture",
       trackButton: "Voir l'état",
       backToAdmin: "Retour au tableau de bord",
       adminTitle: "Tableau de bord Admin",
@@ -1070,7 +1092,7 @@ const translations = {
       takeRead: "PRENDRE",
       readText: "Lire",
       completed: "Terminé",
-      finished: "Si vous avez terminé, cliquez",
+      finish: "Si vous avez terminé, cliquez",
       selectAndRead: "SÉLECTIONNER & LIRE",
       clickToCount: "CLIQUEZ PENDANT LA LECTURE",
       decrease: "DIMINUER",

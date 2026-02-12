@@ -107,7 +107,9 @@ export function useDistributionSession(code: string) {
             }
         } catch (e) {
             console.error("Save progress failed", e);
-            setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
+             setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
+
+             alert("Bağlantı hatası! Sayı kaydedilemedi.");
         }
     };
 
@@ -146,9 +148,8 @@ export function useDistributionSession(code: string) {
             fetchSession();
         }
     };
-
     const handleCancelPart = async (assignmentId: number) => {
-        if (!confirm(t("confirmCancel"))) return;
+         if (!confirm(t("confirmCancel"))) return;
 
         const nameToUse = userName || localStorage.getItem("guestUserName");
         if (!nameToUse) return;
@@ -162,16 +163,16 @@ export function useDistributionSession(code: string) {
             const res = await fetch(url, { method: "POST", headers });
 
             if (res.ok) {
-                const assignment = session?.assignments.find(a => a.id === assignmentId);
+                 const assignment = session?.assignments.find(a => a.id === assignmentId);
                 if (assignment) {
-                    const initialCount = assignment.endUnit - assignment.startUnit + 1;
+                     const initialCount = assignment.endUnit - assignment.startUnit + 1;
 
                     setLocalCounts(prev => ({
                         ...prev,
                         [assignmentId]: initialCount
                     }));
                 }
-
+ 
                 dataFetchedRef.current = false;
                 fetchSession();
             } else {
@@ -183,29 +184,30 @@ export function useDistributionSession(code: string) {
     };
 
     const handleCompletePart = async (assignmentId: number) => {
-        const nameToUse = userName || localStorage.getItem("guestUserName");
-
-        if (!nameToUse) return;
-        if (!confirm(t("confirmComplete"))) return;
-
         try {
             const headers: Record<string, string> = {};
             if (token) headers["Authorization"] = `Bearer ${token}`;
             let url = `${apiUrl}/api/distribution/complete/${assignmentId}`;
-            if (!token) url += `?name=${encodeURIComponent(nameToUse)}`;
+
+             const nameToUse = userName || localStorage.getItem("guestUserName");
+            if (!token && nameToUse) {
+                url += `?name=${encodeURIComponent(nameToUse)}`;
+            }
 
             const res = await fetch(url, { method: "POST", headers });
+
             if (res.ok) {
+                 setLocalCounts(prev => ({
+                    ...prev,
+                    [assignmentId]: 0
+                }));
+ 
                 dataFetchedRef.current = false;
                 fetchSession();
             } else {
-                const msg = await res.text();
-                alert(t("errorPrefix") + msg);
+                console.error("Complete failed");
             }
-        } catch (e) {
-            console.error(e);
-            alert(t("connectionError"));
-        }
+        } catch (e) { console.error(e); }
     };
 
     const openReadingModal = (assignment: Assignment, startPage?: number, endPage?: number) => {
@@ -295,7 +297,7 @@ export function useDistributionSession(code: string) {
             handleCancelPart,
             handleCompletePart,
             openReadingModal,
-            updateLocalCount: (id: number, count: number) => setLocalCounts(prev => ({ ...prev, [id]: count }))
+            updateLocalCount: (id: number, count: number) => setLocalCounts(prev => ({ ...prev, [id]: count })),
         }
     };
 }

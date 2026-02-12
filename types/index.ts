@@ -39,6 +39,7 @@ export interface DistributionSession {
   participants: number;
   creatorName?: string;
   assignments: Assignment[];
+
 }
 
 export interface SessionSummary {
