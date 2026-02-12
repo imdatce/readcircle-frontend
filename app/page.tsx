@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";  
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { SessionSummary } from "@/types";
 import { useSearchParams } from "next/navigation";
-export default function Home() {
+
+ function HomeContent() {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams();  
   const router = useRouter();
   const [code, setCode] = useState("");
   const [mySessions, setMySessions] = useState<SessionSummary[]>([]);
@@ -344,7 +345,7 @@ export default function Home() {
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       placeholder={t("pasteCodeOrLink")}
-                      className="..."
+                      className="bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 min-w-[200px]"
                       onKeyDown={(e) => e.key === "Enter" && handleJoin()}
                     />
                     <button
@@ -616,6 +617,20 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
 
