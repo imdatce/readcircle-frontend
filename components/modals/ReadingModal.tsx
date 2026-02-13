@@ -48,7 +48,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   t,
 }) => {
   const [fontLevel, setFontLevel] = useState(3);
-  const { language } = useLanguage();
 
   const getDisplayTitle = () => {
     if (!content.codeKey) return content.title;
@@ -316,9 +315,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
               {content.assignmentId && (
                 <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 w-full flex flex-col items-center">
-                  <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">
-                    {t("clickToCount")}
-                  </p>
+              
 
                   {(() => {
                     const currentAssignment = session?.assignments.find(
