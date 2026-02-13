@@ -215,7 +215,7 @@ export default function AdminPage() {
           {t("backHome")}
         </Link>
         <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
-          {t("createDistTitle") || "Yeni Halka"}
+          {t("createDistTitle")}
         </h1>
       </div>
 
@@ -238,7 +238,7 @@ export default function AdminPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-2">
-              {t("sessionCreated")}:
+              {t("sessionCreated")}
             </h2>
             {createdSessionName && (
               <p className="text-4xl font-medium text-blue-600 dark:text-blue-400 text-center -mt-1 mb-6">
@@ -248,7 +248,7 @@ export default function AdminPage() {
 
             <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-6 flex flex-col items-center">
               <span className="text-sm font-bold text-gray-400 mb-1">
-                {t("sessionCodePlaceholder")}:
+                {t("sessionCodePlaceholder")}
               </span>
               <span className="text-3xl font-mono font-black text-blue-600 dark:text-blue-400 tracking-widest">
                 {createdCode}
@@ -342,7 +342,7 @@ export default function AdminPage() {
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-              {t("startReading") || "Okumaya Başla"}
+              {t("startReading")}
             </Link>
             <button
               onClick={() => {
@@ -353,7 +353,7 @@ export default function AdminPage() {
               }}
               className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline w-full text-center"
             >
-              {t("createNewOne") || "Yeni bir tane daha oluştur"}
+              {t("createNewOne")}
             </button>
           </div>
         )}
@@ -362,13 +362,13 @@ export default function AdminPage() {
           <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 rounded-[2rem] p-6 md:p-8 shadow-xl">
             <div className="mb-4">
               <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-                Halka İsmi (İsteğe Bağlı)
+                {t("sessionNameLabel")}
               </label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Örn: Ramazan Hatmi, Aile Salavatı..."
+                placeholder={t("sessionNamePlaceholder")}
                 className="w-full p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700"
               />
             </div>
@@ -482,7 +482,7 @@ export default function AdminPage() {
               </div>
             )}
 
-             <button
+            <button
               onClick={handleCreate}
               disabled={loading || selectedResources.length === 0}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"

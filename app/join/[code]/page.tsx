@@ -28,6 +28,7 @@ export default function JoinPage({
     setReadingModalContent,
     actions,
   } = useDistributionSession(code);
+
   const isCreator = session?.creatorName === userName;
   const [activeTab, setActiveTab] = useState<"distributed" | "individual">(
     "distributed",
@@ -35,7 +36,6 @@ export default function JoinPage({
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
-
   const [tempName, setTempName] = useState(userName || "");
 
   const stats = useMemo(() => {
@@ -50,9 +50,7 @@ export default function JoinPage({
     }
 
     const total = session.assignments.length;
-
     const distributed = session.assignments.filter((a) => a.isTaken).length;
-
     const completed = session.assignments.filter((a) => a.isCompleted).length;
 
     return {
@@ -129,14 +127,14 @@ export default function JoinPage({
   if (error)
     return (
       <div className="flex h-screen items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
             {t("errorOccurred")}
           </h2>
           <p className="text-gray-500 mb-6">{error}</p>
           <Link
             href="/"
-            className="inline-block w-full py-3 bg-gray-800 text-white rounded-xl font-bold"
+            className="inline-block w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition"
           >
             {t("backHome")}
           </Link>
@@ -154,7 +152,7 @@ export default function JoinPage({
             href="/"
             className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 dark:text-gray-300 transition-colors group"
           >
-            <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-emerald-50 transition-colors">
+            <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform"
@@ -174,16 +172,24 @@ export default function JoinPage({
               {t("backHome")}
             </span>
           </Link>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              {t("sessionCode")}:
+            </span>
+            <span className="text-sm font-black text-gray-800 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
+              {session.code}
+            </span>
+          </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
         {!userName ? (
-          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden">
+          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl shadow-emerald-100/50 dark:shadow-none border border-emerald-50 dark:border-emerald-900/30 text-center relative overflow-hidden animate-in fade-in zoom-in duration-500">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
             <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <span className="text-5xl animate-wave">👋</span>
+              <span className="text-5xl animate-bounce">👋</span>
             </div>
 
             <h2 className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3">
@@ -200,65 +206,82 @@ export default function JoinPage({
                   type="text"
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value)}
-                  placeholder={t("yourName")}
-                  className="w-full px-6 py-5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500 rounded-2xl text-lg font-bold text-center outline-none transition-all text-gray-800 dark:text-white group-hover:bg-white dark:group-hover:bg-gray-800 shadow-sm focus:shadow-md"
+                  placeholder={t("yourNamePlaceholder")}
+                  className="w-full px-6 py-5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-emerald-500 dark:focus:border-emerald-500 rounded-2xl text-lg font-bold text-center outline-none transition-all text-gray-800 dark:text-white group-hover:bg-white dark:group-hover:bg-gray-800 shadow-sm focus:shadow-md placeholder-gray-400"
                   onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
                 />
               </div>
               <button
                 onClick={handleNameSubmit}
                 disabled={!tempName.trim()}
-                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none"
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
               >
                 {t("continue")}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </button>
             </div>
           </div>
         ) : (
           <>
-            <div className="text-center mb-10">
-              <span className="inline-block py-1 px-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wider mb-3 border border-gray-200 dark:border-gray-700">
-                #{session.code}
-              </span>
+            <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs font-bold tracking-wider mb-3 border border-blue-100 dark:border-blue-800">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                {t("welcomeUser")?.replace("{name}", userName)}
+              </div>
               <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
                 {session.description || t("joinTitle")}
               </h1>
             </div>
 
             <div className="grid grid-cols-3 gap-3 md:gap-6 mb-10">
-              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow text-center group">
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow text-center group">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-gray-600 transition-colors">
-                  {t("total")}
+                  {t("totalParts")}
                 </p>
-                <p className="text-3xl font-black text-gray-800 dark:text-white">
+                <p className="text-2xl md:text-3xl font-black text-gray-800 dark:text-white">
                   {stats.total}
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md hover:shadow-blue-100/50 transition-all text-center relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-bl-[2rem] -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                 <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">
                   {t("distributed")}
                 </p>
-                <p className="text-3xl font-black text-blue-600 dark:text-blue-400 flex flex-col items-center leading-none gap-1">
-                  {stats.distributed}
-                  <span className="text-[10px] font-bold text-blue-400/60 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                <div className="flex flex-col items-center leading-none gap-1">
+                  <span className="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400">
+                    {stats.distributed}
+                  </span>
+                  <span className="text-[10px] font-bold text-blue-400/80 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
                     %{stats.distPercent}
                   </span>
-                </p>
+                </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-8 h-8 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-2xl -mr-2 -mt-2"></div>
+              <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md hover:shadow-emerald-100/50 transition-all text-center relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-[2rem] -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">
                   {t("completed")}
                 </p>
-                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 flex flex-col items-center leading-none gap-1">
-                  {stats.completed}
-                  <span className="text-[10px] font-bold text-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                <div className="flex flex-col items-center leading-none gap-1">
+                  <span className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                    {stats.completed}
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-500/80 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
                     %{stats.compPercent}
                   </span>
-                </p>
+                </div>
               </div>
             </div>
 
@@ -268,8 +291,8 @@ export default function JoinPage({
                   onClick={() => setActiveTab("distributed")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                     activeTab === "distributed"
-                      ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm scale-[1.02]"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm scale-[1.02] ring-1 ring-black/5"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50"
                   }`}
                 >
                   {t("distributedResources")}
@@ -280,8 +303,8 @@ export default function JoinPage({
                   onClick={() => setActiveTab("individual")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                     activeTab === "individual"
-                      ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm scale-[1.02]"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm scale-[1.02] ring-1 ring-black/5"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50"
                   }`}
                 >
                   {t("individualResources")}
@@ -358,32 +381,26 @@ function ResourceGroupList({
     ? "dark:bg-emerald-900/40"
     : "dark:bg-blue-900/40";
 
-  // --- 1. SIRALAMA AYARLARI ---
-  // Buradaki kelimelerden hangisi kaynak isminin içinde geçiyorsa o sırayı alır.
-  // Listede olmayanlar en sona atılır.
   const sortOrder = [
-    "kuran", // 1
-    "cevşen", // 2 (veya cevsen)
-    "tefriciye", // 3
-    "münciye", // 4 (veya munciye)
-    "tevhidname", // 5
-    "bedir", // 6 (ashab-ı bedir)
-    "fatiha", // 7
-    "yasin", // 8
-    "uhud", // 9
-    "salavat", // 10
-    "latif", // 11
-    "hafız", // 12 (veya hafiz)
-    "fettah", // 13
-    "lahavle", // 14
-    "hasbunallah", // 15
+    "kuran",
+    "cevşen",
+    "tefriciye",
+    "münciye",
+    "tevhidname",
+    "bedir",
+    "fatiha",
+    "yasin",
+    "uhud",
+    "salavat",
+    "latif",
+    "hafız",
+    "fettah",
+    "lahavle",
+    "hasbunallah",
   ];
 
-  // Sıralama Fonksiyonu (Hem Türkçe karakter hem normal karakter kontrolü yapar)
   const getPriority = (name: string) => {
-    const lowerName = name.toLocaleLowerCase("tr"); // Türkçe küçük harfe çevir
-
-    // Listede kaçıncı sırada olduğunu bul
+    const lowerName = name.toLocaleLowerCase("tr");
     const index = sortOrder.findIndex(
       (key) =>
         lowerName.includes(key) ||
@@ -396,30 +413,25 @@ function ResourceGroupList({
             .replace("ö", "o"),
         ),
     );
-
-    // Eğer listede varsa index'i (+1 çünkü 0 olmasın), yoksa 999 (en sona at) döndür
     return index !== -1 ? index + 1 : 999;
   };
 
-  // Grupları (Resource Names) önce sıralıyoruz
   const sortedEntries = Object.entries(groups).sort(([nameA], [nameB]) => {
     return getPriority(nameA) - getPriority(nameB);
   });
 
   return sortedEntries.map(([resourceName, assignments]: any) => {
     const isOpen = expandedGroups[resourceName] || false;
-
     const totalCount = assignments.length;
     const takenCount = assignments.filter((a: any) => a.isTaken).length;
     const completedCount = assignments.filter((a: any) => a.isCompleted).length;
-
     const percentage = Math.round((takenCount / totalCount) * 100);
     const completedPercentage = Math.round((completedCount / totalCount) * 100);
 
     return (
       <div
         key={resourceName}
-        className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md mb-4"
+        className="bg-white dark:bg-gray-900 rounded-[1.8rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md mb-4"
       >
         <button
           onClick={() => toggleGroup(resourceName)}
@@ -604,7 +616,7 @@ function AssignmentCard({
       <div className="flex justify-between items-start mb-6">
         <div>
           <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-            {t("part") || "PARÇA"} {item.participantNumber}
+            {t("part")} {item.participantNumber}
           </span>
           <div className="text-sm font-bold text-gray-800 dark:text-gray-200">
             {item.resource.type === "JOINT"
@@ -639,7 +651,7 @@ function AssignmentCard({
                     clipRule="evenodd"
                   />
                 </svg>
-                {t("completed") || "TAMAMLANDI"}
+                {t("completed")}
               </span>
             ) : (
               <span
@@ -650,15 +662,15 @@ function AssignmentCard({
                 }`}
               >
                 {isAssignedToUser
-                  ? t("yourTask") || "SENİN GÖREVİN"
+                  ? t("yourTask")
                   : isCreator
                     ? item.assignedToName
-                    : t("taken") || "ALINDI"}
+                    : t("taken")}
               </span>
             )
           ) : (
             <span className="inline-flex items-center bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30">
-              {t("statusEmpty") || "BOŞ"}
+              {t("statusEmpty")}
             </span>
           )}
         </div>
@@ -707,7 +719,7 @@ function AssignmentCard({
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
-                {t("readText") || "Metni Oku"}
+                {t("readText")}
               </button>
             )}
           </>
@@ -776,7 +788,7 @@ function AssignmentCard({
           onClick={() => actions.handleTakePart(item.id)}
           className="w-full py-3 bg-white border-2 border-dashed border-emerald-200 text-emerald-600 rounded-xl hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition-all active:scale-95 text-sm font-bold flex items-center justify-center gap-2 mt-4 dark:bg-gray-800/50 dark:border-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
         >
-          {t("select") || "Seç"}
+          {t("select")}
         </button>
       )}
     </div>

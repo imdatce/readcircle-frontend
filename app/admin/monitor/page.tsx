@@ -83,21 +83,6 @@ function MonitorContent() {
       const data: DistributionSession = await res.json();
       setError("");
       setSession(data);
-
-      setExpandedResources((prev) => {
-        if (Object.keys(prev).length > 0) return prev;
-
-        const initialExpanded: Record<string, boolean> = {};
-        if (data.assignments && Array.isArray(data.assignments)) {
-          data.assignments.forEach((a) => {
-            if (a.resource) {
-              const name = getResourceName(a.resource);
-              initialExpanded[name] = true;
-            }
-          });
-        }
-        return initialExpanded;
-      });
     } catch (err: any) {
       console.error("Fetch Error:", err);
       setError(err.message || t("errorInvalidCode"));
@@ -139,16 +124,16 @@ function MonitorContent() {
         },
       );
       if (res.ok) {
-        alert("Kaynak eklendi!");
+        alert(t("resourceAdded"));
         setIsAddModalOpen(false);
         fetchData(code);
       } else {
         const msg = await res.text();
-        alert("Hata: " + msg);
+        alert(t("errorPrefix") + " " + msg);
       }
     } catch (e) {
       console.error(e);
-      alert("Bir hata oluştu.");
+      alert(t("errorOccurred"));
     } finally {
       setAddingResource(false);
     }
@@ -262,7 +247,7 @@ function MonitorContent() {
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <h1 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
-                {t("monitorTitle") || "CANLI TAKİP"}
+                {t("monitorTitle")}
               </h1>
             </div>
             {session && (
@@ -314,7 +299,7 @@ function MonitorContent() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                <span>Kaynak Ekle</span>
+                <span>{t("addResource")}</span>
               </button>
             )}
           </div>
@@ -500,10 +485,10 @@ function MonitorContent() {
                       <div className="flex flex-col items-end min-w-[200px] flex-1 md:flex-none relative">
                         <div className="flex justify-between w-full mb-2 text-xs font-bold">
                           <span className="text-blue-500">
-                            Dağıtılan: %{percentage}
+                            {t("distributed")}: %{percentage}
                           </span>
                           <span className="text-emerald-600 dark:text-emerald-400">
-                            Biten: %{completedPercentage}
+                            {t("completed")}: %{completedPercentage}
                           </span>
                         </div>
 
@@ -525,7 +510,6 @@ function MonitorContent() {
 
                   {isOpen && (
                     <div className="animate-in slide-in-from-top-2 fade-in duration-300 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20">
-                      {/* Tablonun taşmasını engelleyen ve kaydırma sağlayan kapsayıcı */}
                       <div className="overflow-x-auto p-2 md:p-6">
                         <table className="w-full text-left border-collapse min-w-full md:min-w-0 table-auto">
                           <thead>
@@ -534,23 +518,24 @@ function MonitorContent() {
                                 #
                               </th>
                               <th className="px-2 md:px-4 py-3">
-                                {t("resource") || "Parça"}
+                                {t("resource")}
                               </th>
                               <th className="px-2 md:px-4 py-3">
                                 {t("assignedTo")}
                               </th>
                               <th className="px-2 md:px-4 py-3 text-right">
-                                {t("status") || "Durum"}
+                                {t("status")}
                               </th>
                             </tr>
                           </thead>
+
                           <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
                             {assignments.map((item) => {
-                              // Zikirmatik hesaplamaları
                               const totalTarget =
                                 item.endUnit - item.startUnit + 1;
-                              const currentCount = item.currentCount || 0;
-                              const remaining = totalTarget - currentCount;
+                              const currentCount =
+                                item.currentCount ?? totalTarget;
+
                               const isCountable =
                                 item.resource.type === "COUNTABLE" ||
                                 item.resource.type === "JOINT";
@@ -564,50 +549,43 @@ function MonitorContent() {
                                       : ""
                                   }`}
                                 >
-                                  {/* 1. SÜTUN: Numara */}
                                   <td className="px-2 md:px-4 py-4 text-center">
                                     <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono text-xs font-bold shadow-sm">
                                       {item.participantNumber}
                                     </span>
                                   </td>
 
-                                  {/* 2. SÜTUN: Parça Bilgisi ve Zikir Durumu */}
                                   <td className="px-2 md:px-4 py-4">
                                     <div className="flex flex-col">
-                                      {/* Sadece "Parça X" yazan kısım */}
                                       <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                        {t("part") || "Parça"}{" "}
-                                        {item.participantNumber}
+                                        {t("part")} {item.participantNumber}
                                       </span>
 
-                                      {/* Zikir ise altta durum göster (Okunan/Toplam) */}
                                       {isCountable && (
                                         <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 mt-0.5">
                                           {item.isCompleted ? (
                                             <span className="text-emerald-500">
-                                              Tamamlandı
+                                              {t("completed")}
                                             </span>
                                           ) : (
                                             <>
-                                              {t("remaining") || "Kalan"}:{" "}
-                                              {remaining} / {totalTarget}
+                                              {t("remaining")}: {currentCount} /{" "}
+                                              {totalTarget}
                                             </>
                                           )}
                                         </span>
                                       )}
 
-                                      {/* Sayfalı ise sayfa aralığını küçük göster */}
                                       {!isCountable &&
                                         item.resource.type === "PAGED" && (
                                           <span className="text-[10px] text-gray-400 mt-0.5">
-                                            Sayfa: {item.startUnit}-
+                                            {t("page")}: {item.startUnit}-
                                             {item.endUnit}
                                           </span>
                                         )}
                                     </div>
                                   </td>
 
-                                  {/* 3. SÜTUN: Atanan Kişi */}
                                   <td className="px-2 md:px-4 py-4">
                                     {item.isTaken ? (
                                       <div className="flex items-center gap-2">
@@ -639,7 +617,6 @@ function MonitorContent() {
                                     )}
                                   </td>
 
-                                  {/* 4. SÜTUN: Durum (Okuyor / Bitti) */}
                                   <td className="px-2 md:px-4 py-4 text-right">
                                     {item.isCompleted ? (
                                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
@@ -655,17 +632,17 @@ function MonitorContent() {
                                           />
                                         </svg>
                                         <span className="hidden xs:inline">
-                                          Bitti
+                                          {t("completed")}
                                         </span>
                                       </span>
                                     ) : item.isTaken ? (
                                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
                                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                        Okuyor
+                                        {t("reading")}
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
-                                        Boşta
+                                        {t("statusEmpty")}
                                       </span>
                                     )}
                                   </td>
@@ -688,7 +665,7 @@ function MonitorContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Halkaya Kaynak Ekle
+              {t("addResourceToSession")}
             </h3>
 
             <div className="space-y-4">
@@ -696,17 +673,17 @@ function MonitorContent() {
                 htmlFor="resourceSelect"
                 className="block text-sm font-medium text-gray-500 dark:text-gray-400"
               >
-                Eklemek istediğiniz kaynağı seçin:
+                {t("selectResourcePrompt")}
               </label>
 
               <select
                 id="resourceSelect"
-                aria-label="Kaynak Seçimi"
+                aria-label={t("resourceSelection")}
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedResourceId}
                 onChange={(e) => setSelectedResourceId(e.target.value)}
               >
-                <option value="">Seçiniz...</option>
+                <option value="">{t("selectPlaceholder")}</option>
                 {allResources.map((res) => {
                   const translation =
                     res.translations?.find(
@@ -728,14 +705,14 @@ function MonitorContent() {
                   onClick={() => setIsAddModalOpen(false)}
                   className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-400"
                 >
-                  İptal
+                  {t("cancel")}
                 </button>
                 <button
                   onClick={handleAddResource}
                   disabled={!selectedResourceId || addingResource}
                   className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-50"
                 >
-                  {addingResource ? "Ekleniyor..." : "Ekle"}
+                  {addingResource ? t("adding") : t("add")}
                 </button>
               </div>
             </div>

@@ -107,9 +107,9 @@ export function useDistributionSession(code: string) {
             }
         } catch (e) {
             console.error("Save progress failed", e);
-             setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
+            setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
 
-             alert("Bağlantı hatası! Sayı kaydedilemedi.");
+            alert("Connection failed");
         }
     };
 
@@ -149,7 +149,7 @@ export function useDistributionSession(code: string) {
         }
     };
     const handleCancelPart = async (assignmentId: number) => {
-         if (!confirm(t("confirmCancel"))) return;
+        if (!confirm(t("confirmCancel"))) return;
 
         const nameToUse = userName || localStorage.getItem("guestUserName");
         if (!nameToUse) return;
@@ -163,16 +163,16 @@ export function useDistributionSession(code: string) {
             const res = await fetch(url, { method: "POST", headers });
 
             if (res.ok) {
-                 const assignment = session?.assignments.find(a => a.id === assignmentId);
+                const assignment = session?.assignments.find(a => a.id === assignmentId);
                 if (assignment) {
-                     const initialCount = assignment.endUnit - assignment.startUnit + 1;
+                    const initialCount = assignment.endUnit - assignment.startUnit + 1;
 
                     setLocalCounts(prev => ({
                         ...prev,
                         [assignmentId]: initialCount
                     }));
                 }
- 
+
                 dataFetchedRef.current = false;
                 fetchSession();
             } else {
@@ -189,7 +189,7 @@ export function useDistributionSession(code: string) {
             if (token) headers["Authorization"] = `Bearer ${token}`;
             let url = `${apiUrl}/api/distribution/complete/${assignmentId}`;
 
-             const nameToUse = userName || localStorage.getItem("guestUserName");
+            const nameToUse = userName || localStorage.getItem("guestUserName");
             if (!token && nameToUse) {
                 url += `?name=${encodeURIComponent(nameToUse)}`;
             }
@@ -197,11 +197,11 @@ export function useDistributionSession(code: string) {
             const res = await fetch(url, { method: "POST", headers });
 
             if (res.ok) {
-                 setLocalCounts(prev => ({
+                setLocalCounts(prev => ({
                     ...prev,
                     [assignmentId]: 0
                 }));
- 
+
                 dataFetchedRef.current = false;
                 fetchSession();
             } else {
@@ -230,7 +230,7 @@ export function useDistributionSession(code: string) {
         }
         const description = translation?.description;
         if (!description) {
-            console.warn("İçerik bulunamadı");
+            console.warn("No data founded");
             return;
         }
 

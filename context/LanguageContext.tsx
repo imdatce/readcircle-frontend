@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, {
@@ -19,461 +20,508 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
-const translations = {
+// Yardımcı Tip Tanımları
+type TranslationValue = string | { [key: string]: string | object };
+type TranslationStructure = {
+  [key in Language]: { [key: string]: TranslationValue };
+};
+
+const translations: TranslationStructure = {
+  // -----------------------------------------------------------
+  // TÜRKÇE (Düz Yapı)
+  // -----------------------------------------------------------
   tr: {
-    common: {
-      appTitle: "Spiritual Union for Reflection & Affinity",
-      subtitle: "Kaynak Dağıtım Platformu",
-      backHome: "Ana Sayfa",
-      footerDesc: "Manevi birliktelik ve kaynak dağıtım platformu.",
-      rightsReserved: "Tüm hakları saklıdır.",
-      allahAccept: "Allah kabul etsin.",
-      loading: "Yükleniyor...",
-      close: "Kapat",
-      leaveSession: "Oturumdan ayrıl",
-
-      cancel: "İptal",
-      codeCopied: "Kod kopyalandı",
-      distributed: "Dağıtıldı",
-      delete: "Sil",
-      fixedResources: "Bireysel Kaynaklar",
-      copy: "Kopyala",
-      createNewOne: "Yeni bir tane daha oluştur",
-      select: "SEÇ",
-      sharedResources: "Paylaşımlı Kaynaklar",
-      resource_YASIN: "Yasin Suresi",
-      resource_FETIH: "Fetih Suresi",
-      resource_CEVSEN: "Cevşenü'l Kebir",
-      resource_TEFRICIYE: "Salat-ı Tefriciye",
-      resource_MUNCIYE: "Salat-ı Münciye",
-      resource_TEVHIDNAME: "Tevhidname",
-      resource_UHUD: "Uhud Şehitleri",
-      resource_BEDIR: "Bedir Şehitleri",
-      resource_SALAVAT: "Salavat-ı Şerife",
-      page: "Sayfa",
-      startReading: "Okumaya Başla",
-
-      part: "Parça",
-      person: "Kişi",
-      total: "Toplam",
-      pieces: "Adet",
-      menuLanguage: "Dil Ayarları",
-      default: "Varsayılan",
-      otherResource: "Diğer",
-      copied: "Kopyalandı",
-      sessionCreated: "Halka Oluşturuldu",
-      giveUp: "Vazgeç",
-      imageMode: "Resim Modu",
-      continueButton: "DEVAM ET",
-      adminButton: "Admin olarak giriş yap!",
-    },
-    auth: {
-      loginTitle: "Giriş Yap",
-      loginButton: "GİRİŞ YAP",
-      logoutButton: "Çıkış Yap",
-      registerTitle: "Hesap Oluştur",
-      registerSubtitle: "Aramıza katılmak için bilgilerinizi girin",
-      registerButton: "KAYIT OL",
-      guestRegister: "Kayıt Ol",
-      guestLogin: "Giriş Yap",
-      guestSubtitle: "Manevi birliktelik platformu",
-      guestMessage:
-        "Halkalara katılmak veya kendi dağıtımını oluşturmak için lütfen giriş yap.",
-      guestNote: "Kayıt olmadan misafir olarak da katılabilirsiniz.",
-      usernameLabel: "Kullanıcı Adı",
-      passwordLabel: "Şifre",
-      placeholderUser: "Kullanıcı adınız",
-      placeholderUserExample: "Örn: ahmet123",
-      placeholderPass: "******",
-      haveAccount: "Zaten hesabınız var mı?",
-      noAccount: "Hesabın yok mu?",
-      loginLink: "Giriş Yap",
-      registerLink: "Hemen Kayıt Ol",
-      loginError: "Kullanıcı adı veya şifre hatalı",
-      registerSuccess: "Kayıt Başarılı! Giriş yapabilirsiniz.",
-      registering: "Kaydediliyor...",
-      loginRequiredMsg: "Parça seçmek için giriş yapmalısınız.",
-      loginOrRegister: "Giriş Yap veya Kayıt Ol",
-    },
-    landing: {
-      landingHeroTitle: "Manevî Birlik Platformu",
-      landingHeroSubtitle:
-        "Kuran hatimleri, Cevşen halkaları ve zikir programlarınızı kolayca organize edin. Sevdiklerinizle birlikte manevi hedeflerinize ulaşın.",
-      getStarted: "Hemen Başla",
-      featuresTitle1: "Kuran & Cevşen Hatimleri",
-      featuresDesc1:
-        "Cüzleri veya sayfaları otomatik dağıtın. Kimin nerede kaldığını canlı takip edin.",
-      featuresTitle2: "Ortak Zikir Halkaları",
-      featuresDesc2:
-        "Salavat, dua ve zikir gibi hayırlarda ortak havuza katkıda bulunun.",
-      featuresTitle3: "Mobil Uyumlu Okuma",
-      featuresDesc3:
-        "Uygulama içinden ayrılmadan Kuran sayfalarını, Cevşen bablarını veya zikirleri okuyun.",
-      howItWorksTitle: "Nasıl Çalışır?",
-      step1Title: "Oturum Oluştur",
-      step1Desc:
-        "Okunacak kaynağı (Yasin, Hatim vb.) ve kişi sayısını belirle.",
-      step2Title: "Davet Et",
-      step2Desc: "Oluşan kısa kodu veya linki sevdiklerinle paylaş.",
-      step3Title: "Tamamla",
-      step3Desc: "Herkes kendi parçasını alıp okusun, ilerlemeyi anlık gör.",
-    },
-    dashboard: {
-      dashboard: "Panel",
-      welcome: "Merhaba",
-      dashboardIntro: "Bugün manevi yolculuğunda neler yapmak istersin?",
-      myCirclesTitle: "Katıldığım Halkalar",
-      myCreatedTitle: "Yönettiğim Dağıtımlar",
-      joinedSessions: "Katıldığım halkalar",
-      managedSessions: "Dağıttığım halkalar",
-      createNewSession: "Yeni Halka Oluştur",
-      noCirclesYet: "Henüz bir halkaya katılmadın.",
-      noCreatedYet: "Henüz bir dağıtım başlatmadın.",
-      noSessionYet: "Henüz yok.",
-      create: "Oluştur",
-      copyLink: "Linki kopyala",
-      join: "Katıl",
-      trackButton: "Takip Et",
-      backToAdmin: "Admin Paneline Dön",
-      adminTitle: "Yönetim Paneli",
-    },
-    distribution: {
-      createDistTitle: "Yeni Dağıtım Başlat",
-      createDistDesc: "Hatim, Yasin veya Zikir halkası oluşturup linki paylaş.",
-      joinDistTitle: "Bir Halkaya Katıl",
-      joinDistDesc: "Sana gönderilen kodu aşağıya girerek dahil ol.",
-      createButton: "OLUŞTUR",
-      yourTask: "Senin gorevin",
-      joinButton: "Katıl",
-      sessionCodePlaceholder: "Mevcut kod",
-      pasteCodeOrLink: "Kodu veya linki yapıştır",
-      enterCodePlaceholder: "Dağıtım Kodu (Örn: 12345)",
-      guestCheckCode: "Sadece bir koda bakmak mı istiyorsun?",
-      guestCodePlaceholder: "Kod giriniz",
-      participantCount: "Kaç Kişi Okuyacak?",
-      setTargetCounts: "Hedef Sayıları Belirle (Opsiyonel)",
-      createDistribution: "DAĞITIMI OLUŞTUR",
-      homeVerseContent:
-        "Bilesiniz ki, kalpler ancak Allah'ı anmakla huzur bulur.",
-      linkCreated: "Link Oluşturuldu:",
-      monitorTitle: "Dağıtım Takibi",
-      monitorSubtitle: "Bir kod girerek kimin ne aldığını kontrol edin.",
-      distCode: "Kod",
-      statusHeader: "Durum",
-      assignedTo: "Alan Kişi",
-      resource: "Kaynak / Parça",
-      copyCode: "Kodu kopyala",
-
-      progress: "İlerleme / Hedef",
-      occupancy: "DOLULUK",
-      targetLabel: "Hedef",
-      deleteSession: "Oturumu sil",
-      remaining: "Kalan",
-      distributedResources: "Bölüştürülecek Kaynaklar",
-      individualResources: "Bireysel Kaynaklar",
-      creatorLabel: "Kurucu",
-    },
-    reading: {
-      readingTitle: "Okuma",
-      joinTitle: "Halkaya Katıl",
-      joinIntro: "Lütfen adınızı giriniz (Misafir)",
-      yourName: "Adınız",
-      takeRead: "AL",
-      readText: "Oku",
-      completed: "Tamamlandı",
-      finish: "Bittiyse tıkla",
-      selectAndRead: "SEÇ & OKU",
-      clickToCount: "OKUDUKÇA TIKLAYINIZ",
-      decrease: "AZALT",
-      closeWindow: "Pencereyi Kapat",
-      chapter: "BAB",
-      group: "Grup",
-      translationTitle: "Türkçe Meali",
-      translationPending: "Çeviri hazırlanıyor...",
-      arabicPage: "Arapça Sayfa",
-      meaningPage: "Meal Sayfa",
-      tabArabic: "Arapça",
-      tabLatin: "Okunuş",
-      tabMeaning: "Meal",
-      previous: "Önceki",
-      next: "Sonraki",
-      statusEmpty: "BOŞTA",
-      statusTaken: "ALINDI",
-      full: "DOLU",
-      participantName: "Katılımcı Adı",
-      cancelRead: "Okumaktan Vazgeç",
-    },
-    alerts: {
-      successReset: "Sıfırlandı!",
-      successDelete: "Silindi!",
-      errorOccurred: "Hata oluştu.",
-      unexpectedError: "Beklenmedik bir hata oluştu.",
-      connectionError: "Bağlantı hatası.",
-      errorFetchFailed: "Veri alınamadı. Hata Kodu:",
-      errorInvalidCode: "Hata: Geçersiz kod veya sunucu kapalı.",
-      errorAlreadyTaken: "Bu parça maalesef başkası tarafından alınmış.",
-      alertSelectResource: "Lütfen en az bir kaynak seçiniz.",
-      alertEnterName: "Lütfen önce yukarıya isminizi yazın.",
-      alertTakenSuccess: "Harika! Bu bölümü okumayı üstlendiniz.",
-      confirmDelete: "Silmek istediğinize emin misiniz?",
-      confirmDeleteSession:
-        "Bu oturumu tamamen silmek istediğinize emin misiniz? Tüm veriler kaybolacak.",
-      confirmLeaveSession:
-        "Bu halkadan ayrılmak üzeresiniz. Aldığınız tüm görevler iptal edilecek.",
-      confirmResetSession:
-        "Bu dağıtımı sıfırlamak istediğinize emin misiniz? Tüm katılımcılar çıkarılacak ve okumalar sıfırlanacak.",
-      confirmReset:
-        "Tüm veritabanı sıfırlanıp varsayılan veriler yüklenecek. Emin misiniz?",
-      confirmComplete: "Bu parçayı okuduğunuzu onaylıyor musunuz?",
-      confirmCancel: "Bu parçayı okumaktan vazgeçmek istiyor musunuz?",
-      resetSuccess:
-        "Oturum başarıyla sıfırlandı! Yeni katılımcılar bekleniyor.",
-      resetFailPrefix: "Sıfırlama başarısız: ",
-      deleteSuccess: "Oturum başarıyla silindi.",
-      deleteFail: "Silme işlemi başarısız oldu.",
-      featureFree: "Ücretsiz Kullanım",
-      featureNoLogin: "Üyeliksiz Katılım",
-      leaveSuccess: "Halkadan ayrıldınız.",
-      leaveFail: "Ayrılma işlemi başarısız oldu.",
-      cancelFailed: "İptal edilemedi.",
-      successLeave: "Halkadan başarıyla ayrıldınız.",
-      resetSession: "Oturumu resetle",
-      alertStatus: "Durum: ",
-      errorPrefix: "Hata: ",
-    },
+    monitorTitle: "CANLI TAKİP",
+    loading: "Yükleniyor...",
+    errorOccurred: "Bir hata oluştu.",
+    errorInvalidCode: "Geçersiz kod veya oturum bulunamadı.",
+    backHome: "Ana Sayfaya Dön",
+    refresh: "Yenile",
+    addResource: "Kaynak Ekle",
+    total: "TOPLAM",
+    distributed: "DAĞITILAN",
+    completed: "TAMAMLANAN",
+    resource: "Parça / Kaynak",
+    assignedTo: "Atanan Kişi",
+    status: "Durum",
+    part: "Parça",
+    page: "Sayfa",
+    remaining: "Kalan",
+    reading: "Okuyor",
+    statusEmpty: "Boşta",
+    addResourceToSession: "Halkaya Kaynak Ekle",
+    selectResourcePrompt: "Eklemek istediğiniz kaynağı seçin:",
+    resourceSelection: "Kaynak Seçimi",
+    selectPlaceholder: "Seçiniz...",
+    cancel: "İptal",
+    add: "Ekle",
+    adding: "Ekleniyor...",
+    resourceAdded: "Kaynak başarıyla eklendi!",
+    errorPrefix: "Hata:",
+    createDistTitle: "Yeni Halka Oluştur",
+    sessionExpired: "Oturum süresi doldu. Lütfen tekrar giriş yapın.",
+    loginRequired: "Halka oluşturmak için giriş yapmalısınız.",
+    alertSelectResource: "Lütfen en az bir kaynak seçin.",
+    sessionCreated: "Halka Oluşturuldu",
+    sessionCodePlaceholder: "Halka Kodu",
+    codeCopied: "Kod panoya kopyalandı!",
+    copyCode: "Kodu Kopyala",
+    copied: "Link panoya kopyalandı!",
+    copyLink: "Linki Kopyala",
+    startReading: "Okumaya Başla",
+    createNewOne: "Yeni bir tane daha oluştur",
+    sessionNameLabel: "Halka Adı (İsteğe Bağlı)",
+    sessionNamePlaceholder: "Örn: Ramazan Hatmi, Aile Salavatı...",
+    participantCount: "KATILIMCI SAYISI",
+    person: "Kişi",
+    sharedResources: "PAYLAŞIMLI KAYNAKLAR",
+    fixedResources: "BİREYSEL KAYNAKLAR",
+    setTargetCounts: "HEDEF SAYILARI BELİRLE",
+    default: "Varsayılan",
+    processing: "İşleniyor...",
+    createButton: "Halka Oluştur",
+    joinTitle: "Halkaya Katıl",
+    joinIntro:
+      "Hoş geldiniz! Bu manevi halkaya katılmak için lütfen aşağıya isminizi girin.",
+    yourNamePlaceholder: "İsminiz",
+    continue: "Devam Et",
+    welcomeUser: "Hoş geldin, {name}",
+    sessionCode: "KOD",
+    totalParts: "TOPLAM PARÇA",
+    distributedResources: "Paylaşımlı Cüzler",
+    individualResources: "Bireysel Zikirler",
+    otherResource: "Diğer Kaynak",
+    target: "Hedef",
+    pieces: "Adet",
+    yourTask: "SENİN GÖREVİN",
+    taken: "ALINDI",
+    readText: "Metni Oku",
+    finish: "Bitirdim",
+    undo: "Geri Al",
+    giveUp: "Bırak",
+    select: "Seç",
+    welcomeBack: "Tekrar Hoş Geldiniz!",
+    loginIntro: "Giriş yapmak için bilgilerinizi girin.",
+    usernameLabel: "Kullanıcı Adı",
+    passwordLabel: "Şifre",
+    placeholderUser: "Kullanıcı adınızı girin",
+    placeholderPass: "Şifrenizi girin",
+    loginButton: "Giriş Yap",
+    loggingIn: "Giriş Yapılıyor...",
+    loginFailed: "Giriş başarısız. Bilgilerinizi kontrol edin.",
+    loginError: "Giriş sırasında bir hata oluştu.",
+    noAccount: "Hesabınız yok mu?",
+    registerLink: "Hesap Oluştur",
+    registerTitle: "Hesap Oluştur",
+    registerSubtitle: "Bugün bizimle yolculuğunu başlat.",
+    placeholderUserExample: "Bir kullanıcı adı seç",
+    registerButton: "Hesap Oluştur",
+    registering: "Hesap oluşturuluyor...",
+    registerSuccess: "Kayıt başarılı! Yönlendiriliyorsunuz...",
+    haveAccount: "Zaten bir hesabınız var mı?",
+    loginLink: "Giriş Yap",
+landingHeroTitle: "Manevi birliktelik ve kaynak dağıtım platformu",
+    homeVerseContent:
+      "Bilesiniz ki, kalpler ancak Allah'ı anmakla huzur bulur.",
+    welcome: "Hoş geldiniz",
+    dashboardIntro: "Halkalarınızı yönetin veya yenilerine katılın.",
+    landingHeroSubtitle:
+      "Toplu manevi etkinlikler düzenleyin, ilerlemeyi canlı takip edin ve topluluğunuzla kolayca paylaşın.",
+    createNewSession: "Yeni Halka Oluştur",
+    getStarted: "Başlayın",
+    pasteCodeOrLink: "Kodu veya linki buraya yapıştır...",
+    join: "Katıl",
+    circles: "Halkalar",
+    managedSessions: "Yönettiğim Halkalar",
+    joinedSessions: "Katıldığım Halkalar",
+    noCreatedYet: "Henüz bir halka oluşturmadınız.",
+    noCirclesYet: "Henüz bir halkaya katılmadınız.",
+    featuresTitle1: "Canlı Takip",
+    featuresDesc1: "Kimin ne okuduğunu anlık görün.",
+    featuresTitle2: "Kolay Paylaşım",
+    featuresDesc2: "WhatsApp veya Telegram ile link paylaşın.",
+    howItWorksTitle: "Nasıl Çalışır?",
+    step1Title: "Oluştur",
+    step1Desc: "Yeni bir Hatim veya Zikir halkası kur.",
+    step2Title: "Paylaş",
+    step2Desc: "Linki katılımcılara gönder.",
+    step3Title: "Takip Et",
+    step3Desc: "İlerlemeyi canlı izle.",
+    creatorLabel: "Kurucu",
+    leaveSession: "Halkadan Ayrıl",
+    resetSession: "Halkayı Sıfırla",
+    deleteSession: "Halkayı Sil",
+    trackButton: "Takip Et",
+    confirmDelete: "Bu halkayı silmek istediğinize emin misiniz?",
+    confirmReset:
+      "Bu halkayı sıfırlamak istediğinize emin misiniz? Tüm okumalar silinecektir.",
+    successReset: "Halka başarıyla sıfırlandı.",
+    confirmLeave: "Bu halkadan ayrılmak istediğinize emin misiniz?",
+    successLeave: "Halkadan başarıyla ayrıldınız.",
+    connectionError: "Bağlantı hatası. Lütfen tekrar deneyin.",
+    decrease: "Okundu",
+    allahAccept: "Allah kabul etsin",
+    tapToCount: "Saymak için dokun",
+    waitingForUser: "Kullanıcı bekleniyor...",
+    resource_CEVSEN: "Cevşen-ül Kebir",
+    resource_K_KERIM: "Kur'an-ı Kerim",
+    resource_TEFRICIYE: "Salat-ı Tefriciye",
+    resource_MUNCIYE: "Salat-ı Münciye",
+    resource_FETTAH: "Ya Fettah",
+    resource_HASBUNALLAH: "Hasbunallah",
+    chapter: "BAB",
+    group: "GRUP",
+    translationTitle: "Meal",
+    arabicPage: "Arapça Sayfa",
+    meaningPage: "Meal Sayfası",
+    clickToCount: "SAYMAK İÇİN TIKLA",
+    previous: "Önceki",
+    next: "Sonraki",
+    increaseFont: "Yazıyı Büyüt",
+    decreaseFont: "Yazıyı Küçült",
+    tabArabic: "Arapça",
+    tabLatin: "Latin",
+    tabMeaning: "Meal",
+    close: "Kapat",
+    appTitle: "Zikir & Hatim Halkası",
+    footerDesc:
+      "Toplu manevi etkinlikler düzenlemek ve ilerlemeyi kolayca takip etmek için bir platform.",
+    rightsReserved: "Tüm hakları saklıdır.",
+    developedBy: "Geliştiren",
+    logoutButton: "Çıkış Yap",
+    guestRegister: "Kayıt Ol",
+    switchTheme: "Temayı Değiştir",
+    switchToLight: "Aydınlık Moda Geç",
+    switchToDark: "Karanlık Moda Geç",
+    subtitle: "Kaynak Dağıtım Platformu",
+     delete: "Sil",
+    copy: "Kopyala",
+     resource_YASIN: "Yasin Suresi",
+    resource_FETIH: "Fetih Suresi",
+    resource_TEVHIDNAME: "Tevhidname",
+    resource_UHUD: "Uhud Şehitleri",
+    resource_BEDIR: "Bedir Şehitleri",
+    resource_SALAVAT: "Salavat-ı Şerife",
+    menuLanguage: "Dil Ayarları",
+     imageMode: "Resim Modu",
+    continueButton: "DEVAM ET",
+    adminButton: "Admin olarak giriş yap!",
+    loginTitle: "Giriş Yap",
+    guestLogin: "Giriş Yap",
+    guestSubtitle: "Manevi birliktelik platformu",
+    guestMessage:
+      "Halkalara katılmak veya kendi dağıtımını oluşturmak için lütfen giriş yap.",
+    guestNote: "Kayıt olmadan misafir olarak da katılabilirsiniz.",
+    loginOrRegister: "Giriş Yap veya Kayıt Ol",
+    featuresTitle3: "Mobil Uyumlu Okuma",
+    featuresDesc3:
+      "Uygulama içinden ayrılmadan Kuran sayfalarını, Cevşen bablarını veya zikirleri okuyun.",
+    dashboard: "Panel",
+    myCirclesTitle: "Katıldığım Halkalar",
+    myCreatedTitle: "Yönettiğim Dağıtımlar",
+    noSessionYet: "Henüz yok.",
+    create: "Oluştur",
+     backToAdmin: "Admin Paneline Dön",
+    adminTitle: "Yönetim Paneli",
+    createDistDesc: "Hatim, Yasin veya Zikir halkası oluşturup linki paylaş.",
+    joinDistTitle: "Bir Halkaya Katıl",
+    joinDistDesc: "Sana gönderilen kodu aşağıya girerek dahil ol.",
+    joinButton: "Katıl",
+    enterCodePlaceholder: "Dağıtım Kodu (Örn: 12345)",
+    guestCheckCode: "Sadece bir koda bakmak mı istiyorsun?",
+    guestCodePlaceholder: "Kod giriniz",
+     createDistribution: "DAĞITIMI OLUŞTUR",
+    linkCreated: "Link Oluşturuldu:",
+     monitorSubtitle: "Bir kod girerek kimin ne aldığını kontrol edin.",
+    distCode: "Kod",
+    statusHeader: "Durum",
+    progress: "İlerleme / Hedef",
+    occupancy: "DOLULUK",
+    targetLabel: "Hedef",
+    readingTitle: "Okuma",
+    yourName: "Adınız",
+    takeRead: "AL",
+    selectAndRead: "SEÇ & OKU",
+     closeWindow: "Pencereyi Kapat",
+    translationPending: "Çeviri hazırlanıyor...",
+    full: "DOLU",
+    participantName: "Katılımcı Adı",
+    cancelRead: "Okumaktan Vazgeç",
+     successDelete: "Silindi!",
+    unexpectedError: "Beklenmedik bir hata oluştu.",
+    errorFetchFailed: "Veri alınamadı. Hata Kodu:",
+    errorAlreadyTaken: "Bu parça maalesef başkası tarafından alınmış.",
+    alertEnterName: "Lütfen önce yukarıya isminizi yazın.",
+    alertTakenSuccess: "Harika! Bu bölümü okumayı üstlendiniz.",
+    confirmDeleteSession:
+      "Bu oturumu tamamen silmek istediğinize emin misiniz? Tüm veriler kaybolacak.",
+    confirmLeaveSession:
+      "Bu halkadan ayrılmak üzeresiniz. Aldığınız tüm görevler iptal edilecek.",
+    confirmResetSession:
+      "Bu dağıtımı sıfırlamak istediğinize emin misiniz? Tüm katılımcılar çıkarılacak ve okumalar sıfırlanacak.",
+     confirmComplete: "Bu parçayı okuduğunuzu onaylıyor musunuz?",
+    confirmCancel: "Bu parçayı okumaktan vazgeçmek istiyor musunuz?",
+    resetSuccess: "Oturum başarıyla sıfırlandı! Yeni katılımcılar bekleniyor.",
+    resetFailPrefix: "Sıfırlama başarısız: ",
+    deleteSuccess: "Oturum başarıyla silindi.",
+    deleteFail: "Silme işlemi başarısız oldu.",
+    featureFree: "Ücretsiz Kullanım",
+    featureNoLogin: "Üyeliksiz Katılım",
+    leaveSuccess: "Halkadan ayrıldınız.",
+    leaveFail: "Ayrılma işlemi başarısız oldu.",
+    cancelFailed: "İptal edilemedi.",
+     alertStatus: "Durum: ",
   },
+
+  // -----------------------------------------------------------
+  // KÜRTÇE (Düz Yapı)
+  // -----------------------------------------------------------
   ku: {
-    common: {
-      appTitle: "Spiritual Union for Reflection & Affinity",
-      subtitle: "Platforma Belavkirina Çavkaniyan",
-      backHome: "Mal",
-      giveUp: "Dev jê bibe",
-      pasteCodeOrLink: "Kod an girêdanê biçeşîne",
-      fixedResources: "Çavkaniyên taybetî",
-      codeCopied: "Kod hat kopîkirin",
-      footerDesc: "Platforma yekîtiya manewî û belavkirina çavkaniyan.",
-      rightsReserved: "Hemû maf parastî ne.",
-
-      distributed: "Belav kirin",
-      allahAccept: "Xwedê qebûl bike.",
-      loading: "Tê barkirin...",
-      close: "Bigire",
-
-      copied: "Kopîkirî",
-      sessionCreated: "Rûniştin çêbû",
-      cancel: "Betal Bike",
-      resource_YASIN: "Sûreya Yasin",
-      resource_FETIH: "Sûreya Fetih",
-      resource_CEVSEN: "Cewşenê Kebîr",
-      resource_TEFRICIYE: "Salatê Tefriciye",
-      resource_MUNCIYE: "Salatê Münciye",
-      resource_TEVHIDNAME: "Tevhîdname",
-      resource_UHUD: "Şehîdên Uhudê",
-      resource_BEDIR: "Şehîdên Bedirê",
-      resource_SALAVAT: "Salawatê Şerîfe",
-
-      sharedResources: "Çavkaniyên parvekirî",
-      delete: "Jê Bibe",
-      copy: "Kopyake",
-      select: "HILBIJÊRE",
-      createNewOne: "Yek nû biafirîne",
-      page: "Rûpel",
-      targetLabel: "Armanc",
-
-      part: "Parçe",
-      person: "Kes",
-      copyLink: "Linkê kopî bike",
-
-      total: "Giştî",
-      pieces: "Heb",
-      menuLanguage: "Mîhengên Ziman",
-      default: "Pêşwext",
-      otherResource: "Yên din",
-      imageMode: "Moda Wêneyê",
-      continueButton: "DEWAM BIKE",
-      adminButton: "Wekî Admin têkeve!",
-    },
-    auth: {
-      loginTitle: "Têkeve",
-      loginButton: "TÊKETIN",
-      logoutButton: "Derketin",
-      registerTitle: "Hesab Çêbike",
-      registerSubtitle: "Ji bo tevlî me bibî agahiyên xwe binivîse",
-      registerButton: "QEYD Bûyîn",
-      guestRegister: "Qeyd Bibe",
-      guestLogin: "Bikevê",
-      resetSession: "Reset Session",
-
-      guestSubtitle: "Platforma yekîtiya manewî",
-      guestMessage:
-        "Ji bo tevlî xelekan bibî an belavkirina xwe çêbikî ji kerema xwe têkeve.",
-      guestNote: "Hûn dikarin bêyî qeydkirinê wekî mêvan tevlî bibin.",
-      usernameLabel: "Navê Bikarhêner",
-      passwordLabel: "Şîfre",
-      placeholderUser: "Navê te yê bikarhêner",
-      placeholderUserExample: "Mînak: azad123",
-      placeholderPass: "******",
-      haveAccount: "Ma hesabê te heye?",
-      noAccount: "Ma hesabê te tune?",
-      copyCode: "Kode kopî bike",
-
-      loginLink: "Têkeve",
-      registerLink: "Hemen Qeyd Bibe",
-      loginError: "Navê bikarhêner an şîfre şaş e",
-      registerSuccess: "Qeyd serkeftî bû! Niha dikarî têkevî.",
-      registering: "Tê qeydkirin...",
-      loginRequiredMsg: "Ji bo hilbijartina parçeyekê divê têkevî.",
-      loginOrRegister: "Têkeve an Qeyd Bibe",
-    },
-    landing: {
-      landingHeroTitle: "Platforma yekîtiya manewî",
-
-      homeVerseContent: "Dil tenê bi bîranîna Xwedê re aram dibin.",
-      landingHeroSubtitle:
-        "Xatimên Quranê, xelekên Cewşenê û bernameyên zikran bi hêsanî organîze bikin",
-      getStarted: "Dest Pê Bike",
-      yourTask: "Erka te",
-      deleteSession: "Paqiş bike!",
-
-      featuresTitle1: "Xatimên Quran & Cewşenê",
-      featuresDesc1:
-        "Cuz an rûpelan bixweber belav bikin. Zindî bişopînin kî li ku maye.",
-      featuresTitle2: "Xelekên Zikrê Yên Hevpar",
-      startReading: "Dest bi xwendinê bike",
-
-      featuresDesc2:
-        "Di zikran de mîna Selewat û duayan beşdarî hewza hevpar bibin.",
-      featuresTitle3: "Xwendina Li Gorî Mobîlê",
-      featuresDesc3:
-        "Bêyî ku ji sepanê derkevin rûpelên Quranê an beşên Cewşenê bixwînin.",
-      howItWorksTitle: "Çawa Dixebite?",
-      step1Title: "Rûniştinê Ava Bike",
-      step1Desc: "Çavkaniyê (Yasîn, Xatim hwd.) û hejmara kesan diyar bike.",
-      step2Title: "Dawet Bike",
-      step2Desc: "Koda kurt an lînka hatî çêkirin parve bike.",
-      step3Title: "Temam Bike",
-      step3Desc: "Her kes para xwe bixwîne, pêşveçûnê di cih de bibîne.",
-    },
-    dashboard: {
-      dashboard: "Panel",
-      welcome: "Bi xêr hatî",
-      dashboardIntro: "Îro di rêwîtiya xwe ya manewî de dixwazî çi bikî?",
-      myCirclesTitle: "Xelekên Ez Tevlî Bûm",
-      myCreatedTitle: "Belavkirinên Min ên Rêvebir",
-      joinedSessions: "Xelekên Ez Tevlî Bûme",
-      managedSessions: "Xelekên Ez Birêve Dibim",
-      createNewSession: "Xeleka Nû Ava Bike",
-      noCirclesYet: "Hêj tevlî tu xelekê nebûyî.",
-      noCreatedYet: "Hêj te belavkirinek neda destpêkirin.",
-      noSessionYet: "Hîn tune.",
-      create: "Ava Bike",
-      join: "Tevlî Bibe",
-      trackButton: "Bişopîne",
-      featureFree: "Bêpere bikar bînî",
-      featureNoLogin: "Bê endamî beşdar bibe",
-      backToAdmin: "Vegere Panela Admin",
-      adminTitle: "Panela Rêveberiyê",
-    },
-    distribution: {
-      createDistTitle: "Xeleka Nû Destpê Bike",
-      createDistDesc:
-        "Xeleka Hatim, Yasîn an Zikirê çêbike û lînkê parve bike.",
-      joinDistTitle: "Tevlî Xelekê Bibe",
-      joinDistDesc:
-        "Koda ku ji te re hatiye şandin li jêr binivîse û beşdar bibe.",
-      createButton: "PÊK BÎNE",
-      joinButton: "Tevlî Bibe",
-      sessionCodePlaceholder: "Koda Xelekê",
-      enterCode: "Koda Belavkirinê Binivîse",
-      enterCodePlaceholder: "Koda Belavkirinê (Mînak: 12345)",
-      guestCheckCode: "Tenê dixwazî li kodekê binêrî?",
-      guestCodePlaceholder: "Kod binivîse",
-      participantCount: "Çend Kes Wê Bixwînin?",
-      setTargetCounts: "Hejmarên Hedef Diyar Bike (Vebijarkî)",
-      createDistribution: "BELAVKIRINÊ PÊK BÎNE",
-      linkCreated: "Lînk Hat Çêkirin:",
-      monitorTitle: "Şopandina Belavkirinê",
-      monitorSubtitle: "Bi nivîsandina kodê kontrol bike ka kî çi girtiye.",
-      distCode: "Kod",
-      statusHeader: "Rewş",
-      assignedTo: "Kesê Girtiye",
-      resource: "Çavkanî / Parçe",
-      progress: "Pêşveçûn / Hedef",
-      occupancy: "TIJEBÛN",
-      targetLabel: "Armanc",
-      remaining: "Mayî",
-      distributedResources: "Çavkaniyên Hatin Belavkirin",
-      individualResources: "Çavkaniyên Bireysel",
-      creatorLabel: "Avaker",
-    },
-    reading: {
-      readingTitle: "Xwendin",
-      joinTitle: "Tevlî Xelekê Bibe",
-      joinIntro: "Navê xwe binivîse (Mêvan)",
-      yourName: "Navê Te",
-      takeRead: "BIGIRE",
-      readText: "Bixwîne",
-      completed: "Temam Bû",
-      finish: "Heke te xelas kir, bitikîne",
-      selectAndRead: "HILBIJÊRE & BIXWÎNE",
-      clickToCount: "HER KU TE XWEND BITIKÎNE",
-      decrease: "KÊM BIKE",
-      closeWindow: "Pencereyê Bigire",
-      successLeave: "Bi serkeftî ji rûniştinê derketî.",
-      chapter: "BEŞ",
-      group: "Kom",
-      translationTitle: "Wateya Kurdî",
-      translationPending: "Wergêr tê amadekirin...",
-      arabicPage: "Rûpela Erebî",
-      meaningPage: "Rûpela Wateyê",
-      tabArabic: "Erebî",
-      tabLatin: "Bilêvkirin",
-      tabMeaning: "Wate",
-      previous: "Pêş",
-      next: "Paş",
-      statusEmpty: "VALA",
-      statusTaken: "HAT GIRTIN",
-      full: "TIJE",
-      participantName: "Navê Beşdar",
-      cancelRead: "Xwendinê Betal Bike",
-    },
-    alerts: {
-      successReset: "Hat Sifirkirin!",
-      successDelete: "Hat Jêbirin!",
-      errorOccurred: "Xetayek çêbû.",
-      unexpectedError: "Xetayek neçaverêkirî çêbû.",
-      connectionError: "Xetaya girêdanê.",
-      errorFetchFailed: "Dâne nehatin standin. Koda Xetayê:",
-      errorInvalidCode: "Xeta: Kod nederbasdar e an server girtî ye.",
-      errorAlreadyTaken:
-        "Mixabin, ev parçe ji aliyê kesekî din ve hatiye girtin.",
-      alertSelectResource: "Ji kerema xwe qet nebe çavkaniyek hilbijêrin.",
-      alertEnterName: "Ji kerema xwe pêşî navê xwe li jor binivîse.",
-      alertTakenSuccess: "Gelek baş e! Te ev beş girt ser xwe.",
-      confirmDelete: "Tu piştrast î ku dixwazî vê belavkirinê jê bibî?",
-      confirmDeleteSession:
-        "Tu piştrast î ku dixwazî vê xelekê bi temamî jê bibî? Hemû dane wê winda bibin.",
-      confirmLeaveSession:
-        "Tu li ber î ku ji vê xelekê derkevî. Hemû parçeyên te wê werin betalkirin.",
-      confirmResetSession:
-        "Tu piştrast î ku dixwazî vê xelekê sifir bikî? Hemû beşdar wê werin derxistin û xwendin wê werin sifirkirin.",
-      confirmReset:
-        "Hemû databas wê were sifirkirin û daneyên pêşwext werin barkirin. Tu piştrast î?",
-      confirmComplete: "Tu piştrast î ku te ev beş xwendiye?",
-      confirmCancel: "Tu dixwazî dev ji xwendina vê beşê berdî?",
-      resetSuccess:
-        "Xelek bi serkeftî hate sifirkirin! Li benda beşdarên nû ye.",
-      resetFailPrefix: "Sifirkirin bi ser neket: ",
-      leaveSession: "Ji rûniştinê derkeve",
-      deleteSuccess: "Xelek bi serkeftî hate jêbirin.",
-      deleteFail: "Jêbirin bi ser neket.",
-      leaveSuccess: "Tu ji xelekê derketî.",
-      leaveFail: "Derketina ji xelekê bi ser neket.",
-      cancelFailed: "Betalkirin biser neket.",
-      alertStatus: "Rewş: ",
-      errorPrefix: "Xeta: ",
-    },
+    // ... (Mevcut Kürtçe kodlarınız burada aynen kalıyor, sadece 'reading' ekliyorum)
+    monitorTitle: "ŞOPANDINA ZINDÎ",
+    loading: "Tê barkirin...",
+    errorOccurred: "Xeletiyek çêbû.",
+    errorInvalidCode: "Koda nederbasdar an rûniştin nehat dîtin.",
+    backHome: "Vegere Malê",
+    refresh: "Nû bike",
+    addResource: "Çavkanî Zêde Bike",
+    total: "GIŞTÎ",
+    distributed: "HAT BELAVKIRIN",
+    resource: "Parçe / Çavkanî",
+    assignedTo: "Kesê Berpirs",
+    status: "Rewş",
+    part: "Parçe",
+    page: "Rûpel",
+    statusEmpty: "Vala",
+    addResourceToSession: "Çavkanî Li Xelekê Zêde Bike",
+    selectResourcePrompt: "Çavkaniya ku hûn dixwazin zêde bikin hilbijêrin:",
+    resourceSelection: "Hilbijartina Çavkaniyê",
+    selectPlaceholder: "Hilbijêre...",
+    cancel: "Betal bike",
+    add: "Zêde bike",
+    adding: "Tê zêdekirin...",
+    resourceAdded: "Çavkanî bi serkeftî hat zêdekirin!",
+    errorPrefix: "Xeletî:",
+    createDistTitle: "Çêkirina çembera nû",
+    sessionExpired: "Rûniştin qediya. Ji kerema xwe dîsa têkeve.",
+    loginRequired: "Ji bo çêkirina rûniştinê divê tu têkevî.",
+    alertSelectResource: "Ji kerema xwe herî kêm yek çavkanî hilbijêre.",
+    sessionCreated: "Rûniştin hate çêkirin",
+    sessionCodePlaceholder: "Koda rûniştinê",
+    codeCopied: "Kod hat kopîkirin!",
+    startReading: "Dest bi xwendinê bike",
+    createNewOne: "Yek din biafirîne",
+    sessionNameLabel: "Navê rûniştinê (Opsiyonel)",
+    sessionNamePlaceholder: "mînak: Xatima Ramazanê, Salawatê malbatê...",
+    participantCount: "HEJMARA BEŞDARAN",
+    person: "Kes",
+    sharedResources: "ÇAVKANIYÊN PARVEKIRÎ",
+    fixedResources: "ÇAVKANIYÊN TAYBETÎ",
+    setTargetCounts: "ARMANCAN DANÎN",
+    default: "Standard",
+    processing: "Tê pêvajokirin...",
+    createButton: "Çember çê bike",
+    joinTitle: "Beşdarî çemberê bibe",
+    joinIntro:
+      "Bi xêr hatî! Ji bo beşdarî vê çembera ruhanî, navê xwe li jêr binivîse.",
+    yourNamePlaceholder: "Navê te",
+    continue: "Berdewam bike",
+    welcomeUser: "Bi xêr hatî, {name}",
+    sessionCode: "KOD",
+    totalParts: "GIŞTÎ BEŞ",
+    distributedResources: "Çavkaniyên belavkirî",
+    individualResources: "Çavkaniyên taybetî",
+    otherResource: "Çavkaniya din",
+    target: "Armanc",
+    pieces: "Beş",
+    yourTask: "ERKA TE",
+    taken: "HAT WERGIRTIN",
+    readText: "Metnê bixwîne",
+    finish: "Bi dawî bike",
+    undo: "Paşde vegerîne",
+    giveUp: "Dev jê berde",
+    select: "Hilbijêre",
+    welcomeBack: "Bi xêr hatî vegerî!",
+    loginIntro: "Ji bo têketinê agahiyên xwe binivîse.",
+    usernameLabel: "Navê bikarhêner",
+    passwordLabel: "Şîfre",
+    placeholderUser: "Navê bikarhênerê xwe binivîse",
+    placeholderPass: "Şîfreya xwe binivîse",
+    loginButton: "Têkeve",
+    loggingIn: "Têketin tê kirin...",
+    loginFailed: "Têketin serneket. Ji kerema xwe agahiyên xwe kontrol bike.",
+    loginError: "Di dema têketinê de çewtiyek çêbû.",
+    noAccount: "Hesabek tune ye?",
+    registerLink: "Hesab çê bike",
+    registerTitle: "Hesab çê bike",
+    registerSubtitle: "Îro bi me re rêwîtiya xwe dest pê bike.",
+    placeholderUserExample: "Navê bikarhêner hilbijêre",
+    registerButton: "Hesab çê bike",
+    registering: "Hesab tê çêkirin...",
+    registerSuccess: "Tomarkirin serketî bû! Tê veguhastin...",
+    haveAccount: "Hesabek heye?",
+    loginLink: "Têkeve",
+    landingHeroTitle: "Belavkirina Zikir û Xatimê hêsan bike",
+    homeVerseContent: "Bizanin ku tenê bi bîranîna Allah dil aram dibin.",
+    welcome: "Bi xêr hatî",
+    dashboardIntro: "Çemberên xwe birêve bibe an jî yên nû beşdar bike.",
+    landingHeroSubtitle:
+      "Çalakiyên ruhanî yên komî rêxistin bike, pêşketinê zindî bişopîne û bi civaka xwe re bi hêsanî parve bike.",
+    createNewSession: "Çembera nû çê bike",
+    getStarted: "Dest pê bike",
+    pasteCodeOrLink: "Kod an girêdan li vir pêve bike...",
+    join: "Beşdar bibe",
+    circles: "Çember",
+    managedSessions: "Çemberên ku ez birêve dibim",
+    joinedSessions: "Çemberên ku ez beşdar bûme",
+    noCreatedYet: "Hêj tu çember çê nekiriye.",
+    noCirclesYet: "Hêj tu beşdarî çemberê nebûyî.",
+    featuresTitle1: "Şopandina zindî",
+    featuresDesc1: "Kî çi xwendiye di demê rast de bibîne.",
+    featuresTitle2: "Parvekirina hêsan",
+    featuresDesc2: "Girêdan bi WhatsApp an Telegram re parve bike.",
+    howItWorksTitle: "Çawa dixebite?",
+    step1Title: "Çê bike",
+    step1Desc: "Çembera Xatim an Zikirê ava bike.",
+    step2Title: "Parve bike",
+    step2Desc: "Girêdanê ji beşdaran re bişîne.",
+    step3Title: "Bi şopîne",
+    step3Desc: "Pêşketinê zindî bibîne.",
+    creatorLabel: "Damezrîner",
+    leaveSession: "Ji çemberê derkeve",
+    resetSession: "Çemberê ji nû ve saz bike",
+    deleteSession: "Çemberê jê bibe",
+    trackButton: "Şopîne",
+    copied: "Hat kopîkirin!",
+    copyLink: "Girêdanê kopî bike",
+    copyCode: "Kodê kopî bike",
+    confirmDelete: "Tu bawer î ku dixwazî vê çemberê jê bibî?",
+    confirmReset:
+      "Tu bawer î ku dixwazî vê çemberê ji nû ve saz bikî? Hemû xwendin dê werin jêbirin.",
+    successReset: "Çember bi serkeftî ji nû ve hate sazkirin.",
+    confirmLeave: "Tu bawer î ku dixwazî ji vê çemberê derkevî?",
+    successLeave: "Bi serkeftî ji çemberê derketî.",
+    connectionError: "Çewtiya girêdanê. Ji kerema xwe dîsa biceribîne.",
+    decrease: "Hat xwendin",
+    completed: "Qediya",
+    remaining: "Mayî",
+    allahAccept: "Xwedê qebûl bike",
+    tapToCount: "Ji bo jimartinê pêl bike",
+    waitingForUser: "Li benda bikarhênerê...",
+    resource_CEVSEN: "Cewşenê Kebîr",
+    resource_K_KERIM: "Qur'ana Pîroz",
+    resource_TEFRICIYE: "Salat-ê Tefrîciye",
+    resource_MUNCIYE: "Salat-ê Muncîye",
+    resource_FETTAH: "Ya Fettah",
+    resource_HASBUNALLAH: "Hasbunallah",
+    chapter: "BEŞ",
+    group: "KOM",
+    translationTitle: "Werger",
+    arabicPage: "Rûpela Erebî",
+    meaningPage: "Rûpela Wateyê",
+    clickToCount: "JI BO JIMARTINÊ PÊL BIKE",
+    previous: "Berê",
+    next: "Piştî",
+    increaseFont: "Mezinahiya nivîsê zêde bike",
+    decreaseFont: "Mezinahiya nivîsê kêm bike",
+    tabArabic: "Erebî",
+    tabLatin: "Latîn",
+    tabMeaning: "Wate",
+    close: "Bigire",
+    appTitle: "Çembera Zikir & Xatim",
+    footerDesc:
+      "Platformek ji bo rêxistina çalakiyên ruhanî yên komî û şopandina pêşketinê bi hêsanî.",
+    rightsReserved: "Hemû maf parastî ne.",
+    developedBy: "Pêşxistî ji aliyê",
+    logoutButton: "Derkeve",
+    guestRegister: "Tomar bibe",
+    switchTheme: "Tema biguherîne",
+    switchToLight: "Biguherîne moda ronahî",
+    switchToDark: "Biguherîne moda tarî",
+    subtitle: "Platforma Belavkirina Çavkaniyan",
+    copy: "Kopyake",
+    delete: "Jê Bibe",
+    resource_YASIN: "Sûreya Yasin",
+    resource_FETIH: "Sûreya Fetih",
+    resource_TEVHIDNAME: "Tevhîdname",
+    resource_UHUD: "Şehîdên Uhudê",
+    resource_BEDIR: "Şehîdên Bedirê",
+    resource_SALAVAT: "Salawatê Şerîfe",
+    imageMode: "Moda Wêneyê",
+    continueButton: "DEWAM BIKE",
+    adminButton: "Wekî Admin têkeve!",
+    guestLogin: "Bikevê",
+    guestSubtitle: "Platforma yekîtiya manewî",
+    guestMessage:
+      "Ji bo tevlî xelekan bibî an belavkirina xwe çêbikî ji kerema xwe têkeve.",
+    guestNote: "Hûn dikarin bêyî qeydkirinê wekî mêvan tevlî bibin.",
+    loginOrRegister: "Têkeve an Qeyd Bibe",
+    featuresTitle3: "Xwendina Li Gorî Mobîlê",
+    featuresDesc3:
+      "Bêyî ku ji sepanê derkevin rûpelên Quranê an beşên Cewşenê bixwînin.",
+    dashboard: "Panel",
+     myCirclesTitle: "Xelekên Ez Tevlî Bûm",
+    myCreatedTitle: "Belavkirinên Min ên Rêvebir",
+    noSessionYet: "Hîn tune.",
+    create: "Ava Bike",
+     featureFree: "Bêpere bikar bînî",
+    featureNoLogin: "Bê endamî beşdar bibe",
+    backToAdmin: "Vegere Panela Admin",
+    adminTitle: "Panela Rêveberiyê",
+    createDistDesc: "Xeleka Hatim, Yasîn an Zikirê çêbike û lînkê parve bike.",
+    joinDistTitle: "Tevlî Xelekê Bibe",
+    joinDistDesc:
+      "Koda ku ji te re hatiye şandin li jêr binivîse û beşdar bibe.",
+    joinButton: "Tevlî Bibe",
+    enterCode: "Koda Belavkirinê Binivîse",
+    enterCodePlaceholder: "Koda Belavkirinê (Mînak: 12345)",
+    guestCheckCode: "Tenê dixwazî li kodekê binêrî?",
+    guestCodePlaceholder: "Kod binivîse",
+    createDistribution: "BELAVKIRINÊ PÊK BÎNE",
+    linkCreated: "Lînk Hat Çêkirin:",
+     monitorSubtitle: "Bi nivîsandina kodê kontrol bike ka kî çi girtiye.",
+    distCode: "Kod",
+    statusHeader: "Rewş",
+    progress: "Pêşveçûn / Hedef",
+    occupancy: "TIJEBÛN",
+    targetLabel: "Armanc",
+     yourName: "Navê Te",
+    takeRead: "BIGIRE",
+    selectAndRead: "HILBIJÊRE & BIXWÎNE",
+     closeWindow: "Pencereyê Bigire",
+     translationPending: "Wergêr tê amadekirin...",
+    statusTaken: "HAT GIRTIN",
+    full: "TIJE",
+    participantName: "Navê Beşdar",
+    cancelRead: "Xwendinê Betal Bike",
+    successDelete: "Hat Jêbirin!",
+    unexpectedError: "Xetayek neçaverêkirî çêbû.",
+    errorFetchFailed: "Dâne nehatin standin. Koda Xetayê:",
+     errorAlreadyTaken:
+      "Mixabin, ev parçe ji aliyê kesekî din ve hatiye girtin.",
+    alertEnterName: "Ji kerema xwe pêşî navê xwe li jor binivîse.",
+    alertTakenSuccess: "Gelek baş e! Te ev beş girt ser xwe.",
+    confirmDeleteSession:
+      "Tu piştrast î ku dixwazî vê xelekê bi temamî jê bibî? Hemû dane wê winda bibin.",
+    confirmLeaveSession:
+      "Tu li ber î ku ji vê xelekê derkevî. Hemû parçeyên te wê werin betalkirin.",
+    confirmResetSession:
+      "Tu piştrast î ku dixwazî vê xelekê sifir bikî? Hemû beşdar wê werin derxistin û xwendin wê werin sifirkirin.",
+     confirmComplete: "Tu piştrast î ku te ev beş xwendiye?",
+    confirmCancel: "Tu dixwazî dev ji xwendina vê beşê berdî?",
+    resetSuccess: "Xelek bi serkeftî hate sifirkirin! Li benda beşdarên nû ye.",
+    resetFailPrefix: "Sifirkirin bi ser neket: ",
+    deleteSuccess: "Xelek bi serkeftî hate jêbirin.",
+    deleteFail: "Jêbirin bi ser neket.",
+    leaveFail: "Derketina ji xelekê bi ser neket.",
+    cancelFailed: "Betalkirin biser neket.",
+    alertStatus: "Rewş: ",
+    reading: "Dixwîne", // EKLENDİ
   },
+
+  // -----------------------------------------------------------
+  // İNGİLİZCE (İç İçe Yapı)
+  // -----------------------------------------------------------
   en: {
     common: {
       appTitle: "Spiritual Union for Reflection & Affinity",
@@ -513,15 +561,15 @@ const translations = {
       menuLanguage: "Language Settings",
       default: "Default",
       targetLabel: "Target",
-
       otherResource: "Other",
       imageMode: "Image Mode",
       continueButton: "CONTINUE",
       startReading: "Start Reading",
-
       adminButton: "Login as Admin!",
+      reading: "Reading", // EKLENDİ (Düzeltme için)
     },
-    auth: {
+    authSection: {
+      // Kategori ismi değiştirildi
       loginTitle: "Login",
       loginButton: "LOGIN",
       logoutButton: "Logout",
@@ -531,7 +579,6 @@ const translations = {
       guestRegister: "Register",
       guestLogin: "Login",
       leaveSession: "Leave session",
-
       resetSession: "Reset Session",
       featureFree: "Free to Use",
       featureNoLogin: "Join Without Login",
@@ -548,7 +595,6 @@ const translations = {
       noAccount: "Don't have an account?",
       loginLink: "Login",
       deleteSession: "Delete Session",
-
       registerLink: "Register Now",
       loginError: "Invalid username or password",
       registerSuccess: "Registration successful! You can login now.",
@@ -556,8 +602,9 @@ const translations = {
       loginRequiredMsg: "You must log in to select a part.",
       loginOrRegister: "Login or Register",
     },
-    landing: {
-      landingHeroTitle: "Spiritual Union Platform",
+    landingSection: {
+      // Kategori ismi değiştirildi
+landingHeroTitle: "Spiritual Union and Resource Distribution Platform",
       landingHeroSubtitle:
         "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
       getStarted: "Get Started",
@@ -579,7 +626,8 @@ const translations = {
       step3Title: "Complete",
       step3Desc: "Everyone reads their part, see progress instantly.",
     },
-    dashboard: {
+    dashboardSection: {
+      // Kategori ismi değiştirildi
       dashboard: "Dashboard",
       welcome: "Welcome",
       dashboardIntro:
@@ -599,7 +647,8 @@ const translations = {
       backToAdmin: "Back to Dashboard",
       adminTitle: "Admin Dashboard",
     },
-    distribution: {
+    distSection: {
+      // Kategori ismi değiştirildi
       createDistTitle: "Start New Circle",
       createDistDesc:
         "Create a Quran, Yasin, or Dhikr circle and share the link.",
@@ -631,7 +680,8 @@ const translations = {
       individualResources: "Individual Resources",
       creatorLabel: "Creator",
     },
-    reading: {
+    readingSection: {
+      // Kategori ismi değiştirildi (HATAYI ÇÖZEN KISIM)
       readingTitle: "Reading",
       joinTitle: "Join Circle",
       joinIntro: "Please enter your name (Guest)",
@@ -669,7 +719,6 @@ const translations = {
       unexpectedError: "An unexpected error occurred.",
       homeVerseContent:
         "Indeed, hearts find peace only in the remembrance of Allah.",
-
       connectionError: "Connection error.",
       errorFetchFailed: "Failed to fetch data. Error Code:",
       errorInvalidCode: "Error: Invalid code or server is down.",
@@ -700,6 +749,10 @@ const translations = {
       errorPrefix: "Error: ",
     },
   },
+
+  // -----------------------------------------------------------
+  // ARAPÇA (İç İçe Yapı)
+  // -----------------------------------------------------------
   ar: {
     common: {
       appTitle: "Spiritual Union for Reflection & Affinity",
@@ -713,9 +766,7 @@ const translations = {
       fixedResources: "الموارد الفردية",
       sessionCreated: "تم إنشاء الجلسة",
       resource_YASIN: "سورة يس",
-
       distributed: "تم التوزيع",
-
       resource_FETIH: "سورة الفتح",
       resource_CEVSEN: "جوشن الكبير",
       resource_TEFRICIYE: "الصلاة التفريجية",
@@ -724,7 +775,6 @@ const translations = {
       resource_UHUD: "شهداء أحد",
       resource_BEDIR: "شهداء بدر",
       resource_SALAVAT: "الصلاة الشريفة",
-
       loading: "جاري التحميل...",
       close: "إغلاق",
       sharedResources: "الموارد المشتركة",
@@ -732,7 +782,6 @@ const translations = {
       cancel: "إلغاء",
       delete: "حذف",
       resetSession: "إعادة تعيين الجلسة",
-
       copied: "تم النسخ",
       copy: "نسخ",
       select: "تحديد",
@@ -744,13 +793,13 @@ const translations = {
       menuLanguage: "إعدادات اللغة",
       default: "افتراضي",
       startReading: "ابدأ القراءة",
-
       otherResource: "آخر",
       imageMode: "وضع الصورة",
       continueButton: "متابعة",
       adminButton: "دخول كمسؤول!",
+      reading: "قيد القراءة", // EKLENDİ
     },
-    auth: {
+    authSection: {
       loginTitle: "تسجيل الدخول",
       loginButton: "تسجيل الدخول",
       logoutButton: "تسجيل الخروج",
@@ -778,8 +827,8 @@ const translations = {
       loginRequiredMsg: "يجب تسجيل الدخول لتحديد جزء.",
       loginOrRegister: "دخول أو تسجيل",
     },
-    landing: {
-      landingHeroTitle: "منصة الاتحاد الروحي",
+    landingSection: {
+landingHeroTitle: "منصة الوحدة الروحية وتوزيع الموارد",
       landingHeroSubtitle:
         "نظم ختمات القرآن وحلقات الجوشن وبرامج الأذكار بسهولة.",
       getStarted: "ابدأ الآن",
@@ -799,7 +848,7 @@ const translations = {
       step3Title: "أكمل القراءة",
       step3Desc: "ليقرأ كل شخص جزأه، وشاهد التقدم فورًا.",
     },
-    dashboard: {
+    dashboardSection: {
       dashboard: "لوحة التحكم",
       welcome: "أهلاً بك،",
       dashboardIntro: "ماذا تريد أن تفعل في رحلتك الروحية اليوم؟",
@@ -817,13 +866,12 @@ const translations = {
       backToAdmin: "العودة للوحة التحكم",
       adminTitle: "لوحة التحكم",
     },
-    distribution: {
+    distSection: {
       createDistTitle: "بدء حلقة جديدة",
       createDistDesc: "أنشئ حلقة قرآن أو يس أو ذكر وشارك الرابط.",
       joinDistTitle: "الانضمام لحلقة",
       joinDistDesc: "أدخل الرمز المشارك معك للمشاركة.",
       homeVerseContent: " ",
-
       createButton: "إنشاء",
       joinButton: "انضمام",
       sessionCodePlaceholder: "رمز الحلقة",
@@ -851,7 +899,8 @@ const translations = {
       individualResources: "المصادر الفردية",
       creatorLabel: "المنشئ",
     },
-    reading: {
+    readingSection: {
+      // Kategori ismi değiştirildi
       readingTitle: "القراءة",
       joinTitle: "الانضمام للحلقة",
       joinIntro: "الرجاء إدخال اسمك (ضيف)",
@@ -922,6 +971,10 @@ const translations = {
       copyCode: "نسخ الكود",
     },
   },
+
+  // -----------------------------------------------------------
+  // FRANSIZCA (İç İçe Yapı)
+  // -----------------------------------------------------------
   fr: {
     common: {
       appTitle: "Spiritual Union for Reflection & Affinity",
@@ -945,12 +998,9 @@ const translations = {
       resource_UHUD: "Martyrs de Uhud",
       resource_BEDIR: "Martyrs de Badr",
       resource_SALAVAT: "Salawat",
-
-      sessionCreated: "Rûniştin çêbû",
+      sessionCreated: "Session créée",
       cancel: "Annuler",
-
       copied: "Copié",
-
       createNewOne: "Créer un nouveau",
       delete: "Supprimer",
       sharedResources: "Ressources partagées",
@@ -958,7 +1008,6 @@ const translations = {
       copy: "Copier",
       select: "SÉLECTIONNER",
       copyCode: "Copier le code",
-
       page: "Page",
       part: "Partie",
       person: "Personne",
@@ -970,8 +1019,9 @@ const translations = {
       imageMode: "Mode Image",
       continueButton: "CONTINUER",
       adminButton: "Connexion Admin !",
+      reading: "En lecture", // EKLENDİ
     },
-    auth: {
+    authSection: {
       loginTitle: "Connexion",
       loginButton: "CONNEXION",
       logoutButton: "Déconnexion",
@@ -989,7 +1039,6 @@ const translations = {
       placeholderUser: "Votre nom d'utilisateur",
       placeholderUserExample: "ex: jean123",
       resetsession: "Réinitialiser la session",
-
       placeholderPass: "******",
       haveAccount: "Vous avez déjà un compte ?",
       noAccount: "Pas de compte ?",
@@ -1003,8 +1052,8 @@ const translations = {
         "Vous devez vous connecter pour sélectionner une partie.",
       loginOrRegister: "Connexion ou Inscription",
     },
-    landing: {
-      landingHeroTitle: "Plateforme d’union spirituelle",
+    landingSection: {
+landingHeroTitle: "Plateforme d’union spirituelle et de distribution des ressources",
       landingHeroSubtitle:
         "Organisez facilement des khatms du Coran, des cercles de Cevshen et des programmes de dhikr.",
       getStarted: "Commencer",
@@ -1027,11 +1076,10 @@ const translations = {
       giveUp: "Abandonner",
       step3Desc: "Chacun lit sa partie, visualisez les progrès instantanément.",
     },
-    dashboard: {
+    dashboardSection: {
       dashboard: "Tableau de bord",
       welcome: "Bienvenue,",
       leaveSession: "Quitter la session",
-
       dashboardIntro:
         "Que voulez-vous faire dans votre voyage spirituel aujourd'hui ?",
       myCirclesTitle: "Mes Cercles",
@@ -1049,7 +1097,7 @@ const translations = {
       backToAdmin: "Retour au tableau de bord",
       adminTitle: "Tableau de bord Admin",
     },
-    distribution: {
+    distSection: {
       createDistTitle: "Démarrer un nouveau cercle",
       createDistDesc:
         "Créez un cercle Coran, Yasin ou Dhikr et partagez le lien.",
@@ -1067,7 +1115,6 @@ const translations = {
       linkCreated: "Lien créé :",
       copyLink: "Copier le link",
       codeCopied: "Code copié",
-
       monitorTitle: "Moniteur de Distribution",
       monitorSubtitle: "Entrez un code pour voir qui a pris quoi.",
       distCode: "Code",
@@ -1083,7 +1130,8 @@ const translations = {
       individualResources: "Ressources Individuelles",
       creatorLabel: "Créateur",
     },
-    reading: {
+    readingSection: {
+      // Kategori ismi değiştirildi
       readingTitle: "Lecture",
       sessionCodePlaceholder: "Le code existant",
       joinTitle: "Rejoindre le cercle",
@@ -1108,7 +1156,6 @@ const translations = {
       tabMeaning: "Traduction",
       homeVerseContent:
         "Sachez que les cœurs ne trouvent la paix que dans le rappel d’Allah.",
-
       previous: "Précédent",
       next: "Suivant",
       statusEmpty: "DISPONIBLE",
@@ -1180,30 +1227,39 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: string): string => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const langData = (translations as any)[language];
+    const langData = translations[language];
 
+    // 1. Doğrudan Eşleşme Kontrolü (Düz metin ise döndür, nesne ise yoksay)
+    if (langData[key] && typeof langData[key] === "string") {
+      return langData[key] as string;
+    }
+
+    // 2. Nokta notasyonu kontrolü (auth.loginTitle gibi)
     if (key.includes(".")) {
       const keys = key.split(".");
-      let value = langData;
+      let value: any = langData;
       for (const k of keys) {
-        if (value && value[k]) {
+        if (value && typeof value === "object" && k in value) {
           value = value[k];
         } else {
-          return key;
+          value = undefined;
+          break;
         }
       }
-      return value as string;
+      if (typeof value === "string") return value;
     }
 
-    for (const category in langData) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const value = (langData as any)[category]?.[key];
-      if (value && typeof value === "string") {
-        return value;
+    // 3. İç içe geçmiş objelerde derinlemesine arama
+    for (const sectionKey in langData) {
+      const section = langData[sectionKey];
+      if (typeof section === "object" && section !== null) {
+         if (section[key] && typeof section[key] === "string") {
+           return section[key] as string;
+        }
       }
     }
 
+    // Bulunamazsa anahtarın kendisini döndür
     return key;
   };
 

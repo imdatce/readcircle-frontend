@@ -2,13 +2,15 @@
 
 import { useTheme } from "@/context/ThemeContext";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ThemeSwitcher() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-     const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setMounted(true);
     }, 0);
 
@@ -16,7 +18,7 @@ export default function ThemeSwitcher() {
   }, []);
 
   if (!mounted) {
-     return <div className="w-9 h-9" />;
+    return <div className="w-9 h-9" />;
   }
 
   const isDark = theme === "dark";
@@ -24,17 +26,17 @@ export default function ThemeSwitcher() {
   return (
     <button
       onClick={toggleTheme}
-      className="group relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 focus:outline-none"
-      aria-label="Temayı Değiştir"
-      title={isDark ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}
+      className="group relative flex items-center justify-center w-10 h-10 rounded-xl hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-300 focus:outline-none"
+      aria-label={t("switchTheme")}
+      title={isDark ? t("switchToLight") : t("switchToDark")}
     >
-       <svg
+      <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={2.5}
+        strokeWidth={2}
         stroke="currentColor"
-        className={`w-5 h-5 text-slate-800 group-hover:text-orange-500 transition-all duration-500 transform absolute
+        className={`w-5 h-5 text-amber-500 group-hover:text-amber-600 transition-all duration-500 absolute
           ${
             !isDark
               ? "rotate-0 scale-100 opacity-100"
@@ -49,11 +51,11 @@ export default function ThemeSwitcher() {
         />
       </svg>
 
-       <svg
+      <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        className={`w-5 h-5 text-white group-hover:text-yellow-400 transition-all duration-500 transform absolute
+        className={`w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-all duration-500 absolute
           ${
             isDark
               ? "rotate-0 scale-100 opacity-100"

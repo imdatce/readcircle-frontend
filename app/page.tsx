@@ -119,7 +119,7 @@ function HomeContent() {
         );
       } else {
         const msg = await res.text();
-        alert(t("errorOccurred") + msg);
+        alert(t("errorOccurred") + " " + msg);
       }
     } catch (error) {
       console.error("Data error", error);
@@ -142,7 +142,7 @@ function HomeContent() {
         alert(t("successReset"));
       } else {
         const msg = await res.text();
-        alert(t("errorOccurred") + msg);
+        alert(t("errorOccurred") + " " + msg);
       }
     } catch (error) {
       console.error(error);
@@ -167,7 +167,7 @@ function HomeContent() {
         alert(t("successLeave"));
       } else {
         const msg = await res.text();
-        alert(t("errorOccurred") + msg);
+        alert(t("errorOccurred") + " " + msg);
       }
     } catch (error) {
       console.error(error);
@@ -250,10 +250,7 @@ function HomeContent() {
 
               <div className="flex flex-col items-center gap-2">
                 <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 italic font-medium font-serif text-center max-w-lg mx-auto">
-                  &quot;
-                  {t("homeVerseContent") ||
-                    "Bilesiniz ki, kalpler ancak Allah'ı anmakla huzur bulur."}
-                  &quot;
+                  &quot;{t("homeVerseContent")}&quot;
                 </p>
                 <span className="text-xs text-emerald-600 dark:text-emerald-500 font-bold tracking-widest uppercase opacity-80">
                   Ra&apos;d, 28
@@ -268,7 +265,6 @@ function HomeContent() {
               : t("landingHeroSubtitle")}
           </p>
 
-          {/* JOIN SESSION SECTION */}
           <div className="flex flex-col gap-8 w-full max-w-4xl mx-auto mb-16">
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000"></div>
@@ -348,24 +344,20 @@ function HomeContent() {
                 id="circles-section"
                 className="relative group mt-20 scroll-mt-28 animate-in fade-in slide-in-from-bottom-8 duration-1000"
               >
-                {/* Arka Plan Glow Efekti (Daha yumuşak ve geniş) */}
                 <div className="absolute -inset-10 bg-gradient-to-r from-blue-500/5 via-emerald-500/5 to-teal-500/5 dark:from-blue-500/10 dark:via-emerald-500/10 dark:to-teal-500/10 rounded-[5rem] blur-3xl opacity-100 transition duration-1000 group-hover:opacity-100"></div>
 
-                {/* Ana Kart Kapsayıcı */}
                 <div className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border border-white/50 dark:border-gray-800/50 p-4 md:p-6 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-                  {/* ORTALANMIŞ MODERN BAŞLIK */}
                   <div className="flex items-center justify-center gap-6 mb-8">
                     <div className="h-[2px] w-12 md:w-20 bg-gradient-to-l from-transparent to-blue-500 rounded-full"></div>
 
                     <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-[0.2em] uppercase">
-                      {t("circles") || "Circles"}
+                      {t("circles")}
                     </h2>
 
                     <div className="h-[2px] w-12 md:w-20 bg-gradient-to-r from-transparent to-emerald-500 rounded-full"></div>
                   </div>
 
                   <div className="flex flex-col md:flex-row gap-3 justify-center items-stretch">
-                    {/* Managed Circles Butonu */}
                     <button
                       onClick={() => toggleTab("managed")}
                       className={`flex-1 group/btn relative px-8 py-6 rounded-[2.2rem] font-bold text-lg transition-all duration-500 overflow-hidden ${
@@ -397,12 +389,10 @@ function HomeContent() {
                       </div>
                     </button>
 
-                    {/* Ayırıcı (Görsel Denge İçin) */}
                     <div className="hidden md:flex items-center justify-center px-2">
                       <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
                     </div>
 
-                    {/* Joined Circles Butonu */}
                     <button
                       onClick={() => toggleTab("joined")}
                       className={`flex-1 group/btn relative px-8 py-6 rounded-[2.2rem] font-bold text-lg transition-all duration-500 overflow-hidden ${
@@ -440,7 +430,6 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* DASHBOARD LISTS */}
         {user && activeTab && (
           <div
             ref={sessionsRef}
@@ -449,7 +438,7 @@ function HomeContent() {
             {activeTab === "managed" && (
               <div className="max-w-4xl mx-auto">
                 <DashboardColumn
-                  title={t("managedSessions") || "Yönettiğim Halkalar"}
+                  title={t("managedSessions")}
                   icon={
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -491,11 +480,9 @@ function HomeContent() {
                     </div>
                   ) : (
                     <EmptyState
-                      title={
-                        t("noCreatedYet") || "Henüz bir dağıtım başlatmadın."
-                      }
+                      title={t("noCreatedYet")}
                       actionLink="/admin"
-                      actionText={t("createNewSession") || "Yeni Oluştur"}
+                      actionText={t("createNewSession")}
                     />
                   )}
                 </DashboardColumn>
@@ -552,7 +539,6 @@ function HomeContent() {
           </div>
         )}
 
-        {/* FEATURES & STEPS */}
         <div className="max-w-3xl mx-auto px-4 my-6">
           <div className="grid md:grid-cols-2 gap-4">
             <FeatureCard
@@ -830,7 +816,7 @@ function SessionCard({
                   ></path>
                 </svg>
                 <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] text-white bg-gray-800 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {t("copyLink") || "Linki kopyala"}
+                  {t("copyLink")}
                 </span>
               </button>
               <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5"></div>
@@ -858,7 +844,7 @@ function SessionCard({
                   ></path>
                 </svg>
                 <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] text-white bg-gray-800 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {t("copyCode") || "Kodu kopyala"}
+                  {t("copyCode")}
                 </span>
               </button>
             </div>
@@ -879,7 +865,7 @@ function SessionCard({
                   onDelete && onDelete(session.code);
                 }}
                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                title={t ? t("deleteSession") || "Sil" : "Sil"}
+                title={t("deleteSession")}
               >
                 <TrashIcon />
               </button>
