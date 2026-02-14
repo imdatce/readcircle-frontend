@@ -43,6 +43,7 @@ const translations: TranslationStructure = {
     completed: "TAMAMLANAN",
     resource: "Parça / Kaynak",
     assignedTo: "Atanan Kişi",
+
     status: "Durum",
     part: "Parça",
     page: "Sayfa",
@@ -438,6 +439,7 @@ const translations: TranslationStructure = {
     developedBy: "Pêşxistî ji aliyê",
     logoutButton: "Derkeve",
     guestRegister: "Tomar bibe",
+    original: "Orîjînal",
     switchTheme: "Tema biguherîne",
     switchToLight: "Biguherîne moda ronahî",
     switchToDark: "Biguherîne moda tarî",
@@ -601,6 +603,8 @@ const translations: TranslationStructure = {
       guestNote: "You can also join as a guest without registering.",
       usernameLabel: "Username",
       passwordLabel: "Password",
+      original: "Original",
+
       placeholderUser: "Your username",
       placeholderUserExample: "e.g. john123",
       placeholderPass: "******",
@@ -737,6 +741,7 @@ const translations: TranslationStructure = {
       homeVerseContent:
         "Indeed, hearts find peace only in the remembrance of Allah.",
       connectionError: "Connection error.",
+      original: "Original",
       errorFetchFailed: "Failed to fetch data. Error Code:",
       errorInvalidCode: "Error: Invalid code or server is down.",
       errorAlreadyTaken:
@@ -985,6 +990,8 @@ const translations: TranslationStructure = {
       confirmReset:
         "سيتم إعادة تعيين قاعدة البيانات إلى البيانات الافتراضية. هل أنت متأكد؟",
       confirmComplete: "هل تؤكد أنك أتممت هذا الجزء؟",
+      original: "الأصلي",
+
       confirmCancel: "هل تريد إلغاء قراءة هذا الجزء؟",
       resetSuccess: "تم إعادة تعيين الجلسة بنجاح! في انتظار مشاركين جدد.",
       resetFailPrefix: "فشل إعادة التعيين: ",

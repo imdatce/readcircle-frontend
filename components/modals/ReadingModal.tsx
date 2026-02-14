@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
 import Zikirmatik from "../common/Zikirmatik";
 import {
@@ -37,6 +37,24 @@ interface ReadingModalProps {
   t: (key: string) => string;
 }
 
+// --- YARDIMCI FONKSİYON: Diyanet API'den Meal Çekme ---
+async function fetchDiyanetPage(pageNumber: number) {
+  try {
+    // tr.diyanet edisyonunu kullanıyoruz
+    const res = await fetch(
+      `https://api.alquran.cloud/v1/page/${pageNumber}/tr.diyanet`,
+    );
+    const data = await res.json();
+    if (data.code === 200 && data.data && data.data.ayahs) {
+      return data.data.ayahs; // Ayet listesini döner
+    }
+    return null;
+  } catch (error) {
+    console.error("Meal çekilemedi:", error);
+    return null;
+  }
+}
+
 const ReadingModal: React.FC<ReadingModalProps> = ({
   content,
   onClose,
@@ -49,6 +67,29 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 }) => {
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
+
+  // --- YENİ STATE'LER (Sadece Kuran Modu İçin) ---
+  const [activeQuranTab, setActiveQuranTab] = useState<"ORIGINAL" | "MEAL">(
+    "ORIGINAL",
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [mealData, setMealData] = useState<any[]>([]);
+  const [loadingMeal, setLoadingMeal] = useState(false);
+
+  const currentPage = content.currentUnit || content.startUnit || 1;
+
+  // --- EFFECT: Meal Verisini Çekme ---
+  useEffect(() => {
+    // Sadece Kuran tipinde ve Meal sekmesi aktifse çalışır
+    if (content.type === "QURAN" && activeQuranTab === "MEAL") {
+      setLoadingMeal(true);
+      fetchDiyanetPage(currentPage)
+        .then((ayahs) => {
+          if (ayahs) setMealData(ayahs);
+        })
+        .finally(() => setLoadingMeal(false));
+    }
+  }, [currentPage, activeQuranTab, content.type]);
 
   const getDisplayTitle = () => {
     if (!content.codeKey) return content.title;
@@ -188,13 +229,35 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
-  const currentPage = content.currentUnit || content.startUnit || 1;
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
 
   // Helper booleanlar
   const isSurahGroup = processedData?.isSurah || false;
   const isBedirGroup = processedData?.mode === "LIST";
+
+  // --- YENİ NAVİGASYON BİLEŞENİ (Hem Alt Hem Üst İçin) ---
+  const PaginationBar = () => (
+    <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+      <button
+        onClick={() => changePage(-1)}
+        disabled={isFirstPage}
+        className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+      >
+        <span>←</span> {t("previous")}
+      </button>
+      <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em]">
+        {t("page")} {currentPage}
+      </span>
+      <button
+        onClick={() => changePage(1)}
+        disabled={isLastPage}
+        className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+      >
+        {t("next")} <span>→</span>
+      </button>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -206,7 +269,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               {getDisplayTitle()}
             </h3>
             <div className="flex items-center gap-2 md:gap-3">
-              {/* Font Controls */}
+              {/* Font Controls - Kuran hariç */}
               {!(isSurahGroup && activeTab === "ARABIC") &&
                 content.type !== "QURAN" && (
                   <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
@@ -248,7 +311,33 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           </div>
 
-          {/* TABLAR (Simple ve Quran Hariç) */}
+          {/* --- YENİ EKLENTİ: SADECE KURAN İÇİN SEKME MENÜSÜ --- */}
+          {content.type === "QURAN" && (
+            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setActiveQuranTab("ORIGINAL")}
+                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${
+                  activeQuranTab === "ORIGINAL"
+                    ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                }`}
+              >
+                {t("Original")}
+              </button>
+              <button
+                onClick={() => setActiveQuranTab("MEAL")}
+                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${
+                  activeQuranTab === "MEAL"
+                    ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                }`}
+              >
+                {t("tabMeaning")}
+              </button>
+            </div>
+          )}
+
+          {/* TABLAR (Simple ve Quran Hariç) - ESKİ YAPI */}
           {content.type !== "SIMPLE" && content.type !== "QURAN" && (
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
@@ -298,41 +387,62 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {/* 2. KUR'AN SAYFASI (Veya Surelerin Arapçası) */}
+          {/* 2. KUR'AN SAYFASI VE SURELER */}
           {(content.type === "QURAN" ||
             (isSurahGroup && activeTab === "ARABIC")) && (
-            <div className="flex flex-col items-center h-full max-w-2xl mx-auto">
-              <div className="flex items-center justify-between w-full mb-4 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                <button
-                  onClick={() => changePage(-1)}
-                  disabled={isFirstPage}
-                  className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
-                >
-                  <span>←</span> {t("previous")}
-                </button>
-                <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em]">
-                  {t("page")} {currentPage}
-                </span>
-                <button
-                  onClick={() => changePage(1)}
-                  disabled={isLastPage}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
-                >
-                  {t("next")} <span>→</span>
-                </button>
+            <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
+              {/* ÜST NAVİGASYON */}
+              <PaginationBar />
+
+              {/* İÇERİK KUTUSU */}
+              <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-[2rem] p-2 md:p-4 border border-gray-200 dark:border-gray-800 shadow-sm min-h-[50vh] relative">
+                {/* A. ORİJİNAL GÖRÜNÜM (RESİM) */}
+                {activeQuranTab === "ORIGINAL" ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <img
+                      src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(currentPage).padStart(3, "0")}.png`}
+                      alt={`Page ${currentPage}`}
+                      className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.parentElement!.innerHTML += `<div class="text-red-500 p-4 text-center text-xs">Page not found</div>`;
+                      }}
+                    />
+                  </div>
+                ) : (
+                  /* B. MEAL GÖRÜNÜMÜ (METİN) */
+                  <div className="w-full h-full p-2 md:p-4">
+                    {loadingMeal ? (
+                      <div className="flex flex-col items-center justify-center h-40 space-y-4">
+                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                          Yükleniyor...
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {mealData.map((ayah: any, idx: number) => (
+                          <div key={idx} className="flex flex-col gap-2">
+                            <div className="flex items-start gap-3">
+                              <span className="shrink-0 flex items-center justify-center w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-full shadow-sm mt-1">
+                                {ayah.numberInSurah}
+                              </span>
+                              <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed font-serif">
+                                {ayah.text}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex-1 w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-2 border border-gray-200 dark:border-gray-800 shadow-sm min-h-[50vh]">
-                <img
-                  src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(currentPage).padStart(3, "0")}.png`}
-                  alt={`Page ${currentPage}`}
-                  className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    e.currentTarget.parentElement!.innerHTML += `<div class="text-red-500 p-4 text-center text-xs">Page not found</div>`;
-                  }}
-                />
-              </div>
+
+              {/* ALT NAVİGASYON (YENİ EKLENEN KISIM) */}
+              <PaginationBar />
             </div>
           )}
 
@@ -547,7 +657,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         isModal={true}
                         t={t}
                         readOnly={!isOwner}
-                        totalCount={totalTarget} // DÜZELTME: Toplam hedefi buraya ekledik
+                        totalCount={totalTarget}
                       />
                     );
                   })()}

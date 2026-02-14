@@ -16,9 +16,7 @@ const Zikirmatik = ({
   const isCompleted = currentCount <= 0;
 
   // Sadece totalCount yoksa kullanılacak yerel tavan değerini tutuyoruz.
-  const [localMax, setLocalMax] = useState<number>(
-    currentCount > 0 ? currentCount : 1,
-  );
+  const [localMax, setLocalMax] = useState<number>(currentCount > 0 ? currentCount : 1);
 
   // DÜZELTME: useEffect yerine render sırasında state kontrolü yapıyoruz.
   // Bu, React'in önerdiği "Adjusting state from props" yöntemidir.
@@ -28,8 +26,8 @@ const Zikirmatik = ({
   }
 
   // Nihai Tavan Değer Hesabı:
-  const finalMax = totalCount && totalCount > 0 ? totalCount : localMax;
-
+  const finalMax = (totalCount && totalCount > 0) ? totalCount : localMax;
+  
   // Sıfıra bölünme hatasını önlemek için güvenlik kontrolü
   const safeMax = finalMax > 0 ? finalMax : 1;
 
@@ -46,14 +44,12 @@ const Zikirmatik = ({
   const textSize = isModal ? "text-6xl" : "text-4xl";
 
   return (
-    <div
-      className={`flex flex-col items-center justify-center ${isModal ? "mt-4" : "mt-2"}`}
-    >
-      <div
-        className={`relative flex items-center justify-center ${containerSize}`}
-      >
+    <div className={`flex flex-col items-center justify-center ${isModal ? "mt-4" : "mt-2"}`}>
+      
+      <div className={`relative flex items-center justify-center ${containerSize}`}>
+        
         {/* PROGRESS HALKASI (SVG) */}
-        <svg
+        <svg 
           className="absolute inset-0 w-full h-full -rotate-90 transform drop-shadow-xl z-0"
           viewBox="0 0 100 100"
         >
@@ -67,7 +63,7 @@ const Zikirmatik = ({
             strokeWidth="4"
             className="text-gray-200 dark:text-gray-800"
           />
-
+          
           {/* İlerleme Halkası */}
           {!isCompleted && (
             <circle
@@ -138,7 +134,7 @@ const Zikirmatik = ({
                       ? "text-emerald-600 dark:text-emerald-400"
                       : readOnly
                         ? "text-gray-400 dark:text-gray-600"
-                        : "text-white dark:text-emerald-500 dark:drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                        : "text-white dark:text-emerald-500 dark:drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
                   }
                 `}
               >
@@ -166,17 +162,8 @@ const Zikirmatik = ({
         {isCompleted ? (
           <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in slide-in-from-bottom-2">
             <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </div>
             <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
@@ -185,7 +172,9 @@ const Zikirmatik = ({
           </div>
         ) : (
           <span className="text-xs font-medium text-gray-400 dark:text-gray-600 tracking-wide animate-pulse">
-            {readOnly ? t("waitingForUser") || "..." : t("tapToCount") || "..."}
+            {readOnly
+              ? t("waitingForUser") || "..."
+              : t("tapToCount") || "..."}
           </span>
         )}
       </div>
