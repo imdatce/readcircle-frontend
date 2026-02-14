@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
 import Zikirmatik from "../common/Zikirmatik";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   formatArabicText,
   formatLatinText,
@@ -37,16 +38,128 @@ interface ReadingModalProps {
   t: (key: string) => string;
 }
 
-// --- YARDIMCI FONKSİYON: Diyanet API'den Meal Çekme ---
-async function fetchDiyanetPage(pageNumber: number) {
+// --- SABİTLER: Dil Koduna Göre Kaynak Eşleştirmesi ---
+const EDITION_MAPPING: Record<string, string> = {
+  tr: "tr.diyanet",
+  en: "en.sahih",
+  fr: "fr.hamidullah",
+  de: "de.abullaimr",
+  ru: "ru.kuliev",
+  id: "id.indonesian",
+  az: "az.mammadaliyev",
+  ar: "ar.jalalayn",
+
+  // ÖZEL: Kürtçe (Kurmançi) için özel bir işaretleyici kullanıyoruz
+  ku: "special_quranenc_kurmanji",
+  kmr: "special_quranenc_kurmanji", // Eğer dil kodun kmr ise
+
+  default: "en.sahih",
+};
+
+// --- YARDIMCI FONKSİYON: QuranEnc API'den Veri İşleme ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchKurdishForPage(structureData: any) {
   try {
-    // tr.diyanet edisyonunu kullanıyoruz
+    // 1. Sayfadaki benzersiz sure numaralarını bul
+    const surahsOnPage = new Set<number>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    structureData.forEach((ayah: any) => surahsOnPage.add(ayah.surah.number));
+
+    // 2. Her bir sure için QuranEnc'ten veri çek (Latin Kürtçe)
+    // DÜZELTME: API anahtarı 'kurdish_kurmanji' yerine 'kurmanji_ismail' yapıldı.
+    const quranEncPromises = Array.from(surahsOnPage).map((surahNo) =>
+      fetch(
+        `https://quranenc.com/api/v1/translation/sura/kurmanji_ismail/${surahNo}`,
+      )
+        .then(async (res) => {
+          if (!res.ok) {
+            // Hata detayını konsola yazdıralım
+            console.error(
+              `QuranEnc Hatası (Sure: ${surahNo}):`,
+              res.status,
+              res.statusText,
+            );
+            throw new Error(`QuranEnc API hatası: ${res.status}`);
+          }
+          return res.json();
+        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .then((data) => ({ surahNo, result: data.result as any[] })),
+    );
+
+    const translations = await Promise.all(quranEncPromises);
+
+    // 3. Çekilen veriyi hızlı erişim için haritala (Map)
+    const translationMap: { [key: string]: string } = {};
+
+    translations.forEach(({ surahNo, result }) => {
+      if (Array.isArray(result)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        result.forEach((item: any) => {
+          const key = `${String(surahNo)}:${String(item.aya)}`;
+          translationMap[key] = item.translation;
+        });
+      }
+    });
+
+    // 4. Orijinal yapıdaki metinleri Kürtçe ile değiştir
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mergedData = structureData.map((ayah: any) => {
+      const key = `${String(ayah.surah.number)}:${String(ayah.numberInSurah)}`;
+      const kurdishText = translationMap[key];
+
+      return {
+        ...ayah,
+        text: kurdishText || `[Çeviri bulunamadı] ${ayah.text}`,
+      };
+    });
+
+    return {
+      ayahs: mergedData,
+      editionInfo: {
+        name: "Kurdî (Kurmanji) - Ismail Segari",
+        englishName: "Kurdish Kurmanji (Latin)",
+      },
+    };
+  } catch (error) {
+    console.error("Kürtçe API Hatası (Detay):", error);
+    return null;
+  }
+}
+
+// --- YARDIMCI FONKSİYON: Ana API Çağrısı ---
+async function fetchQuranTranslationPage(
+  pageNumber: number,
+  editionOrKey: string,
+) {
+  try {
+    // A. EĞER KÜRTÇE İSE: ÖZEL MANTIK
+    if (editionOrKey === "special_quranenc_kurmanji") {
+      // Önce sayfa yapısını (hangi ayetler var) almak için hafif bir Arapça kaynak çek
+      const structRes = await fetch(
+        `https://api.alquran.cloud/v1/page/${pageNumber}/quran-uthmani`,
+      );
+      const structData = await structRes.json();
+
+      if (structData.code === 200 && structData.data && structData.data.ayahs) {
+        // Sonra bu yapıyı kullanarak QuranEnc'ten Kürtçeleri getir
+        const kurdishResult = await fetchKurdishForPage(structData.data.ayahs);
+        // Eğer Kürtçe çekme başarısız olduysa (CORS vb), null dön ki sonsuz döngü olmasın
+        return kurdishResult;
+      }
+      return null;
+    }
+
+    // B. NORMAL DİLLER (Diyanet, Sahih vs.)
     const res = await fetch(
-      `https://api.alquran.cloud/v1/page/${pageNumber}/tr.diyanet`,
+      `https://api.alquran.cloud/v1/page/${pageNumber}/${editionOrKey}`,
     );
     const data = await res.json();
     if (data.code === 200 && data.data && data.data.ayahs) {
-      return data.data.ayahs; // Ayet listesini döner
+      return {
+        ayahs: data.data.ayahs,
+        editionInfo: data.data.edition,
+      };
     }
     return null;
   } catch (error) {
@@ -65,31 +178,43 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   onDecrementCount,
   t,
 }) => {
+  const { language } = useLanguage();
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
 
-  // --- YENİ STATE'LER (Sadece Kuran Modu İçin) ---
+  // --- STATE'LER ---
   const [activeQuranTab, setActiveQuranTab] = useState<"ORIGINAL" | "MEAL">(
     "ORIGINAL",
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mealData, setMealData] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [setEditionInfo] = useState<any>(null);
   const [loadingMeal, setLoadingMeal] = useState(false);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
 
-  // --- EFFECT: Meal Verisini Çekme ---
+  // --- EFFECT: Dinamik Meal Verisini Çekme ---
   useEffect(() => {
-    // Sadece Kuran tipinde ve Meal sekmesi aktifse çalışır
     if (content.type === "QURAN" && activeQuranTab === "MEAL") {
       setLoadingMeal(true);
-      fetchDiyanetPage(currentPage)
-        .then((ayahs) => {
-          if (ayahs) setMealData(ayahs);
+      setMealData([]); // Önceki veriyi temizle
+
+      // 1. Dil koduna göre kaynağı seç (tr -> tr.diyanet, ku -> special...)
+      const targetEdition =
+        EDITION_MAPPING[language] || EDITION_MAPPING["default"];
+
+      // 2. API çağrısını yap
+      fetchQuranTranslationPage(currentPage, targetEdition)
+        .then((result) => {
+          if (result) {
+            setMealData(result.ayahs);
+            setEditionInfo(result.editionInfo);
+          }
         })
         .finally(() => setLoadingMeal(false));
     }
-  }, [currentPage, activeQuranTab, content.type]);
+  }, [currentPage, activeQuranTab, content.type, language]);
 
   const getDisplayTitle = () => {
     if (!content.codeKey) return content.title;
@@ -99,9 +224,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       : translated;
   };
 
-  // --- MERKEZİ VERİ İŞLEME MANTIĞI ---
+  // --- MERKEZİ VERİ İŞLEME MANTIĞI (Processed Data) ---
   const processedData = useMemo(() => {
-    // Sadece CEVSEN veya SURAS tipindeki verileri işleriz
     if (
       (content.type !== "CEVSEN" && content.type !== "SURAS") ||
       !content.cevsenData
@@ -109,10 +233,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       return null;
 
     const codeKey = (content.codeKey || "").toUpperCase();
-
-    // KATEGORİ TANIMLARI
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
-    // Yasin, Fetih vb. -> SURAS tipi veya codeKey kontrolü
     const isSurahGroup =
       content.type === "SURAS" ||
       [
@@ -126,13 +247,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         "JUMA",
       ].includes(codeKey);
 
-    // 1. BEDİR / UHUD / TEVHİDNAME (Liste Modu + Modulo Dağıtım)
     if (isBedirGroup) {
-      // Tüm metni birleştir
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
       const rawLatin = content.cevsenData.map((b) => b.transcript).join("\n");
-
-      // AYRIŞTIRMA (REGEX): Hem ### (Bedir) hem \n (Uhud) karakterlerini yakalar
       const splitRegex = /###|\r\n|\r|\n/g;
 
       const arabicLines = rawArabic
@@ -144,7 +261,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
 
-      // Ana Listeyi Oluştur (Master List)
       const totalLen = Math.max(arabicLines.length, latinLines.length);
       const masterList: CevsenBab[] = [];
 
@@ -153,36 +269,27 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           babNumber: i + 1,
           arabic: arabicLines[i] || "",
           transcript: latinLines[i] || "",
-          meaning: "", // Bu grupta meal yok
+          meaning: "",
         } as CevsenBab);
       }
 
-      // KULLANICIYA DÜŞEN KISMI KES (SLICING & MODULO)
       if (content.startUnit && content.endUnit) {
         const rangeCount = content.endUnit - content.startUnit + 1;
         const slicedData: CevsenBab[] = [];
-
         for (let i = 0; i < rangeCount; i++) {
-          // Modulo (%) işlemi sayesinde liste sonuna gelince başa sarar
           const targetIndex = (content.startUnit - 1 + i) % totalLen;
-
           if (masterList[targetIndex]) {
-            // Orijinal objeyi kopyala (Referans hatası olmaması için)
             slicedData.push({ ...masterList[targetIndex] });
           }
         }
         return { mode: "LIST", data: slicedData, isSurah: false };
       }
-
-      // Dağıtım yoksa hepsini göster
       return { mode: "LIST", data: masterList, isSurah: false };
     }
 
-    // 2. YASİN / FETİH / SURELER (Resim + Kart)
     if (isSurahGroup) {
       const newData: CevsenBab[] = [];
       let counter = 1;
-
       content.cevsenData.forEach((bab) => {
         const latinLines = bab.transcript
           ? bab.transcript.split("\n").filter((l) => l.trim().length > 0)
@@ -190,39 +297,32 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         const meaningLines = bab.meaning
           ? bab.meaning.split("\n").filter((l) => l.trim().length > 0)
           : [];
-
         const maxLen = Math.max(latinLines.length, meaningLines.length);
-
         if (maxLen > 0) {
           for (let i = 0; i < maxLen; i++) {
             newData.push({
               babNumber: counter++,
-              arabic: "", // Arapça resimden gelecek
+              arabic: "",
               transcript: latinLines[i] || "",
               meaning: meaningLines[i] || "",
             } as CevsenBab);
           }
         }
       });
-
-      // Veri varsa döndür, yoksa orijinali döndür
       return {
         mode: "SURAH_CARD",
         data: newData.length > 0 ? newData : content.cevsenData,
         isSurah: true,
       };
     }
-
-    // 3. STANDART CEVŞEN (Blok Görünüm)
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
   }, [content]);
 
-  // --- SAYFA DEĞİŞTİRME (Resimler İçin) ---
+  // --- SAYFA DEĞİŞTİRME ---
   const changePage = (offset: number) => {
     const current = content.currentUnit || content.startUnit || 1;
     const min = content.startUnit || 1;
     const max = content.endUnit || 604;
-
     const next = Math.min(Math.max(current + offset, min), max);
     if (next !== current) {
       onUpdateContent({ ...content, currentUnit: next });
@@ -231,12 +331,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
-
-  // Helper booleanlar
   const isSurahGroup = processedData?.isSurah || false;
   const isBedirGroup = processedData?.mode === "LIST";
 
-  // --- YENİ NAVİGASYON BİLEŞENİ (Hem Alt Hem Üst İçin) ---
+  // --- NAVİGASYON BİLEŞENİ ---
   const PaginationBar = () => (
     <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
       <button
@@ -269,7 +367,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               {getDisplayTitle()}
             </h3>
             <div className="flex items-center gap-2 md:gap-3">
-              {/* Font Controls - Kuran hariç */}
               {!(isSurahGroup && activeTab === "ARABIC") &&
                 content.type !== "QURAN" && (
                   <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
@@ -311,52 +408,36 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           </div>
 
-          {/* --- YENİ EKLENTİ: SADECE KURAN İÇİN SEKME MENÜSÜ --- */}
+          {/* --- KURAN SEKMELERİ --- */}
           {content.type === "QURAN" && (
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setActiveQuranTab("ORIGINAL")}
-                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${
-                  activeQuranTab === "ORIGINAL"
-                    ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                }`}
+                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
-                {t("Original")}
+                {t("Original") || "Orijinal"}
               </button>
               <button
                 onClick={() => setActiveQuranTab("MEAL")}
-                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${
-                  activeQuranTab === "MEAL"
-                    ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
-                }`}
+                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
-                {t("tabMeaning")}
+                {t("tabMeaning") || "Meal"}
               </button>
             </div>
           )}
 
-          {/* TABLAR (Simple ve Quran Hariç) - ESKİ YAPI */}
+          {/* --- DİĞER SEKMELER --- */}
           {content.type !== "SIMPLE" && content.type !== "QURAN" && (
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
-                // Bedir/Uhud/Tevhidname -> Meal Yok
                 if (tab === "MEANING" && isBedirGroup) return null;
-
-                // DÜZELTME: Büyük Salavat ("OZELSALAVAT") kaynağında "LATIN" (Okunuş) sekmesini gizle
                 if (content.codeKey === "OZELSALAVAT" && tab === "LATIN")
                   return null;
-
                 return (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${
-                      activeTab === tab
-                        ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]"
-                        : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${activeTab === tab ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}
                   >
                     {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`)}
                   </button>
@@ -368,7 +449,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
         {/* --- CONTENT AREA --- */}
         <div className="flex-1 overflow-y-auto bg-gray-100 dark:bg-black p-4 md:p-6 scroll-smooth">
-          {/* 1. SIMPLE (ZİKİRLER) */}
           {content.type === "SIMPLE" && content.simpleItems && (
             <div className="space-y-3 max-w-2xl mx-auto">
               {content.simpleItems.map((item, index) => (
@@ -387,16 +467,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {/* 2. KUR'AN SAYFASI VE SURELER */}
           {(content.type === "QURAN" ||
             (isSurahGroup && activeTab === "ARABIC")) && (
             <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
-              {/* ÜST NAVİGASYON */}
               <PaginationBar />
-
-              {/* İÇERİK KUTUSU */}
               <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-[2rem] p-2 md:p-4 border border-gray-200 dark:border-gray-800 shadow-sm min-h-[50vh] relative">
-                {/* A. ORİJİNAL GÖRÜNÜM (RESİM) */}
                 {activeQuranTab === "ORIGINAL" ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img
@@ -411,13 +486,12 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     />
                   </div>
                 ) : (
-                  /* B. MEAL GÖRÜNÜMÜ (METİN) */
                   <div className="w-full h-full p-2 md:p-4">
                     {loadingMeal ? (
                       <div className="flex flex-col items-center justify-center h-40 space-y-4">
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                          Yükleniyor...
+                          {t("loading")}
                         </p>
                       </div>
                     ) : (
@@ -440,68 +514,47 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   </div>
                 )}
               </div>
-
-              {/* ALT NAVİGASYON (YENİ EKLENEN KISIM) */}
               <PaginationBar />
             </div>
           )}
 
-          {/* 3. İŞLENMİŞ VERİLER (Cevşen, Bedir, Sure Mealleri vb.) */}
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
             processedData &&
             !(isSurahGroup && activeTab === "ARABIC") && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
                 {processedData.data.map((bab, index) => {
-                  const mode = processedData.mode; // BLOCK, LIST, SURAH_CARD
-
-                  // Etiket Belirleme
+                  const mode = processedData.mode;
                   let displayLabel: string | number = bab.babNumber;
                   if (mode === "SURAH_CARD")
                     displayLabel = `${t("verse") || "Ayet"} ${bab.babNumber}`;
-
-                  // Stil Belirleme
                   const isCard = mode === "LIST" || mode === "SURAH_CARD";
                   const containerClasses = isCard
                     ? "bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-[1.5rem] p-4 md:p-5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors"
                     : "";
-
                   return (
                     <div
                       key={index}
                       className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${containerClasses}`}
                       style={{ animationDelay: `${index * 10}ms` }}
                     >
-                      {/* Ayraç (Sadece BLOCK modu - Normal Cevşen) */}
-                      {/* YENİ DİNİ MOTİFLİ AYRAÇ */}
                       {mode === "BLOCK" && (
                         <div className="flex items-center justify-center gap-4 my-8 opacity-90 group">
-                          {/* Sol Süsleme Çizgisi */}
                           <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
                             <div className="w-1 h-1 bg-emerald-400/60 rounded-full ml-auto translate-x-2"></div>
                           </div>
-
-                          {/* Orta Motif (8 Köşeli Yıldız - Rub el Hizb Estetiği) */}
                           <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
-                            {/* Arkadaki Kare (Döndürülmüş) */}
                             <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-45 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-[225deg]"></div>
-                            {/* Öndeki Kare (Düz) */}
                             <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-0 bg-white dark:bg-gray-900 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-180"></div>
-
-                            {/* İçindeki Sayı */}
                             <span className="relative z-10 font-serif font-bold text-lg text-emerald-700 dark:text-emerald-400 drop-shadow-sm">
                               {bab.babNumber}
                             </span>
                           </div>
-
-                          {/* Sağ Süsleme Çizgisi */}
                           <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
                             <div className="w-1 h-1 bg-emerald-400/60 rounded-full mr-auto -translate-x-2"></div>
                           </div>
                         </div>
                       )}
-
                       <div className="w-full">
-                        {/* ARAPÇA (Sadece LIST ve BLOCK modunda metin var. SURAH_CARD arapçası resimdir.) */}
                         {activeTab === "ARABIC" && !isSurahGroup && (
                           <div
                             className={
@@ -521,8 +574,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                               : formatArabicText(bab.arabic, fontLevel)}
                           </div>
                         )}
-
-                        {/* LATIN */}
                         {activeTab === "LATIN" && (
                           <div
                             className={
@@ -541,8 +592,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                               : formatLatinText(bab.transcript, fontLevel)}
                           </div>
                         )}
-
-                        {/* MEAL */}
                         {activeTab === "MEANING" &&
                           mode !== "LIST" &&
                           (isCard ? (
@@ -555,7 +604,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                               )}
                             </div>
                           ) : (
-                            // Normal Cevşen Meali (Blok)
                             <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
                               <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
                                 {formatMeaningText(bab.meaning, fontLevel)}
@@ -569,10 +617,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               </div>
             )}
 
-          {/* 4. SALAVAT (Resim veya Metin Modu) */}
           {content.type === "SALAVAT" && content.salavatData && (
             <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-6">
-              {/* GRAND SALAWAT - IMAGE MODE HANDLING */}
               {(activeTab === "ARABIC" &&
                 content.salavatData.arabic.includes("IMAGE_MODE")) ||
               (activeTab === "LATIN" &&
@@ -598,7 +644,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     ))}
                 </div>
               ) : (
-                // NORMAL METİN SALAVAT
                 <div className="w-full bg-white dark:bg-gray-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-200 dark:border-gray-800">
                   {activeTab === "ARABIC" && (
                     <div
@@ -622,8 +667,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     )}
                 </div>
               )}
-
-              {/* ZİKİRMATİK ENTEGRASYONU */}
               {content.assignmentId && (
                 <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-md border border-gray-100 dark:border-gray-800">
                   {(() => {
@@ -640,14 +683,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           currentAssignment.startUnit +
                           1
                         : 0);
-
-                    // Toplam hedef sayıyı hesapla
                     const totalTarget = currentAssignment
                       ? currentAssignment.endUnit -
                         currentAssignment.startUnit +
                         1
                       : 0;
-
                     return (
                       <Zikirmatik
                         currentCount={safeCount}
@@ -667,7 +707,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           )}
         </div>
 
-        {/* --- FOOTER --- */}
         <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20">
           <button
             onClick={onClose}
