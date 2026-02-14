@@ -9,6 +9,59 @@ import Link from "next/link";
 import { SessionSummary } from "@/types";
 import { useSearchParams } from "next/navigation";
 
+// --- SIRALAMA MANTIĞI ---
+const ORDER_PRIORITY = [
+  "QURAN", // 1. Kuran
+  "CEVSEN", // 2. Cevşen
+  "TEVHIDNAME", // 3. Tevhidname
+  "FETIH", // 4. Fetih
+  "YASIN", // 5. Yasin
+  "BEDIR", // 6. Bedir
+  "UHUD", // 7. Uhud
+  "OZELSALAVAT", // 8. Büyük Salavat
+  "MUNCIYE", // 9. Münciye
+  "TEFRICIYE", // 10. Tefriciye
+  "YALATIF", // 11. Ya Latif
+  "YAHAFIZ", // 12. Ya Hafiz
+  "YAFETTAH", // 13. Ya Fettah
+  "HASBUNALLAH", // 14. Hasbunallah
+  "LAHAVLE", // 15. La Havle
+];
+
+const sortSessions = (sessions: SessionSummary[]) => {
+  return [...sessions].sort((a, b) => {
+    // Backend'den gelen SessionSummary içinde 'resourceCode', 'codeKey' veya 'resource.codeKey' olabilir.
+    // Hepsini kontrol ederek garantiye alıyoruz.
+    const codeA = (
+      (a as any).resourceCode ||
+      (a as any).codeKey ||
+      (a as any).resource?.codeKey ||
+      ""
+    ).toUpperCase();
+    const codeB = (
+      (b as any).resourceCode ||
+      (b as any).codeKey ||
+      (b as any).resource?.codeKey ||
+      ""
+    ).toUpperCase();
+
+    const indexA = ORDER_PRIORITY.indexOf(codeA);
+    const indexB = ORDER_PRIORITY.indexOf(codeB);
+
+    // İkisi de listede varsa, listedeki sıraya göre
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+
+    // Sadece A listedeyse, A öne gelir
+    if (indexA !== -1) return -1;
+
+    // Sadece B listedeyse, B öne gelir
+    if (indexB !== -1) return 1;
+
+    // Listede yoklarsa ID'ye göre (varsayılan: en son eklenen en üstte kalsın istersen b.id - a.id yapabilirsin)
+    return b.id - a.id;
+  });
+};
+
 function HomeContent() {
   const { t, language } = useLanguage();
   const { user, token } = useAuth();
@@ -462,7 +515,8 @@ function HomeContent() {
                     <DashboardSkeleton />
                   ) : createdSessions.length > 0 ? (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-2">
-                      {createdSessions.map((session) => (
+                      {/* BURASI GÜNCELLENDİ: sortSessions KULLANILDI */}
+                      {sortSessions(createdSessions).map((session) => (
                         <SessionCard
                           key={session.id}
                           session={session}
@@ -515,7 +569,8 @@ function HomeContent() {
                     <DashboardSkeleton />
                   ) : mySessions.length > 0 ? (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-2">
-                      {mySessions.map((session) => (
+                      {/* BURASI GÜNCELLENDİ: sortSessions KULLANILDI */}
+                      {sortSessions(mySessions).map((session) => (
                         <SessionCard
                           key={session.id}
                           session={session}

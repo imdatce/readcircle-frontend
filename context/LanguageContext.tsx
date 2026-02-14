@@ -86,6 +86,7 @@ const translations: TranslationStructure = {
     yourNamePlaceholder: "İsminiz",
     continue: "Devam Et",
     welcomeUser: "Hoş geldin, {name}",
+    circle: "Halka Adı",
     sessionCode: "KOD",
     totalParts: "TOPLAM PARÇA",
     distributedResources: "Paylaşımlı Cüzler",
@@ -100,7 +101,7 @@ const translations: TranslationStructure = {
     undo: "Geri Al",
     giveUp: "Bırak",
     select: "Seç",
-    welcomeBack: "Tekrar Hoş Geldiniz!",
+    welcomeBack: "Tekrar Hoş Geldin!",
     loginIntro: "Giriş yapmak için bilgilerinizi girin.",
     usernameLabel: "Kullanıcı Adı",
     passwordLabel: "Şifre",
@@ -300,6 +301,7 @@ const translations: TranslationStructure = {
     cancel: "Betal bike",
     add: "Zêde bike",
     adding: "Tê zêdekirin...",
+    circle: "Navê Çemberê",
     resourceAdded: "Çavkanî bi serkeftî hat zêdekirin!",
     errorPrefix: "Xeletî:",
     createDistTitle: "Çêkirina çembera nû",
@@ -337,6 +339,7 @@ const translations: TranslationStructure = {
     yourTask: "ERKA TE",
     taken: "HAT WERGIRTIN",
     readText: "Metnê bixwîne",
+
     finish: "Bi dawî bike",
     undo: "Paşde vegerîne",
     giveUp: "Dev jê berde",
@@ -531,6 +534,8 @@ const translations: TranslationStructure = {
       footerDesc: "Spiritual connection and resource distribution platform.",
       rightsReserved: "All rights reserved.",
       sessionCreated: "Session created",
+      tapToCount: "Tap to count",
+
       pasteCodeOrLink: "Paste code or link",
       allahAccept: "May Allah accept it.",
       fixedResources: "Fixed Resources",
@@ -542,6 +547,7 @@ const translations: TranslationStructure = {
       resource_MUNCIYE: "Salat al-Munciye",
       resource_TEVHIDNAME: "Tawhidname",
       resource_UHUD: "Martyrs of Uhud",
+      circle: "Circle Name",
       resource_BEDIR: "Martyrs of Badr",
       resource_SALAVAT: "Salawat",
       close: "Close",
@@ -571,15 +577,22 @@ const translations: TranslationStructure = {
     authSection: {
       // Kategori ismi değiştirildi
       loginTitle: "Login",
+      welcomeBack: "Welcome back!",
+
       loginButton: "LOGIN",
       logoutButton: "Logout",
+      sessionNameLabel: "Circle Name (Optional)",
+
       registerTitle: "Create Account",
       registerSubtitle: "Enter your details to join us",
       registerButton: "REGISTER",
       guestRegister: "Register",
       guestLogin: "Login",
       leaveSession: "Leave session",
+      loginIntro: "Enter your details to log in.",
+
       resetSession: "Reset Session",
+      sessionNamePlaceholder: "e.g.: Ramadan Khatm, Family Salawat...",
       featureFree: "Free to Use",
       featureNoLogin: "Join Without Login",
       guestSubtitle: "Spiritual connection platform",
@@ -633,6 +646,8 @@ const translations: TranslationStructure = {
       dashboardIntro:
         "What would you like to do on your spiritual journey today?",
       myCirclesTitle: "My Circles",
+      loggingIn: "Logging in...",
+
       myCreatedTitle: "My Distributions",
       joinedSessions: "Joined Circles",
       managedSessions: "Managed Circles",
@@ -644,6 +659,8 @@ const translations: TranslationStructure = {
       join: "Join",
       copyCode: "Copy code",
       trackButton: "Show Status",
+      welcomeUser: "Welcome, {name}",
+
       backToAdmin: "Back to Dashboard",
       adminTitle: "Admin Dashboard",
     },
@@ -821,6 +838,8 @@ const translations: TranslationStructure = {
       noAccount: "ليس لديك حساب؟",
       loginLink: "دخول",
       registerLink: "سجل الآن",
+      sessionNameLabel: "اسم الحلقة (اختياري)",
+
       loginError: "اسم المستخدم أو كلمة المرور غير صالحة",
       registerSuccess: "تم التسجيل بنجاح! يمكنك الدخول الآن.",
       registering: "جاري التسجيل...",
@@ -916,6 +935,8 @@ const translations: TranslationStructure = {
       chapter: "فصل",
       group: "مجموعة",
       translationTitle: "الترجمة",
+      welcomeBack: "مرحبًا بعودتك!",
+
       translationPending: "الترجمة قيد الانتظار...",
       arabicPage: "الصفحة العربية",
       meaningPage: "صفحة المعاني",
@@ -929,13 +950,22 @@ const translations: TranslationStructure = {
       statusEmpty: "متاح",
       statusTaken: "مأخوذ",
       full: "مأخوذ",
+      tapToCount: "اضغط للعد",
+
       participantName: "اسم المشارك",
       cancelRead: "إلغاء القراءة",
+      sessionNamePlaceholder: "مثال: ختم رمضان، صلوات العائلة...",
     },
     alerts: {
       successReset: "تمت إعادة التعيين بنجاح!",
+      welcomeUser: "مرحبًا، {name}",
+
       successDelete: "تم الحذف!",
+      loggingIn: "جارٍ تسجيل الدخول...",
+
       errorOccurred: "حدث خطأ.",
+      loginIntro: "أدخل بياناتك لتسجيل الدخول.",
+
       unexpectedError: "حدث خطأ غير متوقع.",
       connectionError: "خطأ في الاتصال.",
       errorFetchFailed: "فشل جلب البيانات. رمز الخطأ:",
@@ -969,6 +999,7 @@ const translations: TranslationStructure = {
       featureNoLogin: "الانضمام بدون تسجيل الدخول",
       successLeave: "لقد غادرت الجلسة بنجاح.",
       copyCode: "نسخ الكود",
+      ar: "اسم الدائرة",
     },
   },
 
@@ -981,6 +1012,8 @@ const translations: TranslationStructure = {
       subtitle: "Plateforme de Distribution de Ressources",
       backHome: "Accueil",
       pasteCodeOrLink: "Collez le code ou le lien",
+      fr: "Nom du Cercle",
+
       footerDesc:
         "Plateforme de connexion spirituelle et de distribution de ressources.",
       rightsReserved: "Tous droits réservés.",
@@ -998,6 +1031,7 @@ const translations: TranslationStructure = {
       resource_UHUD: "Martyrs de Uhud",
       resource_BEDIR: "Martyrs de Badr",
       resource_SALAVAT: "Salawat",
+      sessionNamePlaceholder: "Ex. : Khatm du Ramadan, Salawat en famille...",
       sessionCreated: "Session créée",
       cancel: "Annuler",
       copied: "Copié",
@@ -1072,6 +1106,8 @@ const translations: TranslationStructure = {
       yourTask: "Votre tâche",
       step1Desc: "Sélectionnez la ressource et le nombre de personnes.",
       step2Title: "Inviter",
+      tapToCount: "Appuyez pour compter",
+
       step2Desc: "Partagez le code court ou le lien généré.",
       step3Title: "Terminer",
       giveUp: "Abandonner",
@@ -1097,6 +1133,7 @@ const translations: TranslationStructure = {
       trackButton: "Voir l'état",
       backToAdmin: "Retour au tableau de bord",
       adminTitle: "Tableau de bord Admin",
+      sessionNameLabel: "Nom du cercle (Facultatif)",
     },
     distSection: {
       createDistTitle: "Démarrer un nouveau cercle",
@@ -1130,6 +1167,7 @@ const translations: TranslationStructure = {
       distributedResources: "Ressources Partagées",
       individualResources: "Ressources Individuelles",
       creatorLabel: "Créateur",
+      welcomeUser: "Bienvenue, {name}",
     },
     readingSection: {
       // Kategori ismi değiştirildi
@@ -1159,10 +1197,14 @@ const translations: TranslationStructure = {
         "Sachez que les cœurs ne trouvent la paix que dans le rappel d’Allah.",
       previous: "Précédent",
       next: "Suivant",
+      welcomeBack: "Content de te revoir !",
+
       statusEmpty: "DISPONIBLE",
       featureFree: "Utilisation gratuite",
       featureNoLogin: "Participation sans inscription",
       statusTaken: "PRIS",
+      loggingIn: "Connexion en cours...",
+
       full: "PRIS",
       participantName: "Nom du participant",
       cancelRead: "Annuler la lecture",
@@ -1171,6 +1213,8 @@ const translations: TranslationStructure = {
       successReset: "Réinitialisation réussie !",
       successDelete: "Supprimé !",
       errorOccurred: "Une erreur est survenue.",
+      loginIntro: "Entrez vos informations pour vous connecter.",
+
       unexpectedError: "Une erreur inattendue est survenue.",
       connectionError: "Erreur de connexion.",
       errorFetchFailed: "Échec de récupération des données. Code d'erreur :",
