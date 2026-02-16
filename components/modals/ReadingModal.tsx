@@ -116,10 +116,6 @@ async function fetchKurdishForPage(structureData: any) {
 
     return {
       ayahs: mergedData,
-      editionInfo: {
-        name: "Kurdî (Kurmanji) - Ismail Segari",
-        englishName: "Kurdish Kurmanji (Latin)",
-      },
     };
   } catch (error) {
     console.error("Kürtçe API Hatası (Detay):", error);
@@ -158,7 +154,6 @@ async function fetchQuranTranslationPage(
     if (data.code === 200 && data.data && data.data.ayahs) {
       return {
         ayahs: data.data.ayahs,
-        editionInfo: data.data.edition,
       };
     }
     return null;
@@ -188,8 +183,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mealData, setMealData] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [setEditionInfo] = useState<any>(null);
   const [loadingMeal, setLoadingMeal] = useState(false);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
@@ -209,7 +202,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         .then((result) => {
           if (result) {
             setMealData(result.ayahs);
-            setEditionInfo(result.editionInfo);
           }
         })
         .finally(() => setLoadingMeal(false));

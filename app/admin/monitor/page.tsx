@@ -66,7 +66,7 @@ function MonitorContent() {
   const { t, language } = useLanguage();
   const { token } = useAuth();
   const searchParams = useSearchParams();
-  const [targetCount, setTargetCount] = useState<string>("1"); // Varsayılan 1 veya en çok kullanılan sayı
+  const [targetCount, setTargetCount] = useState<string>("1");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [allResources, setAllResources] = useState<any[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string>("");
@@ -129,18 +129,22 @@ function MonitorContent() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const getResourceName = (resource: any) => {
-    let trans = resource.translations?.find(
-      (tr: any) => tr.langCode === language,
-    );
-    if (!trans) {
-      trans = resource.translations?.find((tr: any) => tr.langCode === "tr");
-    }
-    if (!trans) {
-      trans = resource.translations?.[0];
-    }
-    return trans?.name || resource.codeKey;
-  };
+  // --- DÜZELTME BURADA: useCallback KULLANILDI ---
+  const getResourceName = useCallback(
+    (resource: any) => {
+      let trans = resource.translations?.find(
+        (tr: any) => tr.langCode === language,
+      );
+      if (!trans) {
+        trans = resource.translations?.find((tr: any) => tr.langCode === "tr");
+      }
+      if (!trans) {
+        trans = resource.translations?.[0];
+      }
+      return trans?.name || resource.codeKey;
+    },
+    [language],
+  );
 
   const fetchData = async (codeToFetch: string) => {
     if (!codeToFetch) return;
@@ -195,8 +199,6 @@ function MonitorContent() {
     try {
       const queryParams = new URLSearchParams({
         resourceId: selectedResourceId,
-        // ÇOĞU DURUMDA BACKEND 'totalUnits' BEKLER
-        // Eğer backend kodunuzu biliyorsanız oradaki ismi buraya yazın
         totalUnits: targetCount,
       }).toString();
 
@@ -224,11 +226,11 @@ function MonitorContent() {
       setAddingResource(false);
     }
   };
+
   // --- GRUPLAMA VE KATEGORİLENDİRME ---
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
-    // TİP TANIMI
     type GroupData = {
       assignments: Assignment[];
       codeKey: string;
@@ -239,6 +241,7 @@ function MonitorContent() {
     const rawGroups: Record<string, GroupData> = {};
 
     session.assignments.forEach((a) => {
+      // DÜZELTME BURADA: useCallback ile tanımlanan fonksiyon kullanılıyor
       const name = getResourceName(a.resource);
       const codeKey = a.resource?.codeKey || "";
 
@@ -252,7 +255,7 @@ function MonitorContent() {
       rawGroups[name].assignments.push(a);
     });
 
-    // Her grup içindeki atamaları sırala (katılımcı numarasına göre)
+    // Her grup içindeki atamaları sırala
     Object.values(rawGroups).forEach((group) => {
       group.assignments.sort(
         (a, b) => a.participantNumber - b.participantNumber,
@@ -295,7 +298,8 @@ function MonitorContent() {
         items: items,
       };
     }).filter(Boolean);
-  }, [session, language, t, getCategoryTitle]);
+    // DÜZELTME BURADA: getResourceName bağımlılık olarak eklendi
+  }, [session, getCategoryTitle, getResourceName]);
 
   const toggleResource = (name: string) => {
     setExpandedResources((prev) => ({
@@ -304,6 +308,7 @@ function MonitorContent() {
     }));
   };
 
+  // ... (Geri kalan render kodları aynı kalabilir)
   if (loading && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent">
@@ -321,6 +326,7 @@ function MonitorContent() {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent p-4">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
+          {/* ... Hata ekranı içeriği ... */}
           <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/20">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -355,11 +361,13 @@ function MonitorContent() {
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-black/90 pb-20 font-sans">
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
+        {/* ... Header içeriği aynı ... */}
         <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-3 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-all group"
           >
+            {/* ... Logo ve geri butonu ... */}
             <div className="p-2.5 rounded-xl bg-gray-100 group-hover:bg-emerald-50 dark:bg-gray-800 dark:group-hover:bg-emerald-900/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -447,6 +455,7 @@ function MonitorContent() {
       <main className="max-w-6xl mx-auto px-4 mt-8">
         {session && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {/* ... İstatistik kartları (Total, Distributed, Completed) ... */}
             <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <svg
@@ -550,6 +559,7 @@ function MonitorContent() {
           </div>
         )}
 
+        {/* ... Kategoriler ve Listeler (Değişiklik yok) ... */}
         {session && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {categorizedGroups.map((category: any) => (
@@ -826,6 +836,7 @@ function MonitorContent() {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
+            {/* ... Modal içeriği aynı ... */}
             {/* Başlık */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -852,19 +863,17 @@ function MonitorContent() {
               {/* Kaynak Seçimi */}
               <div>
                 <label
-                  htmlFor="resource-selector" // ID ile eşleşmeli
+                  htmlFor="resource-selector"
                   className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1"
                 >
                   {t("selectResourcePrompt")}
                 </label>
 
                 <div className="relative">
-                  {" "}
-                  {/* Select kutusunu bir div içine almak stili korur */}
                   <select
-                    id="resource-selector" // label'daki htmlFor ile aynı olmalı
-                    title={t("selectResourcePrompt")} // Hatanın ana çözümü
-                    aria-label={t("selectResourcePrompt")} // Ekran okuyucular için en iyi pratik
+                    id="resource-selector"
+                    title={t("selectResourcePrompt")}
+                    aria-label={t("selectResourcePrompt")}
                     className="w-full p-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
                     value={selectedResourceId}
                     onChange={(e) => setSelectedResourceId(e.target.value)}
@@ -876,7 +885,6 @@ function MonitorContent() {
                       </option>
                     ))}
                   </select>
-                  {/* Select kutusunun sağ tarafına küçük bir ok ikonu eklemek istersen (Görsel iyileştirme) */}
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                     <svg
                       className="w-4 h-4"

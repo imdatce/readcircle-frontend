@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -354,40 +355,45 @@ function HomeContent() {
                   )}
                   <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
                   <form
-                    onSubmit={handleJoin}
-                    className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all"
-                  >
-                    <div className="pl-4 pr-2 text-gray-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder={t("pasteCodeOrLink")}
-                      className="bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 min-w-[200px]"
-                      onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                    />
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 rounded-xl font-bold shadow-sm transition-all duration-200 whitespace-nowrap"
-                    >
-                      {t("join")}
-                    </button>
-                  </form>
+  onSubmit={handleJoin}
+  className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all shadow-sm"
+>
+  {/* İkon Bölümü: Küçülmemesi için shrink-0 ekledik */}
+  <div className="pl-3 pr-2 text-gray-400 shrink-0">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+      />
+    </svg>
+  </div>
+
+  {/* Input Bölümü: min-w-[200px] KALDIRILDI. Yerine flex-1 ve min-w-0 eklendi */}
+  <input
+    type="text"
+    value={code}
+    onChange={(e) => setCode(e.target.value)}
+    placeholder={t("pasteCodeOrLink")}
+    className="bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 w-full flex-1 min-w-0 text-sm md:text-base"
+    onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+  />
+
+  {/* Buton Bölümü: Padding mobilde biraz kısıldı (px-3), masaüstünde geniş (md:px-5) */}
+  <button
+    type="submit"
+    className="shrink-0 px-3 py-2.5 md:px-5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 rounded-xl font-bold shadow-sm transition-all duration-200 whitespace-nowrap text-xs md:text-sm"
+  >
+    {t("join")}
+  </button>
+</form>
                 </div>
               </div>
             </div>
@@ -594,50 +600,6 @@ function HomeContent() {
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto px-4 my-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <FeatureCard
-              icon={
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              }
-              title={t("featuresTitle1")}
-              desc={t("featuresDesc1")}
-              isRTL={isRTL}
-            />
-            <FeatureCard
-              icon={
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              }
-              title={t("featuresTitle2")}
-              desc={t("featuresDesc2")}
-              isRTL={isRTL}
-            />
-          </div>
-        </div>
         <div className="max-w-3xl mx-auto px-4 mb-2">
           <div className="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-6 border border-white/20 dark:border-gray-800 shadow-sm">
             <h2 className="text-xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
@@ -732,28 +694,6 @@ function DashboardSkeleton() {
   );
 }
 
-function FeatureCard({ icon, title, desc, isRTL }: any) {
-  return (
-    <div
-      className={`group p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 ${isRTL ? "text-right" : "text-left"}`}
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 shrink-0 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center transition-colors">
-          {icon}
-        </div>
-        <div className="flex flex-col">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors leading-tight">
-            {title}
-          </h3>
-          <p className="text-base text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
-            {desc}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Step({ num, title, desc }: any) {
   return (
     <div className="flex flex-col items-center text-center group py-1">
@@ -774,9 +714,6 @@ function SessionCard({
   session,
   router,
   isRTL,
-  handleCopyLink,
-  handleCopyCode,
-  copiedId,
   type,
   onDelete,
   onReset,
