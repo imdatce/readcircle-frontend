@@ -129,7 +129,6 @@ function MonitorContent() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // --- DÜZELTME BURADA: useCallback KULLANILDI ---
   const getResourceName = useCallback(
     (resource: any) => {
       let trans = resource.translations?.find(
@@ -211,6 +210,7 @@ function MonitorContent() {
       );
 
       if (res.ok) {
+        // GÜNCELLEME: Alert mesajı i18n'e bağlandı
         alert(t("resourceAdded"));
         setIsAddModalOpen(false);
         setTargetCount("1");
@@ -241,7 +241,6 @@ function MonitorContent() {
     const rawGroups: Record<string, GroupData> = {};
 
     session.assignments.forEach((a) => {
-      // DÜZELTME BURADA: useCallback ile tanımlanan fonksiyon kullanılıyor
       const name = getResourceName(a.resource);
       const codeKey = a.resource?.codeKey || "";
 
@@ -298,7 +297,6 @@ function MonitorContent() {
         items: items,
       };
     }).filter(Boolean);
-    // DÜZELTME BURADA: getResourceName bağımlılık olarak eklendi
   }, [session, getCategoryTitle, getResourceName]);
 
   const toggleResource = (name: string) => {
@@ -308,7 +306,6 @@ function MonitorContent() {
     }));
   };
 
-  // ... (Geri kalan render kodları aynı kalabilir)
   if (loading && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent">
@@ -326,7 +323,6 @@ function MonitorContent() {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent p-4">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
-          {/* ... Hata ekranı içeriği ... */}
           <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/20">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -361,13 +357,11 @@ function MonitorContent() {
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-black/90 pb-20 font-sans">
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
-        {/* ... Header içeriği aynı ... */}
         <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-3 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-all group"
           >
-            {/* ... Logo ve geri butonu ... */}
             <div className="p-2.5 rounded-xl bg-gray-100 group-hover:bg-emerald-50 dark:bg-gray-800 dark:group-hover:bg-emerald-900/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -429,7 +423,7 @@ function MonitorContent() {
             {session && (
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-sm active:scale-95 ml-2"
+                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -445,6 +439,7 @@ function MonitorContent() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
+                {/* GÜNCELLEME: Sabit metin yerine t() kullanıldı */}
                 <span>{t("addResource")}</span>
               </button>
             )}
@@ -455,7 +450,6 @@ function MonitorContent() {
       <main className="max-w-6xl mx-auto px-4 mt-8">
         {session && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {/* ... İstatistik kartları (Total, Distributed, Completed) ... */}
             <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <svg
@@ -559,7 +553,7 @@ function MonitorContent() {
           </div>
         )}
 
-        {/* ... Kategoriler ve Listeler (Değişiklik yok) ... */}
+        {/* ... Kategoriler ve Listeler ... */}
         {session && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {categorizedGroups.map((category: any) => (
@@ -833,10 +827,10 @@ function MonitorContent() {
         )}
       </main>
 
+      {/* --- ADD MODAL --- */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
-            {/* ... Modal içeriği aynı ... */}
             {/* Başlık */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -854,6 +848,7 @@ function MonitorContent() {
                   />
                 </svg>
               </div>
+              {/* GÜNCELLEME: t() kullanıldı */}
               <h3 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
                 {t("addResourceToSession")}
               </h3>
@@ -862,6 +857,7 @@ function MonitorContent() {
             <div className="space-y-6">
               {/* Kaynak Seçimi */}
               <div>
+                {/* GÜNCELLEME: t() kullanıldı */}
                 <label
                   htmlFor="resource-selector"
                   className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1"
@@ -878,6 +874,7 @@ function MonitorContent() {
                     value={selectedResourceId}
                     onChange={(e) => setSelectedResourceId(e.target.value)}
                   >
+                    {/* GÜNCELLEME: t() kullanıldı */}
                     <option value="">{t("selectPlaceholder")}</option>
                     {allResources.map((res) => (
                       <option key={res.id} value={res.id}>
@@ -905,8 +902,9 @@ function MonitorContent() {
 
               {/* Hedef Sayı / Adet */}
               <div>
+                {/* GÜNCELLEME: t() kullanıldı ve fallback kaldırıldı */}
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
-                  {t("target") || "Hedef Sayı / Adet"}
+                  {t("target")}
                 </label>
                 <div className="relative group">
                   <input
@@ -918,12 +916,13 @@ function MonitorContent() {
                     placeholder="100"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-tighter pointer-events-none bg-white dark:bg-gray-900 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-800">
-                    {t("pieces") || "Adet"}
+                    {/* GÜNCELLEME: t() kullanıldı ve fallback kaldırıldı */}
+                    {t("pieces")}
                   </div>
                 </div>
+                {/* GÜNCELLEME: Türkçe metin yerine t('addResourceNote') kullanıldı */}
                 <p className="mt-2 text-[10px] text-gray-400 font-medium ml-1">
-                  * Eklenen kaynak tüm katılımcılara eşit olarak veya tek parça
-                  halinde dağıtılır.
+                  {t("addResourceNote")}
                 </p>
               </div>
 
@@ -945,6 +944,7 @@ function MonitorContent() {
                   {addingResource ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   ) : (
+                    // GÜNCELLEME: t() kullanıldı
                     <span>{t("add")}</span>
                   )}
                 </button>

@@ -39,9 +39,8 @@ export interface DistributionSession {
   participants: number;
   creatorName?: string;
   assignments: Assignment[];
-
+  ownerDeviceId?: string; // <--- BU SATIRI EKLE
 }
-
 export interface SessionSummary {
   id: number;
   code: string;

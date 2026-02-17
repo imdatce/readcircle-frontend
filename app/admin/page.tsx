@@ -7,38 +7,45 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Resource } from "@/types";
 import Link from "next/link";
 
-// --- KATEGORİ TANIMLARI ---
+/**
+ * CATEGORY DEFINITIONS
+ * Defines the strict order of categories for the UI display.
+ */
 const CATEGORY_ORDER = [
-  "MAIN", // Kuran
-  "SURAHS", // Sureler (Yasin, Fetih)
-  "PRAYERS", // Dualar (Cevşen, Tevhidname)
-  "SALAWATS", // Salavatlar
-  "NAMES", // İsimler (Bedir, Uhud)
-  "DHIKRS", // Zikirler (Kalanlar)
+  "MAIN", // Quran
+  "SURAHS", // Specific Surahs (Yasin, Fetih)
+  "PRAYERS", // Prayers (Cevşen, Tevhidname)
+  "SALAWATS", // Salawats
+  "NAMES", // Names of Allah/Prophet/Companions (Bedir, Uhud)
+  "DHIKRS", // General Dhikrs
 ] as const;
 
+/**
+ * MAPPING CONFIGURATION
+ * Maps specific resource codes to their display categories.
+ */
 const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  // Kuran
+  // Quran
   QURAN: "MAIN",
 
-  // Sureler
+  // Surahs
   FETIH: "SURAHS",
   YASIN: "SURAHS",
 
-  // Dualar
+  // Prayers
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
 
-  // Salavatlar
+  // Salawats
   OZELSALAVAT: "SALAWATS",
   TEFRICIYE: "SALAWATS",
   MUNCIYE: "SALAWATS",
 
-  // İsimler
+  // Names
   BEDIR: "NAMES",
   UHUD: "NAMES",
 
-  // Zikirler
+  // Dhikrs
   YALATIF: "DHIKRS",
   YAHAFIZ: "DHIKRS",
   YAFETTAH: "DHIKRS",
@@ -46,7 +53,10 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   LAHAVLE: "DHIKRS",
 };
 
-// Kaynakların kendi içindeki sıralaması
+/**
+ * PRIORITY SORTING
+ * Defines the specific sort order of resources within their categories.
+ */
 const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
@@ -60,7 +70,7 @@ const RESOURCE_PRIORITY = [
   "UHUD",
 ];
 
-// --- GRUP A: Adet (Kopya) Bazlı Çoğaltılacak Kaynaklar ---
+// Resources that imply a 'Count' based distribution rather than 'Part' based.
 const MULTIPLIER_KEYWORDS = [
   "KURAN",
   "QURAN",
@@ -71,19 +81,32 @@ const MULTIPLIER_KEYWORDS = [
 ];
 
 export default function AdminPage() {
+  // Context Hooks
   const { t, language } = useLanguage();
   const { user, token, logout } = useAuth();
+
+  // State Management
   const [resources, setResources] = useState<Resource[]>([]);
   const [description, setDescription] = useState("");
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [participants, setParticipants] = useState<string>("10");
   const [customTotals, setCustomTotals] = useState<Record<string, string>>({});
+
+  // Creation Result State
   const [createdLink, setCreatedLink] = useState<string>("");
   const [createdCode, setCreatedCode] = useState<string>("");
-  const [loading, setLoading] = useState(false);
   const [createdSessionName, setCreatedSessionName] = useState<string>("");
+
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [deviceId, setDeviceId] = useState("");
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
+  /**
+   * Helper to resolve the correct display name based on current language.
+   * Falls back to 'tr' or the code key if translation is missing.
+   */
   const getDisplayName = useCallback(
     (resource: Resource) => {
       let translation = resource.translations?.find(
@@ -97,6 +120,24 @@ export default function AdminPage() {
     [language],
   );
 
+  /**
+   * Device ID Management
+   * Generates or retrieves a unique ID for the device to track session ownership locally.
+   */
+  useEffect(() => {
+    let id = localStorage.getItem("deviceId");
+    if (!id) {
+      id =
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("deviceId", id);
+    }
+    setDeviceId(id);
+  }, []);
+
+  /**
+   * Helper to get localized Category Titles.
+   */
   const getCategoryTitle = useCallback(
     (catKey: string) => {
       const titles: Record<string, Record<string, string>> = {
@@ -128,6 +169,7 @@ export default function AdminPage() {
     );
   };
 
+  // Fetch available resources on mount
   useEffect(() => {
     if (!apiUrl || !token) return;
     const headers = { Authorization: `Bearer ${token}` };
@@ -146,7 +188,11 @@ export default function AdminPage() {
       .catch((err) => console.error(err));
   }, [apiUrl, token, logout, t]);
 
-  // --- KATEGORİLERE GÖRE GRUPLAMA MANTIĞI ---
+  /**
+   * MEMOIZED RESOURCE GROUPING
+   * Filters, groups, and sorts resources into categories for the UI.
+   * This ensures high performance even with many resources.
+   */
   const categorizedResources = useMemo(() => {
     if (!resources.length) return [];
 
@@ -167,7 +213,7 @@ export default function AdminPage() {
       const items = categories[catKey];
       if (items.length === 0) return null;
 
-      // Kategori içi sıralama
+      // Inner Category Sorting
       items.sort((a, b) => {
         const codeA = (a.codeKey || "").toUpperCase();
         const codeB = (b.codeKey || "").toUpperCase();
@@ -219,7 +265,9 @@ export default function AdminPage() {
         participants: parseInt(participants) || 10,
         customTotals: customTotals,
         description: description,
+        ownerDeviceId: deviceId,
       };
+
       const res = await fetch(`${apiUrl}/api/distribution/create`, {
         method: "POST",
         headers: {
@@ -228,8 +276,10 @@ export default function AdminPage() {
         },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+
       setCreatedCode(data.code);
       setCreatedLink(`${window.location.origin}/join/${data.code}`);
       setCreatedSessionName(data.description || "");
@@ -242,7 +292,7 @@ export default function AdminPage() {
     }
   };
 
-  // Seçilen kaynakları da ÖNCELİK SIRASINA göre filtreleyip sıralıyoruz
+  // Helper to display selected resources in the "Targets" section
   const allSelectedResources = useMemo(() => {
     return resources
       .filter((r) => selectedResources.includes(r.id.toString()))
@@ -260,7 +310,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen pb-10 pt-4 md:pt-6 px-4 bg-transparent">
-      {/* Üst Bar */}
+      {/* Header Bar */}
       <div className="max-w-2xl mx-auto mb-6 md:mb-8 flex items-center justify-between">
         <Link
           href="/"
@@ -288,9 +338,9 @@ export default function AdminPage() {
 
       <div className="max-w-2xl mx-auto space-y-6 md:space-y-8">
         {!createdLink ? (
-          /* OLUŞTURMA FORMU */
+          /* --- CREATION FORM --- */
           <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Halka İsmi */}
+            {/* Session Name Input */}
             <div className="mb-5 md:mb-6">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
                 {t("sessionNameLabel")}
@@ -304,7 +354,7 @@ export default function AdminPage() {
               />
             </div>
 
-            {/* Katılımcı Sayısı */}
+            {/* Participant Count Input */}
             <div className="mb-6 md:mb-8">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
                 {t("participantCount")}
@@ -324,7 +374,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Kaynak Seçimi - KATEGORİLENDİRİLMİŞ */}
+            {/* Resource Selection Grid */}
             <div className="mb-8 md:mb-10">
               <h3 className="flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 dark:text-blue-400 ml-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -334,7 +384,7 @@ export default function AdminPage() {
               <div className="space-y-6">
                 {categorizedResources.map((category: any) => (
                   <div key={category.key}>
-                    {/* Kategori Ayracı */}
+                    {/* Category Divider */}
                     <div className="flex items-center gap-3 mb-3 px-1">
                       <div className="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -343,7 +393,7 @@ export default function AdminPage() {
                       <div className="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
                     </div>
 
-                    {/* Kaynak Grid - GÜNCELLENEN KISIM: DAHA BÜYÜK BOYUTLAR */}
+                    {/* Resources Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                       {category.items.map((r: Resource) => {
                         const isSelected = selectedResources.includes(
@@ -372,7 +422,6 @@ export default function AdminPage() {
                                 </svg>
                               )}
                             </div>
-                            {/* YAZI BOYUTU BÜYÜTÜLDÜ (text-base) */}
                             <span
                               className={`ml-3.5 font-bold text-base md:text-lg truncate ${isSelected ? "text-blue-700 dark:text-blue-300" : "text-gray-600 dark:text-gray-400"}`}
                             >
@@ -387,7 +436,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Hedef Sayı Girişleri - BÜYÜTÜLDÜ */}
+            {/* Target Counts Configuration */}
             {allSelectedResources.length > 0 && (
               <div className="mb-8 md:mb-10 bg-amber-50/50 dark:bg-amber-900/10 border-2 border-amber-100 dark:border-amber-900/20 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 space-y-4 animate-in zoom-in-95 duration-300">
                 <div className="flex items-center gap-2 border-b border-amber-100 dark:border-amber-900/20 pb-3">
@@ -408,9 +457,7 @@ export default function AdminPage() {
                         </label>
                         <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                           <span className="text-[9px] font-black text-gray-400 uppercase bg-gray-100 dark:bg-gray-800 px-2.5 py-1.5 rounded-md">
-                            {isMult
-                              ? t("pieces") || "ADET"
-                              : t("target") || "HEDEF"}
+                            {isMult ? t("pieces") : t("target")}
                           </span>
                           <input
                             type="number"
@@ -464,7 +511,7 @@ export default function AdminPage() {
             </button>
           </div>
         ) : (
-          /* BAŞARI EKRANI */
+          /* --- SUCCESS SCREEN --- */
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl border border-green-200 dark:border-green-900 rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-14 text-center animate-in fade-in zoom-in duration-500 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
             <div className="w-16 h-16 md:w-24 md:h-24 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-8 transform rotate-3 shadow-inner">
@@ -502,7 +549,7 @@ export default function AdminPage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(createdCode);
-                  alert(t("codeCopied"));
+                  alert(t("copied"));
                 }}
                 className="w-full py-3.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-2 border-gray-100 dark:border-gray-700 rounded-xl md:rounded-2xl font-bold hover:bg-gray-50 transition-all active:scale-95 text-sm"
               >
@@ -518,6 +565,8 @@ export default function AdminPage() {
               >
                 {t("copyLink")}
               </button>
+
+              {/* WhatsApp Share Button */}
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
                   t("whatsappShareText")

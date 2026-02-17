@@ -80,7 +80,10 @@ export default function JoinPage({
     readingModalContent,
     setReadingModalContent,
     actions,
+    deviceId,
   } = useDistributionSession(code);
+
+  const isOwner = session?.ownerDeviceId === deviceId;
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
@@ -132,18 +135,15 @@ export default function JoinPage({
     };
   }, [session]);
 
-  // --- KATEGORİLERE GÖRE GRUPLAMA MANTIĞI ---
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
-    // TİP TANIMLAMASI EKLENDİ (Hatayı çözen kısım)
     type GroupData = {
       assignments: Record<number, Assignment[]>;
       codeKey: string;
       resourceName: string;
     };
 
-    // 1. Tüm kaynakları topla
     const rawGroups: Record<string, GroupData> = {};
 
     session.assignments.forEach((a) => {
@@ -170,11 +170,7 @@ export default function JoinPage({
       rawGroups[rName].assignments[a.participantNumber].push(a);
     });
 
-    // 2. Kaynakları Kategorilere Dağıt
-    // TİP DÜZELTİLDİ: Record<string, GroupData[]>
     const categories: Record<string, GroupData[]> = {};
-
-    // Kategorileri başlat
     CATEGORY_ORDER.forEach((cat) => (categories[cat] = []));
 
     Object.values(rawGroups).forEach((group) => {
@@ -188,12 +184,10 @@ export default function JoinPage({
       }
     });
 
-    // 3. Her kategori içindeki kaynakları sırala
     return CATEGORY_ORDER.map((catKey) => {
       const items = categories[catKey];
       if (items.length === 0) return null;
 
-      // Kategori içi sıralama
       items.sort((a, b) => {
         const indexA = RESOURCE_PRIORITY.indexOf(a.codeKey.toUpperCase());
         const indexB = RESOURCE_PRIORITY.indexOf(b.codeKey.toUpperCase());
@@ -318,7 +312,6 @@ export default function JoinPage({
               </h1>
             </div>
 
-            {/* İSTATİSTİKLER (Mobilde daha kompakt) */}
             <div className="grid grid-cols-3 gap-2 md:gap-6 mb-8 md:mb-10">
               <StatCard label={t("total")} value={stats.total} />
               <StatCard
@@ -335,14 +328,12 @@ export default function JoinPage({
               />
             </div>
 
-            {/* KATEGORİLENDİRİLMİŞ LİSTE */}
             <div className="space-y-8 md:space-y-10 pb-20">
               {categorizedGroups.map((category: any) => (
                 <div
                   key={category.key}
                   className="animate-in fade-in slide-in-from-bottom-4 duration-700"
                 >
-                  {/* Kategori Başlığı */}
                   <div className="flex items-center gap-4 mb-4 md:mb-5 px-1">
                     <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
                     <h2 className="text-sm md:text-base font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] md:tracking-[0.3em] text-center whitespace-nowrap">
@@ -423,6 +414,8 @@ export default function JoinPage({
                                     userName={userName}
                                     actions={actions}
                                     t={t}
+                                    isOwner={isOwner}
+                                    deviceId={deviceId}
                                   />
                                 ))}
                             </div>
@@ -454,7 +447,6 @@ export default function JoinPage({
   );
 }
 
-// BİLEŞEN: İstatistik Kartı
 function StatCard({ label, value, percent, color = "gray" }: any) {
   const colorClasses: any = {
     blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
@@ -481,7 +473,6 @@ function StatCard({ label, value, percent, color = "gray" }: any) {
   );
 }
 
-// BİLEŞEN: Parça Kartı
 function AssignmentCard({
   participantNumber,
   assignments,
@@ -489,10 +480,16 @@ function AssignmentCard({
   userName,
   actions,
   t,
+  isOwner,
+  deviceId,
 }: any) {
   const first = assignments[0];
   const isTaken = first.isTaken;
-  const isAssignedToUser = userName && first.assignedToName === userName;
+
+  const isAssignedToMe = first.deviceId === deviceId;
+  const isAssignedToUserName = userName && first.assignedToName === userName;
+  const isMyAssignment = isAssignedToMe || isAssignedToUserName;
+  const canSeeDetails = isOwner || isMyAssignment;
   const isCompleted = first.isCompleted;
 
   const getTypeName = (resource: any) => {
@@ -504,15 +501,38 @@ function AssignmentCard({
 
   let cardStyle =
     "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm";
-  if (isCompleted && isAssignedToUser)
+
+  if (isCompleted && isMyAssignment) {
     cardStyle =
       "bg-emerald-50/30 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 shadow-sm";
-  else if (isAssignedToUser)
+  } else if (isMyAssignment) {
     cardStyle =
       "bg-white dark:bg-gray-900 border-blue-500 ring-4 ring-blue-500/5 shadow-xl scale-[1.01] z-10";
-  else if (isTaken)
+  } else if (isTaken) {
     cardStyle =
       "bg-gray-50/80 dark:bg-gray-900/80 border-gray-100 dark:border-gray-800 opacity-60 grayscale-[0.5]";
+  }
+
+  // --- İSİM ve DURUM METNİ ---
+  let displayName = "";
+  let statusText = t("statusEmpty");
+
+  if (isTaken) {
+    if (canSeeDetails) {
+      if (isMyAssignment) {
+        statusText = t("yourTask");
+        displayName = "";
+      } else {
+        // GÜNCELLEME: "Alındı" -> t("taken")
+        statusText = t("taken");
+        displayName = first.assignedToName;
+      }
+    } else {
+      // GÜNCELLEME: "Alındı" -> t("taken")
+      statusText = t("taken");
+      displayName = "";
+    }
+  }
 
   return (
     <div
@@ -524,22 +544,30 @@ function AssignmentCard({
             <span className="text-[9px] md:text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.15em]">
               {t("part")} {participantNumber}
             </span>
-            {isAssignedToUser && !isCompleted && (
+            {isMyAssignment && !isCompleted && (
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
             )}
           </div>
+
           <div className="flex flex-wrap gap-1 md:gap-1.5">
-            {assignments.map((a: any, idx: number) => (
-              <span
-                key={idx}
-                className="text-[9px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 shadow-inner"
-              >
-                {getTypeName(a.resource) === "JOINT" ? t("target") : t("page")}:{" "}
-                {getTypeName(a.resource) === "JOINT"
-                  ? a.endUnit
-                  : `${a.startUnit}-${a.endUnit}`}
-              </span>
-            ))}
+            {assignments.map((a: any, idx: number) => {
+              const typeName = getTypeName(a.resource);
+              const isPaged = typeName === "PAGED";
+              const count = a.endUnit - a.startUnit + 1;
+
+              return (
+                <span
+                  key={idx}
+                  className="text-[9px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 shadow-inner"
+                >
+                  {
+                    isPaged
+                      ? `${t("page")}: ${a.startUnit}-${a.endUnit}`
+                      : `${count} ${t("pieces")}` // GÜNCELLEME: Fallback "Adet" kaldırıldı
+                  }
+                </span>
+              );
+            })}
           </div>
         </div>
 
@@ -558,14 +586,16 @@ function AssignmentCard({
             </div>
           ) : isTaken ? (
             <div
-              className={`px-2.5 py-1 md:px-4 md:py-1.5 rounded-xl border-2 flex flex-col items-center leading-tight transition-all ${isAssignedToUser ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400"}`}
+              className={`px-2.5 py-1 md:px-4 md:py-1.5 rounded-xl border-2 flex flex-col items-center leading-tight transition-all ${isMyAssignment ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400"}`}
             >
               <span className="text-[6px] md:text-[7px] font-black uppercase tracking-[0.1em] mb-0.5">
-                {isAssignedToUser ? t("yourTask") : t("taken")}
+                {statusText}
               </span>
-              <span className="text-[8px] md:text-[10px] font-black truncate max-w-[50px] md:max-w-[70px]">
-                {isAssignedToUser ? userName : first.assignedToName || "--"}
-              </span>
+              {displayName && (
+                <span className="text-[8px] md:text-[10px] font-black truncate max-w-[50px] md:max-w-[70px]">
+                  {displayName}
+                </span>
+              )}
             </div>
           ) : (
             <span className="bg-gray-50 dark:bg-gray-800 text-gray-400 text-[8px] md:text-[9px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-full uppercase tracking-widest border border-gray-100 dark:border-gray-700 shadow-inner">
@@ -577,6 +607,7 @@ function AssignmentCard({
 
       <div className="flex flex-col items-center justify-center py-2 md:py-4 flex-1">
         {isTaken &&
+          canSeeDetails &&
           (getTypeName(first.resource) === "COUNTABLE" ||
             getTypeName(first.resource) === "JOINT") && (
             <div className="scale-100 md:scale-125 transform transition-all duration-500 mb-6 md:mb-8 mt-2 md:mt-4 hover:scale-105 md:hover:scale-130">
@@ -586,12 +617,12 @@ function AssignmentCard({
                 }
                 onDecrement={() => actions.decrementCount(first.id)}
                 t={t}
-                readOnly={!isAssignedToUser}
+                readOnly={!isMyAssignment}
               />
             </div>
           )}
 
-        {isAssignedToUser && !isCompleted && (
+        {isMyAssignment && !isCompleted && (
           <div className="w-full space-y-2 md:space-y-2.5 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
             {assignments.map((a: any, idx: number) => (
               <button
@@ -631,7 +662,7 @@ function AssignmentCard({
             {t("select")}
           </button>
         ) : (
-          isAssignedToUser && (
+          isMyAssignment && (
             <div className="flex flex-col gap-2 md:gap-3">
               {!isCompleted && (
                 <button
@@ -672,11 +703,7 @@ function AssignmentCard({
                     actions.updateLocalCount(first.id, initial);
                   }
                 }}
-                className={`w-full py-3 md:py-3.5 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all active:scale-95 border-2 ${
-                  isCompleted
-                    ? "bg-white dark:bg-gray-800 text-gray-400 border-gray-100 dark:border-gray-700"
-                    : "bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30"
-                }`}
+                className={`w-full py-3 md:py-3.5 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all active:scale-95 border-2 ${isCompleted ? "bg-white dark:bg-gray-800 text-gray-400 border-gray-100 dark:border-gray-700" : "bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30"}`}
               >
                 {isCompleted ? t("undo") : t("giveUp")}
               </button>

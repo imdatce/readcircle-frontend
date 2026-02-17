@@ -14,20 +14,45 @@ export function useDistributionSession(code: string) {
     const [error, setError] = useState("");
     const [localCounts, setLocalCounts] = useState<Record<number, number>>({});
     const [userName, setUserName] = useState<string | null>(null);
+
+    // Device ID state'i
+    const [deviceId, setDeviceId] = useState<string>("");
+
     const dataFetchedRef = useRef(false);
-
     const [readingModalContent, setReadingModalContent] = useState<ReadingModalContent | null>(null);
-
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+    // 1. Device ID'yi bul veya oluştur
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            let storedDeviceId = localStorage.getItem("deviceId");
+            if (!storedDeviceId) {
+                storedDeviceId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem("deviceId", storedDeviceId);
+            }
+            setDeviceId(storedDeviceId);
+        }
+    }, []);
+
+    // 2. İsim Oluşturma (GÜNCELLENDİ: Otomatik İsim Atama)
     useEffect(() => {
         if (user) {
             setUserName(user);
         } else {
-            const savedName = localStorage.getItem("guestUserName");
+            let savedName = localStorage.getItem("guestUserName");
+
+            // DEĞİŞİKLİK BURADA: Eğer isim kayıtlı değilse ve DeviceID hazırsa OTOMATİK oluştur.
+            // Böylece kullanıcıya isim sorma ekranı hiç gelmez, "o yazmaz".
+            if (!savedName && deviceId) {
+                const shortCode = deviceId.substring(0, 4).toUpperCase();
+                // Örnek İsim: "Misafir-A1B2"
+                savedName = `${t("guest") || "Misafir"}-${shortCode}`;
+                localStorage.setItem("guestUserName", savedName);
+            }
+
             if (savedName) setUserName(savedName);
         }
-    }, [user]);
+    }, [user, deviceId, t]);
 
     const fetchSession = useCallback(async () => {
         try {
@@ -86,6 +111,7 @@ export function useDistributionSession(code: string) {
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
             if (!token && !nameToUse) {
+                // İsim otomatik atandığı için buraya düşme ihtimali çok düşük ama güvenlik için kalsın
                 alert(t("alertEnterName"));
                 setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
                 return;
@@ -108,7 +134,6 @@ export function useDistributionSession(code: string) {
         } catch (e) {
             console.error("Save progress failed", e);
             setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
-
             alert("Connection failed");
         }
     };
@@ -123,7 +148,7 @@ export function useDistributionSession(code: string) {
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
             const res = await fetch(
-                `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(userName)}`,
+                `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(userName)}&deviceId=${deviceId}`,
                 { method: "POST", headers }
             );
 
@@ -148,6 +173,7 @@ export function useDistributionSession(code: string) {
             fetchSession();
         }
     };
+
     const handleCancelPart = async (assignmentId: number) => {
         if (!confirm(t("confirmCancel"))) return;
 
@@ -256,7 +282,7 @@ export function useDistributionSession(code: string) {
             });
         } else if (resource.type === "LIST_BASED") {
             let separator = "###";
-            if (resource.codeKey === "BEDIR" && !description.includes("###")) separator = "\n";
+            if ((resource.codeKey === "BEDIR" || resource.codeKey === "UHUD") && !description.includes("###")) separator = "\n";
 
             const allParts = description.split(separator).filter((p) => p.trim().length > 0);
             const selectedPartsRaw = allParts.slice(Math.max(0, assignment.startUnit - 1), Math.min(allParts.length, assignment.endUnit));
@@ -291,6 +317,7 @@ export function useDistributionSession(code: string) {
         setUserName,
         readingModalContent,
         setReadingModalContent,
+        deviceId, // Hook artık deviceId'yi de döndürüyor
         actions: {
             decrementCount,
             handleTakePart,

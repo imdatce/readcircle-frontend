@@ -231,12 +231,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       [
         "YASIN",
         "FETIH",
-        "MULK",
-        "NEBE",
-        "DUHAN",
-        "RAHMAN",
-        "WAQIA",
-        "JUMA",
       ].includes(codeKey);
 
     if (isBedirGroup) {

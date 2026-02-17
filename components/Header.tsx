@@ -62,7 +62,7 @@ export default function Header() {
               src="/logo/sura-lgo.png"
               alt="SURA Logo"
               fill
-              className="object-contain object-left mix-blend-multiply dark:mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity"
+              className="object-contain dark:invert object-left mix-blend-multiply dark:mix-blend-screen opacity-90 group-hover:opacity-100 transition-opacity"
               priority
             />
           </div>
