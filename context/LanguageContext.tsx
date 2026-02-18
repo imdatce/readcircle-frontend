@@ -40,6 +40,8 @@ const translations: TranslationStructure = {
       refresh: "Yenile",
       add: "Ekle",
       status: "Durum",
+      yourNamePlaceholder: "Adınız?", // tr
+
       undo: "Geri Al",
       taken: "Alındı",
       completed: "Tamamlandı",
@@ -302,6 +304,8 @@ const translations: TranslationStructure = {
       add: "Zêde bike",
       status: "Rewş",
       undo: "Vegerîne",
+      yourNamePlaceholder: "Navê te?", // ku
+
       taken: "Hat girtin",
       completed: "Temam bû",
       target: "Hejmara Hedef",
@@ -560,6 +564,8 @@ const translations: TranslationStructure = {
       rightsReserved: "All rights reserved.",
       sessionCreated: "Session created",
       tapToCount: "Tap to count",
+      yourNamePlaceholder: "Your Name?", // en
+
       refresh: "Refresh",
       add: "Add",
       status: "Status",
@@ -829,6 +835,8 @@ const translations: TranslationStructure = {
       tapToCount: "اضغط للعد",
       refresh: "تحديث",
       add: "إضافة",
+      yourNamePlaceholder: "ما اسمك؟", // ar
+
       status: "الحالة",
       undo: "تراجع",
       taken: "مأخوذ",
@@ -1086,6 +1094,8 @@ const translations: TranslationStructure = {
       tapToCount: "Appuyer pour compter",
       refresh: "Actualiser",
       add: "Ajouter",
+      yourNamePlaceholder: "Votre nom ?", // fr
+
       status: "Statut",
       undo: "Annuler",
       taken: "Pris",

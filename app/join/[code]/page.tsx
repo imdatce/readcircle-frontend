@@ -11,36 +11,25 @@ import { useDistributionSession } from "@/hooks/useDistributionSession";
 
 // --- KATEGORİ TANIMLARI ---
 const CATEGORY_ORDER = [
-  "MAIN", // Kuran
-  "SURAHS", // Sureler (Yasin, Fetih)
-  "PRAYERS", // Dualar (Cevşen, Tevhidname)
-  "SALAWATS", // Salavatlar
-  "NAMES", // İsimler (Bedir, Uhud)
-  "DHIKRS", // Zikirler (Kalanlar)
+  "MAIN",
+  "SURAHS",
+  "PRAYERS",
+  "SALAWATS",
+  "NAMES",
+  "DHIKRS",
 ] as const;
 
 const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  // Kuran
   QURAN: "MAIN",
-
-  // Sureler
   FETIH: "SURAHS",
   YASIN: "SURAHS",
-
-  // Dualar
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
-
-  // Salavatlar
   OZELSALAVAT: "SALAWATS",
   TEFRICIYE: "SALAWATS",
   MUNCIYE: "SALAWATS",
-
-  // İsimler
   BEDIR: "NAMES",
   UHUD: "NAMES",
-
-  // Zikirler
   YALATIF: "DHIKRS",
   YAHAFIZ: "DHIKRS",
   YAFETTAH: "DHIKRS",
@@ -48,7 +37,6 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   LAHAVLE: "DHIKRS",
 };
 
-// Kaynakların kendi içindeki sıralaması
 const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
@@ -88,7 +76,55 @@ export default function JoinPage({
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
-  const [tempName, setTempName] = useState(userName || "");
+
+  // --- İSİM SORMA MODALI STATE ---
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [pendingPartId, setPendingPartId] = useState<number | null>(null);
+
+  const isGuestUser =
+    !userName ||
+    userName.toLowerCase().startsWith("guest") ||
+    userName.startsWith("GUguest");
+
+  const [tempName, setTempName] = useState("");
+
+  // Parça Seçme Tıklaması
+  const handlePartClick = (partId: number) => {
+    if (isGuestUser) {
+      setPendingPartId(partId);
+
+      // useEffect yerine burada ayarlıyoruz.
+      // Misafir ise input boş gelsin, değilse (nadiren olur) var olan ismi yazsın.
+      setTempName("");
+
+      setIsNameModalOpen(true);
+    } else {
+      actions.handleTakePart(partId);
+    }
+  };
+
+  // --- KRİTİK DÜZELTME BURADA ---
+  const handleNameModalSubmit = async () => {
+    if (!tempName.trim()) return;
+
+    const finalName = tempName.trim();
+
+    // 1. LocalStorage güncelle (Kalıcılık için)
+    localStorage.setItem("guestUserName", finalName);
+
+    // 2. State güncelle (UI anında güncellensin diye)
+    setUserName(finalName);
+
+    // 3. API'ye yeni ismi MANUEL OLARAK gönder (State'i bekleme!)
+    if (pendingPartId !== null) {
+      // DİKKAT: actions.handleTakePart fonksiyonunuzun 2. parametre olarak isim alması lazım!
+      // (Bkz: 1. Adım)
+      await actions.handleTakePart(pendingPartId, finalName);
+    }
+
+    setIsNameModalOpen(false);
+    setPendingPartId(null);
+  };
 
   const getCategoryTitle = useCallback(
     (catKey: string) => {
@@ -104,11 +140,7 @@ export default function JoinPage({
         NAMES: { tr: "İsimler", en: "Names", ar: "الأسماء" },
         DHIKRS: { tr: "Zikirler", en: "Dhikrs", ar: "الأذكار" },
       };
-
-      const langKey =
-        language === "tr" || language === "en" || language === "ar"
-          ? language
-          : "en";
+      const langKey = ["tr", "en", "ar"].includes(language) ? language : "en";
       return titles[catKey]?.[langKey] || titles[catKey]?.["en"] || catKey;
     },
     [language],
@@ -138,12 +170,12 @@ export default function JoinPage({
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
+    // --- BURADA GRUPLAMA VE SIRALAMA MANTIĞI AYNEN KALIYOR ---
     type GroupData = {
       assignments: Record<number, Assignment[]>;
       codeKey: string;
       resourceName: string;
     };
-
     const rawGroups: Record<string, GroupData> = {};
 
     session.assignments.forEach((a) => {
@@ -151,22 +183,14 @@ export default function JoinPage({
         a.resource?.translations?.find((tr) => tr.langCode === language) ||
         a.resource?.translations?.find((tr) => tr.langCode === "tr") ||
         a.resource?.translations?.[0];
-
       const rName =
         translation?.name || a.resource?.codeKey || t("otherResource");
       const codeKey = a.resource?.codeKey || "";
 
-      if (!rawGroups[rName]) {
-        rawGroups[rName] = {
-          assignments: {},
-          codeKey: codeKey,
-          resourceName: rName,
-        };
-      }
-
-      if (!rawGroups[rName].assignments[a.participantNumber]) {
+      if (!rawGroups[rName])
+        rawGroups[rName] = { assignments: {}, codeKey, resourceName: rName };
+      if (!rawGroups[rName].assignments[a.participantNumber])
         rawGroups[rName].assignments[a.participantNumber] = [];
-      }
       rawGroups[rName].assignments[a.participantNumber].push(a);
     });
 
@@ -176,42 +200,24 @@ export default function JoinPage({
     Object.values(rawGroups).forEach((group) => {
       const upperCode = group.codeKey.toUpperCase();
       const category = CATEGORY_MAPPING[upperCode] || "DHIKRS";
-
-      if (categories[category]) {
-        categories[category].push(group);
-      } else {
-        categories["DHIKRS"].push(group);
-      }
+      if (categories[category]) categories[category].push(group);
+      else categories["DHIKRS"].push(group);
     });
 
     return CATEGORY_ORDER.map((catKey) => {
       const items = categories[catKey];
       if (items.length === 0) return null;
-
       items.sort((a, b) => {
         const indexA = RESOURCE_PRIORITY.indexOf(a.codeKey.toUpperCase());
         const indexB = RESOURCE_PRIORITY.indexOf(b.codeKey.toUpperCase());
-
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
         if (indexB !== -1) return 1;
         return a.resourceName.localeCompare(b.resourceName);
       });
-
-      return {
-        key: catKey,
-        title: getCategoryTitle(catKey),
-        items: items,
-      };
+      return { key: catKey, title: getCategoryTitle(catKey), items };
     }).filter(Boolean);
   }, [session, language, t, getCategoryTitle]);
-
-  const handleNameSubmit = () => {
-    if (tempName.trim()) {
-      setUserName(tempName.trim());
-      localStorage.setItem("guestUserName", tempName.trim());
-    }
-  };
 
   if (loading)
     return (
@@ -277,159 +283,188 @@ export default function JoinPage({
       </header>
 
       <main className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
-        {!userName ? (
-          <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-[2rem] p-6 md:p-12 shadow-2xl border border-emerald-50 dark:border-emerald-900/20 text-center animate-in zoom-in-95 duration-500">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner">
-              <span className="text-3xl md:text-4xl animate-bounce">👋</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-3 md:mb-4 dark:text-white leading-tight">
-              {session.description || t("joinTitle")}
-            </h2>
-            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-6 md:mb-8 font-medium">
-              {t("joinIntro")}
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
+            {t("circle")}: {session.description || t("joinTitle")}
+          </h1>
+          {isGuestUser && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {t("guestMessage") || "Lütfen almak istediğiniz parçayı seçin."}
             </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-8 md:mb-10">
+          <StatCard label={t("total")} value={stats.total} />
+          <StatCard
+            label={t("distributed")}
+            value={stats.distributed}
+            percent={stats.distPercent}
+            color="blue"
+          />
+          <StatCard
+            label={t("completed")}
+            value={stats.completed}
+            percent={stats.compPercent}
+            color="emerald"
+          />
+        </div>
+
+        <div className="space-y-8 md:space-y-10 pb-20">
+          {categorizedGroups.map((category: any) => (
+            <div
+              key={category.key}
+              className="animate-in fade-in slide-in-from-bottom-4 duration-700"
+            >
+              <div className="flex items-center gap-4 mb-4 md:mb-5 px-1">
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
+                <h2 className="text-sm md:text-base font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] md:tracking-[0.3em] text-center whitespace-nowrap">
+                  {category.title}
+                </h2>
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
+              </div>
+
+              <div className="space-y-4 md:space-y-6">
+                {category.items.map((group: any) => (
+                  <div
+                    key={group.resourceName}
+                    className="bg-white dark:bg-gray-900 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
+                  >
+                    <button
+                      onClick={() =>
+                        setExpandedGroups((p) => ({
+                          ...p,
+                          [group.resourceName]: !p[group.resourceName],
+                        }))
+                      }
+                      className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-all"
+                    >
+                      <div className="flex items-center gap-3 md:gap-4 text-left min-w-0">
+                        <div
+                          className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl shrink-0 flex items-center justify-center shadow-inner transition-colors ${expandedGroups[group.resourceName] ? "bg-emerald-500 text-white" : "bg-blue-50 dark:bg-blue-900/20 text-blue-600"}`}
+                        >
+                          <svg
+                            className="w-5 h-5 md:w-6 md:h-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13"
+                            />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-sm md:text-lg font-black text-gray-800 dark:text-gray-100 leading-tight truncate">
+                            {group.resourceName}
+                          </h3>
+                          <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                            {Object.keys(group.assignments).length} {t("part")}
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-transform duration-300 ${expandedGroups[group.resourceName] ? "rotate-180" : ""}`}
+                      >
+                        <svg
+                          className="w-4 h-4 md:w-5 md:h-5 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                        >
+                          <path d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+
+                    {expandedGroups[group.resourceName] && (
+                      <div className="p-3 md:p-6 bg-gray-50/50 dark:bg-black/10 border-t border-gray-50 dark:border-gray-800 animate-in slide-in-from-top-2 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                          {Object.entries(group.assignments)
+                            .sort(([pA], [pB]) => Number(pA) - Number(pB))
+                            .map(([pNum, subAssignments]) => (
+                              <AssignmentCard
+                                key={pNum}
+                                participantNumber={Number(pNum)}
+                                assignments={subAssignments}
+                                localCounts={localCounts}
+                                userName={userName} // Context'ten gelen (yeni güncellenmiş) isim
+                                actions={actions}
+                                t={t}
+                                isOwner={isOwner}
+                                deviceId={deviceId}
+                                onTakeClick={handlePartClick}
+                              />
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* --- İSİM GİRME MODALI --- */}
+      {isNameModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 md:p-8 w-full max-w-sm shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-200">
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-7 h-7"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                {t("joinTitle") || "İsminiz Nedir?"}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t("joinIntro") ||
+                  "Parçayı alabilmek için lütfen isminizi girin."}
+              </p>
+            </div>
             <input
               type="text"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
-              placeholder={t("yourNamePlaceholder")}
-              className="w-full px-4 py-4 md:px-6 md:py-5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl text-base md:text-lg font-bold text-center mb-4 outline-none focus:border-emerald-500 transition-all dark:text-white"
-              onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+              placeholder={t("yourNamePlaceholder") || "İsim Soyisim"}
+              className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-lg font-bold text-center outline-none focus:border-blue-500 transition-all dark:text-white mb-4"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && handleNameModalSubmit()}
             />
-            <button
-              onClick={handleNameSubmit}
-              disabled={!tempName.trim()}
-              className="w-full py-3.5 md:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-black text-base md:text-lg shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition-all"
-            >
-              {t("continue")}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsNameModalOpen(false)}
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={handleNameModalSubmit}
+                disabled={!tempName.trim()}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none"
+              >
+                {t("continue")}
+              </button>
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="text-center mb-8 md:mb-10">
-              <h1 className="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
-                {t("circle")}: {session.description || t("joinTitle")}
-              </h1>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 md:gap-6 mb-8 md:mb-10">
-              <StatCard label={t("total")} value={stats.total} />
-              <StatCard
-                label={t("distributed")}
-                value={stats.distributed}
-                percent={stats.distPercent}
-                color="blue"
-              />
-              <StatCard
-                label={t("completed")}
-                value={stats.completed}
-                percent={stats.compPercent}
-                color="emerald"
-              />
-            </div>
-
-            <div className="space-y-8 md:space-y-10 pb-20">
-              {categorizedGroups.map((category: any) => (
-                <div
-                  key={category.key}
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-700"
-                >
-                  <div className="flex items-center gap-4 mb-4 md:mb-5 px-1">
-                    <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
-                    <h2 className="text-sm md:text-base font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] md:tracking-[0.3em] text-center whitespace-nowrap">
-                      {category.title}
-                    </h2>
-                    <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
-                  </div>
-
-                  <div className="space-y-4 md:space-y-6">
-                    {category.items.map((group: any) => (
-                      <div
-                        key={group.resourceName}
-                        className="bg-white dark:bg-gray-900 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
-                      >
-                        <button
-                          onClick={() =>
-                            setExpandedGroups((p) => ({
-                              ...p,
-                              [group.resourceName]: !p[group.resourceName],
-                            }))
-                          }
-                          className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-all"
-                        >
-                          <div className="flex items-center gap-3 md:gap-4 text-left min-w-0">
-                            <div
-                              className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl shrink-0 flex items-center justify-center shadow-inner transition-colors ${expandedGroups[group.resourceName] ? "bg-emerald-500 text-white" : "bg-blue-50 dark:bg-blue-900/20 text-blue-600"}`}
-                            >
-                              <svg
-                                className="w-5 h-5 md:w-6 md:h-6"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13"
-                                />
-                              </svg>
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="text-sm md:text-lg font-black text-gray-800 dark:text-gray-100 leading-tight truncate">
-                                {group.resourceName}
-                              </h3>
-                              <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                                {Object.keys(group.assignments).length}{" "}
-                                {t("part")}
-                              </p>
-                            </div>
-                          </div>
-                          <div
-                            className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-transform duration-300 ${expandedGroups[group.resourceName] ? "rotate-180" : ""}`}
-                          >
-                            <svg
-                              className="w-4 h-4 md:w-5 md:h-5 text-gray-400"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-
-                        {expandedGroups[group.resourceName] && (
-                          <div className="p-3 md:p-6 bg-gray-50/50 dark:bg-black/10 border-t border-gray-50 dark:border-gray-800 animate-in slide-in-from-top-2 duration-300">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                              {Object.entries(group.assignments)
-                                .sort(([pA], [pB]) => Number(pA) - Number(pB))
-                                .map(([pNum, subAssignments]) => (
-                                  <AssignmentCard
-                                    key={pNum}
-                                    participantNumber={Number(pNum)}
-                                    assignments={subAssignments}
-                                    localCounts={localCounts}
-                                    userName={userName}
-                                    actions={actions}
-                                    t={t}
-                                    isOwner={isOwner}
-                                    deviceId={deviceId}
-                                  />
-                                ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </main>
+        </div>
+      )}
 
       {readingModalContent && (
         <ReadingModal
@@ -482,13 +517,24 @@ function AssignmentCard({
   t,
   isOwner,
   deviceId,
+  onTakeClick,
 }: any) {
   const first = assignments[0];
   const isTaken = first.isTaken;
 
+  // --- KONTROL İYİLEŞTİRMESİ ---
   const isAssignedToMe = first.deviceId === deviceId;
-  const isAssignedToUserName = userName && first.assignedToName === userName;
+
+  // Boşlukları temizle ve küçük harfe çevirerek karşılaştır
+  const assignedName = first.assignedToName
+    ? first.assignedToName.trim().toLowerCase()
+    : "";
+  const currentName = userName ? userName.trim().toLowerCase() : "";
+
+  const isAssignedToUserName = currentName && assignedName === currentName;
   const isMyAssignment = isAssignedToMe || isAssignedToUserName;
+  // ------------------------------
+
   const canSeeDetails = isOwner || isMyAssignment;
   const isCompleted = first.isCompleted;
 
@@ -501,7 +547,6 @@ function AssignmentCard({
 
   let cardStyle =
     "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm";
-
   if (isCompleted && isMyAssignment) {
     cardStyle =
       "bg-emerald-50/30 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 shadow-sm";
@@ -513,7 +558,6 @@ function AssignmentCard({
       "bg-gray-50/80 dark:bg-gray-900/80 border-gray-100 dark:border-gray-800 opacity-60 grayscale-[0.5]";
   }
 
-  // --- İSİM ve DURUM METNİ ---
   let displayName = "";
   let statusText = t("statusEmpty");
 
@@ -523,12 +567,10 @@ function AssignmentCard({
         statusText = t("yourTask");
         displayName = "";
       } else {
-        // GÜNCELLEME: "Alındı" -> t("taken")
         statusText = t("taken");
         displayName = first.assignedToName;
       }
     } else {
-      // GÜNCELLEME: "Alındı" -> t("taken")
       statusText = t("taken");
       displayName = "";
     }
@@ -548,29 +590,24 @@ function AssignmentCard({
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
             )}
           </div>
-
           <div className="flex flex-wrap gap-1 md:gap-1.5">
             {assignments.map((a: any, idx: number) => {
               const typeName = getTypeName(a.resource);
               const isPaged = typeName === "PAGED";
               const count = a.endUnit - a.startUnit + 1;
-
               return (
                 <span
                   key={idx}
                   className="text-[9px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 shadow-inner"
                 >
-                  {
-                    isPaged
-                      ? `${t("page")}: ${a.startUnit}-${a.endUnit}`
-                      : `${count} ${t("pieces")}` // GÜNCELLEME: Fallback "Adet" kaldırıldı
-                  }
+                  {isPaged
+                    ? `${t("page")}: ${a.startUnit}-${a.endUnit}`
+                    : `${count} ${t("pieces")}`}
                 </span>
               );
             })}
           </div>
         </div>
-
         <div className="shrink-0 ml-2">
           {isCompleted ? (
             <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-200 dark:border-emerald-800 shadow-sm">
@@ -621,7 +658,6 @@ function AssignmentCard({
               />
             </div>
           )}
-
         {isMyAssignment && !isCompleted && (
           <div className="w-full space-y-2 md:space-y-2.5 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
             {assignments.map((a: any, idx: number) => (
@@ -656,7 +692,7 @@ function AssignmentCard({
       <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t-2 border-dashed border-gray-50 dark:border-gray-800">
         {!isTaken ? (
           <button
-            onClick={() => actions.handleTakePart(first.id)}
+            onClick={() => onTakeClick(first.id)}
             className="w-full py-3.5 md:py-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-xl md:rounded-2xl font-black text-xs md:text-sm hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all active:scale-95 shadow-sm"
           >
             {t("select")}
@@ -690,7 +726,6 @@ function AssignmentCard({
                   {t("finish")}
                 </button>
               )}
-
               <button
                 onClick={() => {
                   actions.handleCancelPart(first.id);

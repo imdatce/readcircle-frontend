@@ -138,8 +138,12 @@ export function useDistributionSession(code: string) {
         }
     };
 
-    const handleTakePart = async (assignmentId: number) => {
-        if (!userName) {
+    // --- ÖNEMLİ DEĞİŞİKLİK BURADA: Parametre eklendi ---
+    const handleTakePart = async (assignmentId: number, guestName?: string) => {
+        // Gönderilecek ismi belirle: Eğer parametre geldiyse onu kullan, yoksa state'tekini kullan
+        const nameToSend = guestName || userName;
+
+        if (!nameToSend) {
             alert(t("alertEnterName"));
             return;
         }
@@ -147,8 +151,9 @@ export function useDistributionSession(code: string) {
             const headers: Record<string, string> = {};
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
+            // URL'deki name parametresini nameToSend ile güncelleyin
             const res = await fetch(
-                `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(userName)}&deviceId=${deviceId}`,
+                `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(nameToSend)}&deviceId=${deviceId}`,
                 { method: "POST", headers }
             );
 
@@ -320,7 +325,7 @@ export function useDistributionSession(code: string) {
         deviceId, // Hook artık deviceId'yi de döndürüyor
         actions: {
             decrementCount,
-            handleTakePart,
+            handleTakePart, // Güncellenmiş fonksiyon
             handleCancelPart,
             handleCompletePart,
             openReadingModal,
