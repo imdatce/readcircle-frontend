@@ -43,13 +43,12 @@ const toArabicNumerals = (num: string | number) => {
   return num.toString().replace(/\d/g, (d) => digits[parseInt(d)]);
 };
 
-// --- GÜNCELLENEN KISIM: Besmele Kontrolü (Türkçe Meal Desteği Eklendi) ---
+// Besmele Kontrolü
 const isBismillah = (text: string) => {
   const cleanText = text.toLowerCase().replace(/[\s\.\,\*\'\"]/g, "");
   return (
     cleanText.includes("bismillahirrahmanirrahim") ||
     (cleanText.includes("bismi") && cleanText.includes("rahim")) ||
-    // Türkçe Meal Kontrolü:
     (cleanText.includes("rahman") &&
       cleanText.includes("rahim") &&
       cleanText.includes("allah")) ||
@@ -57,7 +56,7 @@ const isBismillah = (text: string) => {
   );
 };
 
-// --- GELİŞMİŞ AYET RENDER FONKSİYONU ---
+// --- GÜNCELLENMİŞ AYET RENDER FONKSİYONU ---
 const renderVerseLine = (
   line: string,
   index: number,
@@ -79,25 +78,25 @@ const renderVerseLine = (
     verseText = match[2]; // "Bismillâhirrahmanirrahim."
   }
 
-  // 2. Besmele Özel Gösterimi (Yeşil, Büyük, Ortalanmış)
-  if (isBismillah(verseText) && parseInt(verseNum) <= 1) {
+  // 2. Besmele Özel Gösterimi
+  // --- BESMELE ÖZEL GÖSTERİMİ (BLOK YAPI) ---
+  if (isBismillah(verseText) && parseInt(verseNum || "0") <= 1) {
     return (
       <div
-        key={index}
-        className="w-full text-center my-8 md:my-10 animate-in zoom-in-95 duration-700"
+        key={`besmele-${index}`}
+        className="w-full text-center my-8 md:my-10 animate-in zoom-in-95 duration-700 block"
       >
         <span
-          className={`font-serif font-black opacity-90 ${className} block text-emerald-700 dark:text-emerald-400 drop-shadow-md text-2xl md:text-3xl`}
+          className={`font-serif font-black opacity-90 block text-emerald-700 dark:text-emerald-400 drop-shadow-sm text-2xl md:text-3xl leading-normal`}
         >
           {verseText}
         </span>
-        {/* Dekoratif Çizgi */}
-        <div className="mx-auto w-32 md:w-48 h-1 bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent mt-4 rounded-full"></div>
+        <div className="mx-auto w-40 h-1 bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent mt-3 rounded-full"></div>
       </div>
     );
   }
 
-  // 3. Normal Ayet Gösterimi (Mushaf Stili)
+  // 3. Normal Ayet Gösterimi (SADE DAİRE GÜNCELLEMESİ YAPILDI)
   return (
     <div
       key={index}
@@ -108,34 +107,19 @@ const renderVerseLine = (
       <p
         className={`${className} inline decoration-clone text-gray-800 dark:text-gray-200`}
       >
-        {verseText} {/* Ayet Sonu İşareti (Sonda) */}
+        {verseText}
+
+        {/* --- YENİ SADE DAİRE STİLİ --- */}
         {verseNum && (
-          <span className="inline-flex items-center justify-center align-middle mx-1.5 select-none relative -top-0.5 whitespace-nowrap">
-            <span className="relative flex items-center justify-center w-[1.7em] h-[1.7em]">
-              {/* Ayet Gülü İkonu */}
-              <svg
-                viewBox="0 0 36 36"
-                className="w-full h-full text-emerald-600 dark:text-emerald-400 fill-current opacity-90"
-              >
-                <path
-                  d="M18 2.5 L21.5 8.5 L28 8.5 L24 13.5 L26 20 L19.5 17.5 L18 24 L16.5 17.5 L10 20 L12 13.5 L8 8.5 L14.5 8.5 Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-                <circle
-                  cx="18"
-                  cy="16"
-                  r="8"
-                  stroke="currentColor"
-                  strokeWidth="0.5"
-                  fill="none"
-                  opacity="0.4"
-                />
-              </svg>
-              {/* Numara */}
+          <span className="inline-flex items-center justify-center min-w-[30px] h-[30px] px-1 mx-1.5 align-middle select-none">
+            <span className="flex items-center justify-center w-full h-full border border-gray-400 dark:border-gray-500 rounded-full text-[0.6em] opacity-80">
+              {/* Arapça modundaysa Arapça rakam, değilse Latin rakam */}
               <span
-                className={`absolute inset-0 flex items-center justify-center font-bold text-[0.45em] pb-[0.2em] ${mode === "ARABIC" ? "font-serif" : "font-sans"} text-emerald-800 dark:text-emerald-200`}
+                className={
+                  mode === "ARABIC"
+                    ? "mt-1 font-serif"
+                    : "font-sans font-medium"
+                }
               >
                 {mode === "ARABIC" || mode === "LATIN"
                   ? toArabicNumerals(verseNum)
@@ -144,12 +128,14 @@ const renderVerseLine = (
             </span>
           </span>
         )}
+        {/* ----------------------------- */}
       </p>
     </div>
   );
 };
 
-// --- ARAPÇA TEXT FORMATLAYICI ---
+// --- FORMATLAYICI FONKSİYONLAR ---
+
 export const formatArabicText = (text: string, fontLevel: number) => {
   const className = `${fontSizes.ARABIC[fontLevel]} font-serif leading-[2.5]`;
   const lines = text.split("\n").filter((line) => line.trim() !== "");
@@ -163,7 +149,6 @@ export const formatArabicText = (text: string, fontLevel: number) => {
   );
 };
 
-// --- LATİN TEXT FORMATLAYICI ---
 export const formatLatinText = (text: string, fontLevel: number) => {
   const className = `${fontSizes.LATIN[fontLevel]} font-serif tracking-wide leading-relaxed`;
   const lines = text.split("\n").filter((line) => line.trim() !== "");
@@ -177,7 +162,6 @@ export const formatLatinText = (text: string, fontLevel: number) => {
   );
 };
 
-// --- MEAL TEXT FORMATLAYICI ---
 export const formatMeaningText = (text: string, fontLevel: number) => {
   const className = `${fontSizes.MEANING[fontLevel]} font-sans leading-relaxed`;
   const lines = text.split("\n").filter((line) => line.trim() !== "");
@@ -191,14 +175,13 @@ export const formatMeaningText = (text: string, fontLevel: number) => {
   );
 };
 
-// ... (Uhud/Bedir Listeleri için olan renderUhudList fonksiyonu aynı kalabilir)
+// Uhud/Bedir Listeleri için
 export const renderUhudList = (
   text: string,
   mode: "ARABIC" | "LATIN" | "MEANING",
   fontLevel: number,
   label: string | number,
 ) => {
-  // ... (Bu kısım önceki koddaki gibi kalabilir)
   if (!text) return null;
 
   let fontSizeClass = "";

@@ -28,6 +28,7 @@ type TranslationStructure = {
 
 const translations: TranslationStructure = {
   tr: {
+    
     common: {
       appTitle: "Tefekkür ve Ünsiyet Birliği",
       subtitle: "Kaynak Dağıtım Platformu",

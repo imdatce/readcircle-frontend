@@ -227,11 +227,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const codeKey = (content.codeKey || "").toUpperCase();
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
     const isSurahGroup =
-      content.type === "SURAS" ||
-      [
-        "YASIN",
-        "FETIH",
-      ].includes(codeKey);
+      content.type === "SURAS" || ["YASIN", "FETIH"].includes(codeKey);
 
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
@@ -461,7 +457,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 {activeQuranTab === "ORIGINAL" ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img
-                      src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(currentPage).padStart(3, "0")}.png`}
+                      // src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(currentPage).padStart(3, "0")}.png`}
+                      src={`https://quran.islam-db.com/data/pages/quranpages_1024/images/page${String(currentPage).padStart(3, "0")}.png`}
                       alt={`Page ${currentPage}`}
                       className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
                       loading="lazy"
