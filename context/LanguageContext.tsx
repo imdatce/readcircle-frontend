@@ -28,7 +28,6 @@ type TranslationStructure = {
 
 const translations: TranslationStructure = {
   tr: {
-    
     common: {
       appTitle: "Tefekkür ve Ünsiyet Birliği",
       subtitle: "Kaynak Dağıtım Platformu",
@@ -39,6 +38,10 @@ const translations: TranslationStructure = {
       sessionCreated: "Oturum oluşturuldu",
       tapToCount: "Saymak için dokun",
       refresh: "Yenile",
+      serverWakingUpPart1:
+        "Sunucu uyku modundan çıkarılıyor. İlk girişte bu işlem",
+      seconds: "saniye",
+      serverWakingUpPart2: "sürebilir, lütfen sekmeyi kapatmadan bekleyin.",
       add: "Ekle",
       status: "Durum",
       yourNamePlaceholder: "Adınız?", // tr
@@ -310,6 +313,10 @@ const translations: TranslationStructure = {
       taken: "Hat girtin",
       completed: "Temam bû",
       target: "Hejmara Hedef",
+      serverWakingUpPart1:
+        "Server tê destpêkirin. Di barkirina yekem de ev dikare bidome",
+      seconds: "çirke",
+      serverWakingUpPart2: "ji kerema xwe re bê girtina tabê bisekine.",
       selectPlaceholder: "Hilbijêre...",
       pasteCodeOrLink: "Kod an lînkê li vir bixe",
       allahAccept: "Xwedê qebûl bike.",
@@ -572,6 +579,9 @@ const translations: TranslationStructure = {
       status: "Status",
       undo: "Undo",
       taken: "Taken",
+      serverWakingUpPart1: "Waking up the server. On first load, this may take",
+      seconds: "seconds",
+      serverWakingUpPart2: "please wait without closing the tab.",
       completed: "Completed",
       target: "Target Amount",
       selectPlaceholder: "Select...",
@@ -843,6 +853,9 @@ const translations: TranslationStructure = {
       taken: "مأخوذ",
       completed: "مكتمل",
       target: "العدد المستهدف",
+      serverWakingUpPart1: "جارٍ تشغيل الخادم. عند التحميل الأول قد يستغرق هذا",
+      seconds: "ثوانٍ",
+      serverWakingUpPart2: "يرجى الانتظار دون إغلاق علامة التبويب.",
       selectPlaceholder: "اختر...",
       pasteCodeOrLink: "الصق الكود أو الرابط",
       allahAccept: "تقبل الله منا ومنكم.",
@@ -1095,6 +1108,10 @@ const translations: TranslationStructure = {
       tapToCount: "Appuyer pour compter",
       refresh: "Actualiser",
       add: "Ajouter",
+      serverWakingUpPart1:
+        "Démarrage du serveur. Lors du premier chargement, cela peut prendre",
+      seconds: "secondes",
+      serverWakingUpPart2: "veuillez patienter sans fermer l’onglet.",
       yourNamePlaceholder: "Votre nom ?", // fr
 
       status: "Statut",

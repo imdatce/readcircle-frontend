@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { use, useState, useMemo, useCallback } from "react";
+import React, { use, useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Assignment } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
 import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
-
 // --- KATEGORİ TANIMLARI ---
 const CATEGORY_ORDER = [
   "MAIN",
@@ -23,6 +22,9 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   QURAN: "MAIN",
   FETIH: "SURAHS",
   YASIN: "SURAHS",
+  WAQIA: "SURAHS",
+  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
+  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
   OZELSALAVAT: "SALAWATS",
@@ -41,6 +43,9 @@ const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
   "YASIN",
+  "WAQIA",
+  "FATIHA",
+  "IHLAS",
   "CEVSEN",
   "TEVHIDNAME",
   "OZELSALAVAT",
@@ -219,17 +224,7 @@ export default function JoinPage({
     }).filter(Boolean);
   }, [session, language, t, getCategoryTitle]);
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center bg-transparent px-4 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium animate-pulse text-sm md:text-base">
-            {t("loading")}
-          </p>
-        </div>
-      </div>
-    );
+  if (loading) return <LoadingScreen t={t} />;
 
   if (error || !session)
     return (
@@ -745,6 +740,41 @@ function AssignmentCard({
             </div>
           )
         )}
+      </div>
+    </div>
+  );
+}
+
+function LoadingScreen({ t }: { t: any }) {
+  const [isSlowLoad, setIsSlowLoad] = useState(false);
+
+  useEffect(() => {
+    // 4 saniye sonra Render'ın uyku modunda olduğunu varsayıyoruz
+    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-transparent px-4 text-center">
+      <div className="flex flex-col items-center gap-5">
+        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin"></div>
+
+        <div className="flex flex-col gap-3 items-center">
+          <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-base md:text-lg">
+            {t("loading")}
+          </p>
+
+          {isSlowLoad && (
+            <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+              {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                30-40 {t("seconds") || "saniye"}
+              </span>{" "}
+              {t("serverWakingUpPart2") ||
+                "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

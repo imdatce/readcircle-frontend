@@ -1,39 +1,39 @@
 import React from "react";
 
-// Font boyutları
+// Font boyutları (Mobilde daha küçük, masaüstünde büyük olacak şekilde güncellendi)
 export const fontSizes = {
   ARABIC: [
-    "text-2xl",
-    "text-3xl",
-    "text-4xl",
-    "text-5xl",
-    "text-6xl",
-    "text-7xl",
-    "text-8xl",
-    "text-9xl",
-    "text-[10rem]",
+    "text-base md:text-xl",
+    "text-lg md:text-2xl",
+    "text-xl md:text-3xl",
+    "text-2xl md:text-4xl", // Varsayılan (Seviye 3): Mobilde 2xl, Bilgisayarda 4xl
+    "text-3xl md:text-5xl",
+    "text-4xl md:text-6xl",
+    "text-5xl md:text-7xl",
+    "text-6xl md:text-8xl",
+    "text-7xl md:text-9xl",
   ],
   LATIN: [
-    "text-sm",
-    "text-base",
-    "text-lg",
-    "text-xl",
-    "text-2xl",
-    "text-3xl",
-    "text-4xl",
-    "text-5xl",
-    "text-6xl",
+    "text-xs md:text-sm",
+    "text-sm md:text-base",
+    "text-base md:text-lg",
+    "text-lg md:text-xl", // Varsayılan (Seviye 3): Mobilde lg, Bilgisayarda xl
+    "text-xl md:text-2xl",
+    "text-2xl md:text-3xl",
+    "text-3xl md:text-4xl",
+    "text-4xl md:text-5xl",
+    "text-5xl md:text-6xl",
   ],
   MEANING: [
-    "text-xs",
-    "text-sm",
-    "text-base",
-    "text-lg",
-    "text-xl",
-    "text-2xl",
-    "text-3xl",
-    "text-4xl",
-    "text-5xl",
+    "text-[10px] md:text-xs",
+    "text-xs md:text-sm",
+    "text-sm md:text-base",
+    "text-base md:text-lg", // Varsayılan (Seviye 3): Mobilde base, Bilgisayarda lg
+    "text-lg md:text-xl",
+    "text-xl md:text-2xl",
+    "text-2xl md:text-3xl",
+    "text-3xl md:text-4xl",
+    "text-4xl md:text-5xl",
   ],
 };
 
@@ -214,6 +214,76 @@ export const formatStyledText = (
 ) => {
   if (mode === "LATIN") return formatLatinText(text, fontLevel);
   return formatMeaningText(text, fontLevel);
+};
+
+export const renderCevsenGrid = (text: string, fontLevel: number) => {
+  // 1. Metni satırlara böl ve boş satırları temizle
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  
+  // Eğer format beklediğimiz gibi değilse (çok kısaysa) standart render et
+  if (lines.length < 3) {
+    return <div className={`font-serif leading-[2.4] py-2 ${fontSizes.ARABIC[fontLevel]}`}>{text}</div>;
+  }
+
+  // 2. Cevşen'in son satırı "Sübhaneke..." duasıdır, bunu ayırıyoruz
+  const lastLine = lines.pop(); 
+
+  // 3. Grid Görünümü (Osmanlı Hat / Madalyonlu)
+  return (
+    <div className="bg-[#fcfbf9] dark:bg-[#12141a] border-[8px] border-double border-amber-800/20 dark:border-amber-500/20 p-4 md:p-8 rounded-[2rem] shadow-xl max-w-5xl mx-auto my-4 relative overflow-hidden" dir="rtl">
+      
+      {/* Geleneksel kağıt dokusu / Arka plan deseni (Hafif Filigran) */}
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none" 
+           style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/arabesque.png')" }}></div>
+      
+      <div className="relative z-10">
+        {/* Çift Sütunlu Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 text-center">
+          {lines.map((line, index) => {
+            // Metin içindeki eski numaraları (1-, 2-) temizleyelim
+            const cleanLine = line.replace(/^[\d١-٩]+[\-\.]?\s*/, '');
+            
+            return (
+              <div key={index} className="flex items-center justify-between border-b border-amber-900/10 dark:border-amber-100/10 pb-3 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors px-3 rounded-xl group">
+                
+                {/* Numara Madalyonu (Arapça okuma yönünde en sağda durur) */}
+                <span className="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 shrink-0">
+                  <svg className="absolute inset-0 w-full h-full text-amber-700/80 dark:text-amber-500/80 drop-shadow-md" viewBox="0 0 100 100">
+                    <path fill="currentColor" d="M50 5 L60 25 L80 20 L75 40 L95 50 L75 60 L80 80 L60 75 L50 95 L40 75 L20 80 L25 60 L5 50 L25 40 L20 20 L40 25 Z"></path>
+                    <circle cx="50" cy="50" r="28" fill="none" stroke="#fff" strokeWidth="2" opacity="0.5"></circle>
+                  </svg>
+                  <span className="relative z-10 text-white font-bold text-sm md:text-base drop-shadow-md font-sans">
+                    {index + 1}
+                  </span>
+                </span>
+
+                {/* Arapça İsim/Dua */}
+                <span className={`font-serif flex-1 text-gray-900 dark:text-gray-100 px-4 ${fontSizes.ARABIC[fontLevel]} leading-[2.4] drop-shadow-sm`}>
+                  {cleanLine}
+                </span>
+
+                {/* Bitiş Süsü (Arapça okuma yönünde en solda durur) */}
+                <span className="text-amber-600/30 dark:text-amber-400/30 text-lg select-none opacity-50 group-hover:opacity-100 transition-opacity">
+                  ❖
+                </span>
+                
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Alt Kısım - Kırmızı Özel Ayrılmış Dua (Sübhaneke kısmı) */}
+        <div className="mt-10 pt-8 border-t-[3px] border-dashed border-red-800/20 dark:border-red-500/30 text-center relative">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#fcfbf9] dark:bg-[#12141a] px-4">
+             <span className="text-red-800/30 dark:text-red-500/40 text-2xl">۞</span>
+          </div>
+          <p className={`font-serif font-black text-red-700 dark:text-red-500 leading-[2.6] ${fontSizes.ARABIC[fontLevel]} tracking-wide drop-shadow-sm`}>
+            {lastLine}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const decorateArabicNumbers = (text: string) => text;

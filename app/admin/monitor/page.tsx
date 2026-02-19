@@ -26,7 +26,9 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   // Sureler
   FETIH: "SURAHS",
   YASIN: "SURAHS",
-
+  WAQIA: "SURAHS",
+  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
+  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
   // Dualar
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
@@ -53,6 +55,9 @@ const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
   "YASIN",
+  "WAQIA",
+  "FATIHA",
+  "IHLAS",
   "CEVSEN",
   "TEVHIDNAME",
   "OZELSALAVAT",

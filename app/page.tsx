@@ -17,6 +17,9 @@ const ORDER_PRIORITY = [
   "TEVHIDNAME", // 3. Tevhidname
   "FETIH", // 4. Fetih
   "YASIN", // 5. Yasin
+  "FATIHA",
+  "IHLAS",
+  "WAQIA",
   "BEDIR", // 6. Bedir
   "UHUD", // 7. Uhud
   "OZELSALAVAT", // 8. Büyük Salavat
@@ -355,45 +358,45 @@ function HomeContent() {
                   )}
                   <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
                   <form
-  onSubmit={handleJoin}
-  className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all shadow-sm"
->
-  {/* İkon Bölümü: Küçülmemesi için shrink-0 ekledik */}
-  <div className="pl-3 pr-2 text-gray-400 shrink-0">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-      />
-    </svg>
-  </div>
+                    onSubmit={handleJoin}
+                    className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all shadow-sm"
+                  >
+                    {/* İkon Bölümü: Küçülmemesi için shrink-0 ekledik */}
+                    <div className="pl-3 pr-2 text-gray-400 shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                        />
+                      </svg>
+                    </div>
 
-  {/* Input Bölümü: min-w-[200px] KALDIRILDI. Yerine flex-1 ve min-w-0 eklendi */}
-  <input
-    type="text"
-    value={code}
-    onChange={(e) => setCode(e.target.value)}
-    placeholder={t("pasteCodeOrLink")}
-    className="bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 w-full flex-1 min-w-0 text-sm md:text-base"
-    onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-  />
+                    {/* Input Bölümü: min-w-[200px] KALDIRILDI. Yerine flex-1 ve min-w-0 eklendi */}
+                    <input
+                      type="text"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder={t("pasteCodeOrLink")}
+                      className="bg-transparent border-none focus:ring-0 text-gray-800 dark:text-gray-100 placeholder-gray-400 w-full flex-1 min-w-0 text-sm md:text-base"
+                      onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                    />
 
-  {/* Buton Bölümü: Padding mobilde biraz kısıldı (px-3), masaüstünde geniş (md:px-5) */}
-  <button
-    type="submit"
-    className="shrink-0 px-3 py-2.5 md:px-5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 rounded-xl font-bold shadow-sm transition-all duration-200 whitespace-nowrap text-xs md:text-sm"
-  >
-    {t("join")}
-  </button>
-</form>
+                    {/* Buton Bölümü: Padding mobilde biraz kısıldı (px-3), masaüstünde geniş (md:px-5) */}
+                    <button
+                      type="submit"
+                      className="shrink-0 px-3 py-2.5 md:px-5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 rounded-xl font-bold shadow-sm transition-all duration-200 whitespace-nowrap text-xs md:text-sm"
+                    >
+                      {t("join")}
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
@@ -618,15 +621,40 @@ function HomeContent() {
   );
 }
 
+function GlobalLoading() {
+  const { t } = useLanguage(); // i18n hook eklendi
+  const [isSlowLoad, setIsSlowLoad] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 flex flex-col items-center justify-center text-center px-4">
+      <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin mb-5"></div>
+
+      <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-lg">
+        {t("loading")}
+      </p>
+
+      {isSlowLoad && (
+        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+          {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+            30-40 {t("seconds") || "saniye"}
+          </span>{" "}
+          {t("serverWakingUpPart2") ||
+            "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
-      }
-    >
+    <Suspense fallback={<GlobalLoading />}>
       <HomeContent />
     </Suspense>
   );
@@ -682,6 +710,14 @@ function EmptyState({ title, actionLink, actionText }: any) {
 }
 
 function DashboardSkeleton() {
+  const { t } = useLanguage(); // i18n hook eklendi
+  const [isSlowLoad, setIsSlowLoad] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="space-y-4">
       {[1, 2].map((i) => (
@@ -690,6 +726,19 @@ function DashboardSkeleton() {
           className="h-24 bg-gray-200/70 dark:bg-gray-800/70 rounded-2xl animate-pulse"
         ></div>
       ))}
+
+      {isSlowLoad && (
+        <div className="p-4 mt-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-1000">
+          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {t("serverWakingUpPart1") ||
+              "Sunucu uyandırılıyor... Verilerin yüklenmesi "}
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+              30-40 {t("seconds") || "saniye"}
+            </span>{" "}
+            {t("serverWakingUpPart2") || "sürebilir, lütfen bekleyin."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

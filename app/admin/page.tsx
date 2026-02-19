@@ -31,7 +31,9 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   // Surahs
   FETIH: "SURAHS",
   YASIN: "SURAHS",
-
+  WAQIA: "SURAHS",
+  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
+  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
   // Prayers
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
@@ -61,6 +63,9 @@ const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
   "YASIN",
+  "WAQIA",
+  "FATIHA",
+  "IHLAS",
   "CEVSEN",
   "TEVHIDNAME",
   "OZELSALAVAT",
@@ -98,7 +103,8 @@ export default function AdminPage() {
   const [createdSessionName, setCreatedSessionName] = useState<string>("");
 
   // UI State
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Buton için
+  const [isFetchingResources, setIsFetchingResources] = useState(true); // Sayfa açılışı için
   const [deviceId, setDeviceId] = useState("");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
@@ -185,7 +191,8 @@ export default function AdminPage() {
       .then((data) => {
         setResources(Array.isArray(data) ? data : []);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => setIsFetchingResources(false)); // <-- BU SATIR EKLENDİ
   }, [apiUrl, token, logout, t]);
 
   /**
@@ -307,6 +314,10 @@ export default function AdminPage() {
         return a.id - b.id;
       });
   }, [resources, selectedResources]);
+
+  if (isFetchingResources) {
+    return <LoadingScreen t={t} />;
+  }
 
   return (
     <div className="min-h-screen pb-10 pt-4 md:pt-6 px-4 bg-transparent">
@@ -606,6 +617,41 @@ export default function AdminPage() {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function LoadingScreen({ t }: { t: any }) {
+  const [isSlowLoad, setIsSlowLoad] = useState(false);
+
+  useEffect(() => {
+    // 4 saniye sonra Render'ın uyku modunda olduğunu varsayıyoruz
+    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-transparent px-4 text-center">
+      <div className="flex flex-col items-center gap-5">
+        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin"></div>
+
+        <div className="flex flex-col gap-3 items-center">
+          <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-base md:text-lg">
+            {t("loading")}
+          </p>
+
+          {isSlowLoad && (
+            <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+              {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                30-40 {t("seconds") || "saniye"}
+              </span>{" "}
+              {t("serverWakingUpPart2") ||
+                "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   formatStyledText,
   renderUhudList,
   fontSizes,
+  renderCevsenGrid, // <-- BUNU EKLEYİN
 } from "@/utils/text-formatter";
 
 // --- TİPLER ---
@@ -48,11 +49,8 @@ const EDITION_MAPPING: Record<string, string> = {
   id: "id.indonesian",
   az: "az.mammadaliyev",
   ar: "ar.jalalayn",
-
-  // ÖZEL: Kürtçe (Kurmançi) için özel bir işaretleyici kullanıyoruz
   ku: "special_quranenc_kurmanji",
-  kmr: "special_quranenc_kurmanji", // Eğer dil kodun kmr ise
-
+  kmr: "special_quranenc_kurmanji",
   default: "en.sahih",
 };
 
@@ -60,20 +58,16 @@ const EDITION_MAPPING: Record<string, string> = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchKurdishForPage(structureData: any) {
   try {
-    // 1. Sayfadaki benzersiz sure numaralarını bul
     const surahsOnPage = new Set<number>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     structureData.forEach((ayah: any) => surahsOnPage.add(ayah.surah.number));
 
-    // 2. Her bir sure için QuranEnc'ten veri çek (Latin Kürtçe)
-    // DÜZELTME: API anahtarı 'kurdish_kurmanji' yerine 'kurmanji_ismail' yapıldı.
     const quranEncPromises = Array.from(surahsOnPage).map((surahNo) =>
       fetch(
         `https://quranenc.com/api/v1/translation/sura/kurmanji_ismail/${surahNo}`,
       )
         .then(async (res) => {
           if (!res.ok) {
-            // Hata detayını konsola yazdıralım
             console.error(
               `QuranEnc Hatası (Sure: ${surahNo}):`,
               res.status,
@@ -88,8 +82,6 @@ async function fetchKurdishForPage(structureData: any) {
     );
 
     const translations = await Promise.all(quranEncPromises);
-
-    // 3. Çekilen veriyi hızlı erişim için haritala (Map)
     const translationMap: { [key: string]: string } = {};
 
     translations.forEach(({ surahNo, result }) => {
@@ -102,7 +94,6 @@ async function fetchKurdishForPage(structureData: any) {
       }
     });
 
-    // 4. Orijinal yapıdaki metinleri Kürtçe ile değiştir
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mergedData = structureData.map((ayah: any) => {
       const key = `${String(ayah.surah.number)}:${String(ayah.numberInSurah)}`;
@@ -114,9 +105,7 @@ async function fetchKurdishForPage(structureData: any) {
       };
     });
 
-    return {
-      ayahs: mergedData,
-    };
+    return { ayahs: mergedData };
   } catch (error) {
     console.error("Kürtçe API Hatası (Detay):", error);
     return null;
@@ -129,32 +118,25 @@ async function fetchQuranTranslationPage(
   editionOrKey: string,
 ) {
   try {
-    // A. EĞER KÜRTÇE İSE: ÖZEL MANTIK
     if (editionOrKey === "special_quranenc_kurmanji") {
-      // Önce sayfa yapısını (hangi ayetler var) almak için hafif bir Arapça kaynak çek
       const structRes = await fetch(
         `https://api.alquran.cloud/v1/page/${pageNumber}/quran-uthmani`,
       );
       const structData = await structRes.json();
 
       if (structData.code === 200 && structData.data && structData.data.ayahs) {
-        // Sonra bu yapıyı kullanarak QuranEnc'ten Kürtçeleri getir
         const kurdishResult = await fetchKurdishForPage(structData.data.ayahs);
-        // Eğer Kürtçe çekme başarısız olduysa (CORS vb), null dön ki sonsuz döngü olmasın
         return kurdishResult;
       }
       return null;
     }
 
-    // B. NORMAL DİLLER (Diyanet, Sahih vs.)
     const res = await fetch(
       `https://api.alquran.cloud/v1/page/${pageNumber}/${editionOrKey}`,
     );
     const data = await res.json();
     if (data.code === 200 && data.data && data.data.ayahs) {
-      return {
-        ayahs: data.data.ayahs,
-      };
+      return { ayahs: data.data.ayahs };
     }
     return null;
   } catch (error) {
@@ -177,7 +159,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
 
-  // --- STATE'LER ---
   const [activeQuranTab, setActiveQuranTab] = useState<"ORIGINAL" | "MEAL">(
     "ORIGINAL",
   );
@@ -187,17 +168,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const currentPage = content.currentUnit || content.startUnit || 1;
 
-  // --- EFFECT: Dinamik Meal Verisini Çekme ---
   useEffect(() => {
     if (content.type === "QURAN" && activeQuranTab === "MEAL") {
       setLoadingMeal(true);
-      setMealData([]); // Önceki veriyi temizle
+      setMealData([]);
 
-      // 1. Dil koduna göre kaynağı seç (tr -> tr.diyanet, ku -> special...)
       const targetEdition =
         EDITION_MAPPING[language] || EDITION_MAPPING["default"];
 
-      // 2. API çağrısını yap
       fetchQuranTranslationPage(currentPage, targetEdition)
         .then((result) => {
           if (result) {
@@ -216,7 +194,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       : translated;
   };
 
-  // --- MERKEZİ VERİ İŞLEME MANTIĞI (Processed Data) ---
   const processedData = useMemo(() => {
     if (
       (content.type !== "CEVSEN" && content.type !== "SURAS") ||
@@ -226,8 +203,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
     const codeKey = (content.codeKey || "").toUpperCase();
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
+    // BURASI KRİTİK: Fatiha ve İhlas eklendi
     const isSurahGroup =
-      content.type === "SURAS" || ["YASIN", "FETIH"].includes(codeKey);
+      content.type === "SURAS" ||
+      ["YASIN", "FETIH", "FATIHA", "IHLAS"].includes(codeKey);
 
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
@@ -300,7 +279,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
   }, [content]);
 
-  // --- SAYFA DEĞİŞTİRME ---
   const changePage = (offset: number) => {
     const current = content.currentUnit || content.startUnit || 1;
     const min = content.startUnit || 1;
@@ -316,7 +294,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const isSurahGroup = processedData?.isSurah || false;
   const isBedirGroup = processedData?.mode === "LIST";
 
-  // --- NAVİGASYON BİLEŞENİ ---
   const PaginationBar = () => (
     <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
       <button
@@ -342,7 +319,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-gray-100 dark:bg-black rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/10 dark:border-gray-800">
-        {/* --- HEADER --- */}
         <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20">
           <div className="flex justify-between items-center">
             <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
@@ -390,7 +366,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           </div>
 
-          {/* --- KURAN SEKMELERİ --- */}
           {content.type === "QURAN" && (
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               <button
@@ -408,7 +383,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {/* --- DİĞER SEKMELER --- */}
           {content.type !== "SIMPLE" && content.type !== "QURAN" && (
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
@@ -429,7 +403,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           )}
         </div>
 
-        {/* --- CONTENT AREA --- */}
         <div className="flex-1 overflow-y-auto bg-gray-100 dark:bg-black p-4 md:p-6 scroll-smooth">
           {content.type === "SIMPLE" && content.simpleItems && (
             <div className="space-y-3 max-w-2xl mx-auto">
@@ -449,15 +422,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {(content.type === "QURAN" ||
-            (isSurahGroup && activeTab === "ARABIC")) && (
+          {/* BURASI KRİTİK: isSurahGroup zorlaması silindi, sadece QURAN ise API açılacak */}
+          {content.type === "QURAN" && (
             <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
               <PaginationBar />
               <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-[2rem] p-2 md:p-4 border border-gray-200 dark:border-gray-800 shadow-sm min-h-[50vh] relative">
                 {activeQuranTab === "ORIGINAL" ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img
-                      // src={`https://raw.githubusercontent.com/GovarJabbar/Quran-PNG/master/${String(currentPage).padStart(3, "0")}.png`}
                       src={`https://quran.islam-db.com/data/pages/quranpages_1024/images/page${String(currentPage).padStart(3, "0")}.png`}
                       alt={`Page ${currentPage}`}
                       className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
@@ -501,9 +473,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
+          {/* BURASI KRİTİK: Engel silindi, CEVSEN ve SURAS rahatça açılacak */}
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
-            processedData &&
-            !(isSurahGroup && activeTab === "ARABIC") && (
+            processedData && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
                 {processedData.data.map((bab, index) => {
                   const mode = processedData.mode;
@@ -538,23 +510,35 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         </div>
                       )}
                       <div className="w-full">
-                        {activeTab === "ARABIC" && !isSurahGroup && (
+                        {activeTab === "ARABIC" && (
                           <div
                             className={
-                              isCard
+                              isCard || content.type === "CEVSEN"
                                 ? "w-full"
                                 : "text-center font-serif leading-[2.4] py-2 text-gray-800 dark:text-gray-100"
                             }
                             dir="rtl"
                           >
-                            {isCard
-                              ? renderUhudList(
-                                  bab.arabic,
-                                  "ARABIC",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              : formatArabicText(bab.arabic, fontLevel)}
+                            {bab.arabic.includes("IMAGE_MODE:::") ? (
+                              <img
+                                src={bab.arabic
+                                  .replace("IMAGE_MODE:::", "")
+                                  .trim()}
+                                className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
+                                alt="Arapça"
+                              />
+                            ) : isCard ? (
+                              renderUhudList(
+                                bab.arabic,
+                                "ARABIC",
+                                fontLevel,
+                                displayLabel,
+                              )
+                            ) : content.type === "CEVSEN" ? (
+                              renderCevsenGrid(bab.arabic, fontLevel) // <-- CEVŞEN GÖRÜNÜMÜ BURADA ÇALIŞACAK
+                            ) : (
+                              formatArabicText(bab.arabic, fontLevel)
+                            )}
                           </div>
                         )}
                         {activeTab === "LATIN" && (

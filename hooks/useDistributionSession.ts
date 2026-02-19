@@ -265,6 +265,7 @@ export function useDistributionSession(code: string) {
             return;
         }
 
+
         if (resource.type === "COUNTABLE" || resource.type === "JOINT") {
             const parts = description.split("|||");
             if (resource.codeKey === "UHUD") {
