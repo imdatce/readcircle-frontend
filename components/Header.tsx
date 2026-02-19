@@ -15,7 +15,7 @@ export default function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         isMenuOpen &&
@@ -31,7 +31,7 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen]);
 
-   const scrollToCircles = (e: React.MouseEvent) => {
+  const scrollToCircles = (e: React.MouseEvent) => {
     if (window.location.pathname === "/") {
       e.preventDefault();
       const element = document.getElementById("circles-section");
@@ -41,7 +41,7 @@ export default function Header() {
     }
   };
 
-   const scrollToTop = (e: React.MouseEvent) => {
+  const scrollToTop = (e: React.MouseEvent) => {
     if (window.location.pathname === "/") {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -51,8 +51,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 transition-all duration-300 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-        
-         <Link
+        <Link
           href="/"
           onClick={scrollToTop}
           className="relative group shrink-0 transition-transform hover:scale-[1.02] active:scale-95"
@@ -68,9 +67,8 @@ export default function Header() {
           </div>
         </Link>
 
-         <div className="flex items-center gap-2 md:gap-4">
-          
-           <Link
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link
             href="/"
             onClick={scrollToTop}
             className="p-2.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 bg-gray-50 hover:bg-blue-50 dark:bg-gray-900/50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 hidden sm:block"
@@ -92,7 +90,7 @@ export default function Header() {
             </svg>
           </Link>
 
-           <div className="flex items-center p-1.5 bg-gray-100/80 dark:bg-gray-900/80 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-inner">
+          <div className="flex items-center p-1.5 bg-gray-100/80 dark:bg-gray-900/80 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-inner">
             {user && (
               <>
                 <Link
@@ -127,7 +125,7 @@ export default function Header() {
             </div>
           </div>
 
-           <div className="relative">
+          <div className="relative">
             <button
               ref={buttonRef}
               className={`p-2.5 rounded-xl transition-all duration-200 border ${
@@ -156,7 +154,7 @@ export default function Header() {
               </svg>
             </button>
 
-             {isMenuOpen && (
+            {isMenuOpen && (
               <div
                 ref={menuRef}
                 className="absolute right-0 top-full mt-3 w-56 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 p-2 transform origin-top-right transition-all animate-in fade-in slide-in-from-top-2 z-50"
@@ -173,8 +171,19 @@ export default function Header() {
                       }}
                       className="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-xl transition-colors font-bold text-sm"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+                        />
                       </svg>
                       {t("logoutButton")}
                     </button>
@@ -186,8 +195,19 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors font-bold text-sm"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
+                        />
                       </svg>
                       {t("loginButton")}
                     </Link>
@@ -196,8 +216,19 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-3 w-full px-3 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all font-bold text-sm"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 text-white/90"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                        />
                       </svg>
                       {t("guestRegister")}
                     </Link>

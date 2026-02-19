@@ -8,7 +8,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
 import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
-// --- KATEGORİ TANIMLARI ---
+
+// --- CATEGORY DEFINITIONS ---
 const CATEGORY_ORDER = [
   "MAIN",
   "SURAHS",
@@ -23,8 +24,8 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   FETIH: "SURAHS",
   YASIN: "SURAHS",
   WAQIA: "SURAHS",
-  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
-  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
+  FATIHA: "SURAHS", // <-- FATIHA ADDED
+  IHLAS: "SURAHS", // <-- IHLAS ADDED
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
   OZELSALAVAT: "SALAWATS",
@@ -82,7 +83,7 @@ export default function JoinPage({
     {},
   );
 
-  // --- İSİM SORMA MODALI STATE ---
+  // --- NAME PROMPT MODAL STATE ---
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [pendingPartId, setPendingPartId] = useState<number | null>(null);
 
@@ -93,13 +94,13 @@ export default function JoinPage({
 
   const [tempName, setTempName] = useState("");
 
-  // Parça Seçme Tıklaması
+  // Handle Part Selection Click
   const handlePartClick = (partId: number) => {
     if (isGuestUser) {
       setPendingPartId(partId);
 
-      // useEffect yerine burada ayarlıyoruz.
-      // Misafir ise input boş gelsin, değilse (nadiren olur) var olan ismi yazsın.
+      // We reset it here instead of inside a useEffect.
+      // If it's a guest, the input will come up empty; otherwise (rarely happens), it will write the existing name.
       setTempName("");
 
       setIsNameModalOpen(true);
@@ -108,22 +109,22 @@ export default function JoinPage({
     }
   };
 
-  // --- KRİTİK DÜZELTME BURADA ---
+  // --- CRITICAL FIX HERE ---
   const handleNameModalSubmit = async () => {
     if (!tempName.trim()) return;
 
     const finalName = tempName.trim();
 
-    // 1. LocalStorage güncelle (Kalıcılık için)
+    // 1. Update LocalStorage (For persistence)
     localStorage.setItem("guestUserName", finalName);
 
-    // 2. State güncelle (UI anında güncellensin diye)
+    // 2. Update State (So UI updates instantly)
     setUserName(finalName);
 
-    // 3. API'ye yeni ismi MANUEL OLARAK gönder (State'i bekleme!)
+    // 3. MANUALLY send the new name to the API (Don't wait for State!)
     if (pendingPartId !== null) {
-      // DİKKAT: actions.handleTakePart fonksiyonunuzun 2. parametre olarak isim alması lazım!
-      // (Bkz: 1. Adım)
+      // ATTENTION: your actions.handleTakePart function must accept the name as the 2nd parameter!
+      // (See: Step 1)
       await actions.handleTakePart(pendingPartId, finalName);
     }
 
@@ -175,7 +176,7 @@ export default function JoinPage({
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
-    // --- BURADA GRUPLAMA VE SIRALAMA MANTIĞI AYNEN KALIYOR ---
+    // --- GROUPING AND SORTING LOGIC REMAINS THE SAME HERE ---
     type GroupData = {
       assignments: Record<number, Assignment[]>;
       codeKey: string;
@@ -284,7 +285,7 @@ export default function JoinPage({
           </h1>
           {isGuestUser && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              {t("guestMessage") || "Lütfen almak istediğiniz parçayı seçin."}
+              {t("guestMessage") || "Please select the part you want to take."}
             </p>
           )}
         </div>
@@ -387,7 +388,7 @@ export default function JoinPage({
                                 participantNumber={Number(pNum)}
                                 assignments={subAssignments}
                                 localCounts={localCounts}
-                                userName={userName} // Context'ten gelen (yeni güncellenmiş) isim
+                                userName={userName} // Context's (newly updated) name
                                 actions={actions}
                                 t={t}
                                 isOwner={isOwner}
@@ -406,7 +407,7 @@ export default function JoinPage({
         </div>
       </main>
 
-      {/* --- İSİM GİRME MODALI --- */}
+      {/* --- NAME PROMPT MODAL --- */}
       {isNameModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 md:p-8 w-full max-w-sm shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-200">
@@ -426,18 +427,17 @@ export default function JoinPage({
                 </svg>
               </div>
               <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
-                {t("joinTitle") || "İsminiz Nedir?"}
+                {t("joinTitle") || "What is your name?"}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t("joinIntro") ||
-                  "Parçayı alabilmek için lütfen isminizi girin."}
+                {t("joinIntro") || "Please enter your name to take the part."}
               </p>
             </div>
             <input
               type="text"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
-              placeholder={t("yourNamePlaceholder") || "İsim Soyisim"}
+              placeholder={t("yourNamePlaceholder") || "Full Name"}
               className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-lg font-bold text-center outline-none focus:border-blue-500 transition-all dark:text-white mb-4"
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleNameModalSubmit()}
@@ -517,10 +517,10 @@ function AssignmentCard({
   const first = assignments[0];
   const isTaken = first.isTaken;
 
-  // --- KONTROL İYİLEŞTİRMESİ ---
+  // --- CHECK OPTIMIZATION ---
   const isAssignedToMe = first.deviceId === deviceId;
 
-  // Boşlukları temizle ve küçük harfe çevirerek karşılaştır
+  // Clean up spaces and convert to lowercase to compare
   const assignedName = first.assignedToName
     ? first.assignedToName.trim().toLowerCase()
     : "";
@@ -540,17 +540,22 @@ function AssignmentCard({
     )?.toUpperCase();
   };
 
+  // --- CARD STYLES (MADE MORE VISIBLE) ---
   let cardStyle =
-    "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 shadow-sm";
+    "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all"; // Idle (Not selected yet)
+
   if (isCompleted && isMyAssignment) {
+    // Completed (Green and prominent border)
     cardStyle =
-      "bg-emerald-50/30 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 shadow-sm";
+      "bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 dark:border-emerald-600 shadow-md opacity-90";
   } else if (isMyAssignment) {
+    // Selected but not finished (Blue, glowing, stands out)
     cardStyle =
-      "bg-white dark:bg-gray-900 border-blue-500 ring-4 ring-blue-500/5 shadow-xl scale-[1.01] z-10";
+      "bg-blue-50/50 dark:bg-blue-900/20 border-2 border-blue-500 ring-4 ring-blue-500/20 shadow-xl scale-[1.02] z-10";
   } else if (isTaken) {
+    // Taken by someone else (Gray, pale)
     cardStyle =
-      "bg-gray-50/80 dark:bg-gray-900/80 border-gray-100 dark:border-gray-800 opacity-60 grayscale-[0.5]";
+      "bg-gray-50/80 dark:bg-gray-800/80 border-gray-100 dark:border-gray-700 opacity-50 grayscale-[0.5] pointer-events-none"; // Prevent clicking on someone else's with pointer-events-none
   }
 
   let displayName = "";
@@ -573,16 +578,27 @@ function AssignmentCard({
 
   return (
     <div
-      className={`p-4 md:p-6 rounded-[1.8rem] md:rounded-[2.5rem] border transition-all duration-500 relative flex flex-col ${cardStyle}`}
+      className={`p-4 md:p-6 rounded-[1.8rem] md:rounded-[2.5rem] transition-all duration-300 relative flex flex-col ${cardStyle}`}
     >
       <div className="flex justify-between items-start mb-4 md:mb-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1.5 md:mb-2">
-            <span className="text-[9px] md:text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.15em]">
+            <span
+              className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] ${
+                isCompleted
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : isMyAssignment
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
               {t("part")} {participantNumber}
             </span>
             {isMyAssignment && !isCompleted && (
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
+            )}
+            {isCompleted && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             )}
           </div>
           <div className="flex flex-wrap gap-1 md:gap-1.5">
@@ -593,7 +609,13 @@ function AssignmentCard({
               return (
                 <span
                   key={idx}
-                  className="text-[9px] md:text-[10px] font-black text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 shadow-inner"
+                  className={`text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-md border shadow-inner ${
+                    isCompleted
+                      ? "bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700"
+                      : isMyAssignment
+                        ? "bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200/50 dark:border-gray-700/50"
+                  }`}
                 >
                   {isPaged
                     ? `${t("page")}: ${a.startUnit}-${a.endUnit}`
@@ -605,20 +627,28 @@ function AssignmentCard({
         </div>
         <div className="shrink-0 ml-2">
           {isCompleted ? (
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-200 dark:border-emerald-800 shadow-sm">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-md transform scale-110">
               <svg
                 className="w-5 h-5 md:w-6 md:h-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={3}
+                strokeWidth={4}
               >
-                <path d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
           ) : isTaken ? (
             <div
-              className={`px-2.5 py-1 md:px-4 md:py-1.5 rounded-xl border-2 flex flex-col items-center leading-tight transition-all ${isMyAssignment ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400"}`}
+              className={`px-2.5 py-1 md:px-4 md:py-1.5 rounded-xl border-2 flex flex-col items-center leading-tight transition-all ${
+                isMyAssignment
+                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30"
+                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400"
+              }`}
             >
               <span className="text-[6px] md:text-[7px] font-black uppercase tracking-[0.1em] mb-0.5">
                 {statusText}
@@ -630,7 +660,7 @@ function AssignmentCard({
               )}
             </div>
           ) : (
-            <span className="bg-gray-50 dark:bg-gray-800 text-gray-400 text-[8px] md:text-[9px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-full uppercase tracking-widest border border-gray-100 dark:border-gray-700 shadow-inner">
+            <span className="bg-gray-50 dark:bg-gray-800 text-gray-400 text-[8px] md:text-[9px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-full uppercase tracking-widest border border-gray-200 dark:border-gray-700 shadow-inner">
               {t("statusEmpty")}
             </span>
           )}
@@ -642,14 +672,20 @@ function AssignmentCard({
           canSeeDetails &&
           (getTypeName(first.resource) === "COUNTABLE" ||
             getTypeName(first.resource) === "JOINT") && (
-            <div className="scale-100 md:scale-125 transform transition-all duration-500 mb-6 md:mb-8 mt-2 md:mt-4 hover:scale-105 md:hover:scale-130">
+            <div
+              className={`scale-100 md:scale-125 transform transition-all duration-500 mb-6 md:mb-8 mt-2 md:mt-4 ${
+                isCompleted
+                  ? "opacity-70 pointer-events-none"
+                  : "hover:scale-105 md:hover:scale-130"
+              }`}
+            >
               <Zikirmatik
                 currentCount={
                   localCounts[first.id] ?? first.endUnit - first.startUnit + 1
                 }
                 onDecrement={() => actions.decrementCount(first.id)}
                 t={t}
-                readOnly={!isMyAssignment}
+                readOnly={!isMyAssignment || isCompleted}
               />
             </div>
           )}
@@ -684,11 +720,19 @@ function AssignmentCard({
         )}
       </div>
 
-      <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t-2 border-dashed border-gray-50 dark:border-gray-800">
+      <div
+        className={`mt-4 md:mt-8 pt-4 md:pt-6 border-t-2 border-dashed ${
+          isCompleted
+            ? "border-emerald-200 dark:border-emerald-800"
+            : isMyAssignment
+              ? "border-blue-200 dark:border-blue-800"
+              : "border-gray-100 dark:border-gray-800"
+        }`}
+      >
         {!isTaken ? (
           <button
             onClick={() => onTakeClick(first.id)}
-            className="w-full py-3.5 md:py-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-xl md:rounded-2xl font-black text-xs md:text-sm hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all active:scale-95 shadow-sm"
+            className="w-full py-3.5 md:py-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl md:rounded-2xl font-black text-xs md:text-sm hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all active:scale-95 shadow-sm"
           >
             {t("select")}
           </button>
@@ -707,7 +751,7 @@ function AssignmentCard({
                       actions.updateLocalCount(first.id, 0);
                     }
                   }}
-                  className="w-full py-3.5 md:py-4 bg-emerald-600 text-white rounded-xl md:rounded-[1.2rem] font-black text-xs md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-2xl shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 border-b-2 md:border-b-4 border-emerald-800"
+                  className="w-full py-3.5 md:py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl md:rounded-[1.2rem] font-black text-xs md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-xl shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 border-b-2 md:border-b-4 border-emerald-700"
                 >
                   <svg
                     className="w-4 h-4 md:w-5 md:h-5"
@@ -716,7 +760,11 @@ function AssignmentCard({
                     stroke="currentColor"
                     strokeWidth={4}
                   >
-                    <path d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   {t("finish")}
                 </button>
@@ -733,7 +781,11 @@ function AssignmentCard({
                     actions.updateLocalCount(first.id, initial);
                   }
                 }}
-                className={`w-full py-3 md:py-3.5 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all active:scale-95 border-2 ${isCompleted ? "bg-white dark:bg-gray-800 text-gray-400 border-gray-100 dark:border-gray-700" : "bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30"}`}
+                className={`w-full py-3 md:py-3.5 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all active:scale-95 border-2 ${
+                  isCompleted
+                    ? "bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border-gray-200 dark:border-gray-700"
+                    : "bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50"
+                }`}
               >
                 {isCompleted ? t("undo") : t("giveUp")}
               </button>
@@ -749,7 +801,7 @@ function LoadingScreen({ t }: { t: any }) {
   const [isSlowLoad, setIsSlowLoad] = useState(false);
 
   useEffect(() => {
-    // 4 saniye sonra Render'ın uyku modunda olduğunu varsayıyoruz
+    // Assume the server is in sleep mode after 4 seconds
     const timer = setTimeout(() => setIsSlowLoad(true), 4000);
     return () => clearTimeout(timer);
   }, []);
@@ -766,12 +818,13 @@ function LoadingScreen({ t }: { t: any }) {
 
           {isSlowLoad && (
             <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-              {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+              {t("serverWakingUpPart1") ||
+                "Waking up server. This process might take "}
               <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                30-40 {t("seconds") || "saniye"}
+                30-40 {t("seconds") || "seconds"}
               </span>{" "}
               {t("serverWakingUpPart2") ||
-                "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+                "please wait without closing the tab."}
             </p>
           )}
         </div>

@@ -15,14 +15,12 @@ export function useDistributionSession(code: string) {
     const [localCounts, setLocalCounts] = useState<Record<number, number>>({});
     const [userName, setUserName] = useState<string | null>(null);
 
-    // Device ID state'i
     const [deviceId, setDeviceId] = useState<string>("");
 
     const dataFetchedRef = useRef(false);
     const [readingModalContent, setReadingModalContent] = useState<ReadingModalContent | null>(null);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    // 1. Device ID'yi bul veya oluştur
     useEffect(() => {
         if (typeof window !== "undefined") {
             let storedDeviceId = localStorage.getItem("deviceId");
@@ -34,18 +32,14 @@ export function useDistributionSession(code: string) {
         }
     }, []);
 
-    // 2. İsim Oluşturma (GÜNCELLENDİ: Otomatik İsim Atama)
     useEffect(() => {
         if (user) {
             setUserName(user);
         } else {
             let savedName = localStorage.getItem("guestUserName");
 
-            // DEĞİŞİKLİK BURADA: Eğer isim kayıtlı değilse ve DeviceID hazırsa OTOMATİK oluştur.
-            // Böylece kullanıcıya isim sorma ekranı hiç gelmez, "o yazmaz".
             if (!savedName && deviceId) {
                 const shortCode = deviceId.substring(0, 4).toUpperCase();
-                // Örnek İsim: "Misafir-A1B2"
                 savedName = `${t("guest") || "Misafir"}-${shortCode}`;
                 localStorage.setItem("guestUserName", savedName);
             }
@@ -111,7 +105,6 @@ export function useDistributionSession(code: string) {
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
             if (!token && !nameToUse) {
-                // İsim otomatik atandığı için buraya düşme ihtimali çok düşük ama güvenlik için kalsın
                 alert(t("alertEnterName"));
                 setLocalCounts((prev) => ({ ...prev, [assignmentId]: currentCount }));
                 return;
@@ -138,9 +131,7 @@ export function useDistributionSession(code: string) {
         }
     };
 
-    // --- ÖNEMLİ DEĞİŞİKLİK BURADA: Parametre eklendi ---
     const handleTakePart = async (assignmentId: number, guestName?: string) => {
-        // Gönderilecek ismi belirle: Eğer parametre geldiyse onu kullan, yoksa state'tekini kullan
         const nameToSend = guestName || userName;
 
         if (!nameToSend) {
@@ -151,7 +142,6 @@ export function useDistributionSession(code: string) {
             const headers: Record<string, string> = {};
             if (token) headers["Authorization"] = `Bearer ${token}`;
 
-            // URL'deki name parametresini nameToSend ile güncelleyin
             const res = await fetch(
                 `${apiUrl}/api/distribution/take/${assignmentId}?name=${encodeURIComponent(nameToSend)}&deviceId=${deviceId}`,
                 { method: "POST", headers }
@@ -323,10 +313,10 @@ export function useDistributionSession(code: string) {
         setUserName,
         readingModalContent,
         setReadingModalContent,
-        deviceId, // Hook artık deviceId'yi de döndürüyor
+        deviceId,
         actions: {
             decrementCount,
-            handleTakePart, // Güncellenmiş fonksiyon
+            handleTakePart,
             handleCancelPart,
             handleCompletePart,
             openReadingModal,

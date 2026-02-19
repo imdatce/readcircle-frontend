@@ -16,7 +16,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
-  
   useEffect(() => {
     const storedUser = localStorage.getItem("username");
     const storedToken = localStorage.getItem("token");

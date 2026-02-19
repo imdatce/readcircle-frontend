@@ -32,8 +32,9 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   FETIH: "SURAHS",
   YASIN: "SURAHS",
   WAQIA: "SURAHS",
-  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
-  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
+  FATIHA: "SURAHS", // <-- FATIHA ADDED
+  IHLAS: "SURAHS", // <-- IHLAS ADDED
+
   // Prayers
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
@@ -103,9 +104,10 @@ export default function AdminPage() {
   const [createdSessionName, setCreatedSessionName] = useState<string>("");
 
   // UI State
-  const [loading, setLoading] = useState(false); // Buton için
-  const [isFetchingResources, setIsFetchingResources] = useState(true); // Sayfa açılışı için
+  const [loading, setLoading] = useState(false); // For button loading state
+  const [isFetchingResources, setIsFetchingResources] = useState(true); // For initial page load
   const [deviceId, setDeviceId] = useState("");
+  const [isAuthChecked, setIsAuthChecked] = useState(false); // For authorization check process
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -139,6 +141,13 @@ export default function AdminPage() {
       localStorage.setItem("deviceId", id);
     }
     setDeviceId(id);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAuthChecked(true);
+    }, 200);
+    return () => clearTimeout(timer);
   }, []);
 
   /**
@@ -177,7 +186,13 @@ export default function AdminPage() {
 
   // Fetch available resources on mount
   useEffect(() => {
-    if (!apiUrl || !token) return;
+    if (!apiUrl || !token) {
+      // If there is no token, do not make an API request, stop loading state.
+      setIsFetchingResources(false);
+      return;
+    }
+
+    setIsFetchingResources(true);
     const headers = { Authorization: `Bearer ${token}` };
     fetch(`${apiUrl}/api/distribution/resources`, { headers })
       .then((res) => {
@@ -192,14 +207,9 @@ export default function AdminPage() {
         setResources(Array.isArray(data) ? data : []);
       })
       .catch((err) => console.error(err))
-      .finally(() => setIsFetchingResources(false)); // <-- BU SATIR EKLENDİ
+      .finally(() => setIsFetchingResources(false));
   }, [apiUrl, token, logout, t]);
 
-  /**
-   * MEMOIZED RESOURCE GROUPING
-   * Filters, groups, and sorts resources into categories for the UI.
-   * This ensures high performance even with many resources.
-   */
   const categorizedResources = useMemo(() => {
     if (!resources.length) return [];
 
@@ -267,11 +277,14 @@ export default function AdminPage() {
     }
     setLoading(true);
     try {
+      const finalDescription =
+        description.trim() === "" ? t("defaultSessionName") : description;
+
       const payload = {
         resourceIds: selectedResources.map((id) => Number(id)),
         participants: parseInt(participants) || 10,
         customTotals: customTotals,
-        description: description,
+        description: finalDescription, // Using finalDescription instead of original 'description'
         ownerDeviceId: deviceId,
       };
 
@@ -289,7 +302,10 @@ export default function AdminPage() {
 
       setCreatedCode(data.code);
       setCreatedLink(`${window.location.origin}/join/${data.code}`);
-      setCreatedSessionName(data.description || "");
+
+      // Displayed name is taken from the backend or fallback to our default name
+      setCreatedSessionName(data.description || finalDescription);
+
       sessionStorage.removeItem("adminState");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
@@ -299,7 +315,6 @@ export default function AdminPage() {
     }
   };
 
-  // Helper to display selected resources in the "Targets" section
   const allSelectedResources = useMemo(() => {
     return resources
       .filter((r) => selectedResources.includes(r.id.toString()))
@@ -315,10 +330,58 @@ export default function AdminPage() {
       });
   }, [resources, selectedResources]);
 
+  // --- RENDER PROCESS ---
+
+  // 1. First wait for the authorization (localStorage read) check
+  if (!isAuthChecked) {
+    return <LoadingScreen t={t} />;
+  }
+
+  // 2. If unauthorized (Not Logged In), show warning screen
+  if (!user || !token) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-transparent p-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30 animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-red-900/20 shadow-inner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-8 h-8"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-gray-800 dark:text-white mb-2">
+            {t("loginRequired")}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 font-medium">
+            {t("unauthorizedAccess") ||
+              "Please log in to access this page and create a new circle."}
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex w-full py-4 items-center justify-center bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-500/30"
+          >
+            {t("getStarted")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. If logged in but resources are still fetching from API, wait
   if (isFetchingResources) {
     return <LoadingScreen t={t} />;
   }
 
+  // 4. If everything is OK, show the normal Admin (Creation) Page
   return (
     <div className="min-h-screen pb-10 pt-4 md:pt-6 px-4 bg-transparent">
       {/* Header Bar */}
@@ -626,7 +689,7 @@ function LoadingScreen({ t }: { t: any }) {
   const [isSlowLoad, setIsSlowLoad] = useState(false);
 
   useEffect(() => {
-    // 4 saniye sonra Render'ın uyku modunda olduğunu varsayıyoruz
+    // Assume the server is in sleep mode after 4 seconds
     const timer = setTimeout(() => setIsSlowLoad(true), 4000);
     return () => clearTimeout(timer);
   }, []);
@@ -643,12 +706,11 @@ function LoadingScreen({ t }: { t: any }) {
 
           {isSlowLoad && (
             <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-              {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+              {t("serverWakingUpPart1")}
               <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                30-40 {t("seconds") || "saniye"}
+                30-40 {t("seconds")}
               </span>{" "}
-              {t("serverWakingUpPart2") ||
-                "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+              {t("serverWakingUpPart2")}
             </p>
           )}
         </div>

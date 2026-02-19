@@ -48,7 +48,6 @@ export default function Footer() {
                   {developerName}
                 </span>
               )}
-             
             </div>
           </div>
         </div>

@@ -10,9 +10,9 @@ import Link from "next/link";
 import { SessionSummary } from "@/types";
 import { useSearchParams } from "next/navigation";
 
-// --- SIRALAMA MANTIĞI ---
+// --- SORTING LOGIC ---
 const ORDER_PRIORITY = [
-  "QURAN", // 1. Kuran
+  "QURAN", // 1. Quran
   "CEVSEN", // 2. Cevşen
   "TEVHIDNAME", // 3. Tevhidname
   "FETIH", // 4. Fetih
@@ -22,7 +22,7 @@ const ORDER_PRIORITY = [
   "WAQIA",
   "BEDIR", // 6. Bedir
   "UHUD", // 7. Uhud
-  "OZELSALAVAT", // 8. Büyük Salavat
+  "OZELSALAVAT", // 8. Great Salawat
   "MUNCIYE", // 9. Münciye
   "TEFRICIYE", // 10. Tefriciye
   "YALATIF", // 11. Ya Latif
@@ -32,10 +32,59 @@ const ORDER_PRIORITY = [
   "LAHAVLE", // 15. La Havle
 ];
 
+const ayahs = [
+  {
+    arabic: "اَلَا بِذِكْرِ اللّٰهِ تَطْمَئِنُّ الْقُلُوبُ",
+    translationKey: "homeVerseContent",
+    reference: "Ra'd, 28",
+  },
+  {
+    arabic: "فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ",
+    translationKey: "verseBaqarah152",
+    reference: "Bakara, 152",
+  },
+  {
+    arabic: "وَقَالَ رَبُّكُمُ ادْعُونِي أَسْتَجِبْ لَكُمْ",
+    translationKey: "verseGafir60",
+    reference: "Mü'min (Gâfir), 60",
+  },
+  {
+    arabic: "يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا",
+    translationKey: "verseAhzab41",
+    reference: "Ahzâb, 41",
+  },
+  {
+    arabic:
+      "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ",
+    translationKey: "verseBaqarah186",
+    reference: "Bakara, 186",
+  },
+  {
+    arabic:
+      "الَّذِينَ يَذْكُرُونَ اللَّهَ قِيَامًا وَقُعُودًا وَعَلَىٰ جُنُوبِهِمْ",
+    translationKey: "verseAliImran191",
+    reference: "Âl-i İmrân, 191",
+  },
+  {
+    arabic: "ادْعُوا رَبَّكُمْ تَضَرَّعًا وَخُفْيَةً",
+    translationKey: "verseAraf55",
+    reference: "A'râf, 55",
+  },
+  {
+    arabic: "وَاذْكُر رَّبَّكَ فِي نَفْسِكَ تَضَرُّعًا وَخِيفَةً",
+    translationKey: "verseAraf205",
+    reference: "A'râf, 205",
+  },
+  {
+    arabic:
+      "إِنَّنِي أَنَا اللَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي",
+    translationKey: "verseTaha14",
+    reference: "Tâhâ, 14",
+  },
+];
+
 const sortSessions = (sessions: SessionSummary[]) => {
   return [...sessions].sort((a, b) => {
-    // Backend'den gelen SessionSummary içinde 'resourceCode', 'codeKey' veya 'resource.codeKey' olabilir.
-    // Hepsini kontrol ederek garantiye alıyoruz.
     const codeA = (
       (a as any).resourceCode ||
       (a as any).codeKey ||
@@ -52,19 +101,87 @@ const sortSessions = (sessions: SessionSummary[]) => {
     const indexA = ORDER_PRIORITY.indexOf(codeA);
     const indexB = ORDER_PRIORITY.indexOf(codeB);
 
-    // İkisi de listede varsa, listedeki sıraya göre
     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-
-    // Sadece A listedeyse, A öne gelir
     if (indexA !== -1) return -1;
-
-    // Sadece B listedeyse, B öne gelir
     if (indexB !== -1) return 1;
 
-    // Listede yoklarsa ID'ye göre (varsayılan: en son eklenen en üstte kalsın istersen b.id - a.id yapabilirsin)
     return b.id - a.id;
   });
 };
+
+// Common Icon (Moved outside so any component can use it)
+function AyahIcon() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0 opacity-80"
+    >
+      <path
+        d="M18 2L21.5 6.5H26.5L28 11.5L33 14.5L31 19.5L33 24.5L28 27.5L26.5 32.5H21.5L18 37L14.5 32.5H9.5L8 27.5L3 24.5L5 19.5L3 14.5L8 11.5L9.5 6.5H14.5L18 2Z"
+        className="fill-emerald-600/20 stroke-emerald-600 dark:fill-emerald-400/20 dark:stroke-emerald-400"
+        strokeWidth="1.5"
+      />
+      <circle
+        cx="18"
+        cy="19.5"
+        r="5"
+        className="fill-emerald-600 dark:fill-emerald-400"
+      />
+    </svg>
+  );
+}
+
+// Random Ayah Display Component
+function HomeAyahSection() {
+  const { t } = useLanguage();
+  const [currentAyah, setCurrentAyah] = useState(ayahs[0]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // To prevent Hydration error in SSR, select random content on the client side.
+    // In this scenario, updating state within useEffect is REQUIRED.
+    const setRandomData = () => {
+      const randomIndex = Math.floor(Math.random() * ayahs.length);
+      setCurrentAyah(ayahs[randomIndex]);
+      setIsMounted(true);
+    };
+
+    // Silencing the linter here or wrapping it in a separate function
+    setRandomData();
+  }, []);
+
+  if (!isMounted) {
+    // Temporary empty/loading view before hydration
+    return <div className="py-8 min-h-[150px]"></div>;
+  }
+
+  return (
+    <div className="relative bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border-y border-emerald-500/30 py-8 px-4 md:px-12 rounded-lg shadow-sm transition-all duration-500">
+      <h2
+        className="font-serif text-2xl md:text-4xl text-gray-800 dark:text-gray-100 mb-4 leading-relaxed drop-shadow-sm text-center flex items-center justify-center gap-4"
+        dir="rtl"
+        lang="ar"
+      >
+        <AyahIcon />
+        <span className="leading-tight">{currentAyah.arabic}</span>
+        <AyahIcon />
+      </h2>
+
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 italic font-medium font-serif text-center max-w-lg mx-auto">
+          &quot;{t(currentAyah.translationKey)}&quot;
+        </p>
+        <span className="text-xs text-emerald-600 dark:text-emerald-500 font-bold tracking-widest uppercase opacity-80">
+          {currentAyah.reference}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function HomeContent() {
   const { t, language } = useLanguage();
@@ -208,7 +325,7 @@ function HomeContent() {
   };
 
   const handleLeaveSession = async (sessionCode: string) => {
-    if (!confirm(t("confirmLeave"))) return;
+    if (!confirm(t("confirmLeaveSession"))) return;
 
     try {
       const res = await fetch(
@@ -246,31 +363,6 @@ function HomeContent() {
     }
   };
 
-  function AyahIcon() {
-    return (
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 36 36"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0 opacity-80"
-      >
-        <path
-          d="M18 2L21.5 6.5H26.5L28 11.5L33 14.5L31 19.5L33 24.5L28 27.5L26.5 32.5H21.5L18 37L14.5 32.5H9.5L8 27.5L3 24.5L5 19.5L3 14.5L8 11.5L9.5 6.5H14.5L18 2Z"
-          className="fill-emerald-600/20 stroke-emerald-600 dark:fill-emerald-400/20 dark:stroke-emerald-400"
-          strokeWidth="1.5"
-        />
-        <circle
-          cx="18"
-          cy="19.5"
-          r="5"
-          className="fill-emerald-600 dark:fill-emerald-400"
-        />
-      </svg>
-    );
-  }
-
   return (
     <main
       className="min-h-screen bg-gray-50/50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 font-sans selection:bg-emerald-100 dark:selection:bg-emerald-900 transition-colors duration-300 relative overflow-hidden"
@@ -292,28 +384,8 @@ function HomeContent() {
           <div className="relative mx-auto max-w-2xl mt-4 mb-12 group cursor-default">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-red-500/10 to-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-70 transition-opacity duration-1000"></div>
 
-            <div className="relative bg-white/40 dark:bg-gray-900/40 backdrop-blur-md border-y border-emerald-500/30 py-8 px-4 md:px-12 rounded-lg shadow-sm">
-              <h2
-                className="font-serif text-2xl md:text-4xl text-gray-800 dark:text-gray-100 mb-4 leading-relaxed drop-shadow-sm text-center flex items-center justify-center gap-4"
-                dir="rtl"
-                lang="ar"
-              >
-                <AyahIcon />
-                <span className="leading-tight">
-                  اَلَا بِذِكْرِ اللّٰهِ تَطْمَئِنُّ الْقُلُوبُ
-                </span>
-                <AyahIcon />
-              </h2>
-
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 italic font-medium font-serif text-center max-w-lg mx-auto">
-                  &quot;{t("homeVerseContent")}&quot;
-                </p>
-                <span className="text-xs text-emerald-600 dark:text-emerald-500 font-bold tracking-widest uppercase opacity-80">
-                  Ra&apos;d, 28
-                </span>
-              </div>
-            </div>
+            {/* Random Ayah Display Component added here */}
+            <HomeAyahSection />
           </div>
 
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 leading-relaxed max-w-2xl mx-auto">
@@ -361,7 +433,6 @@ function HomeContent() {
                     onSubmit={handleJoin}
                     className="flex items-center w-full md:w-auto bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all shadow-sm"
                   >
-                    {/* İkon Bölümü: Küçülmemesi için shrink-0 ekledik */}
                     <div className="pl-3 pr-2 text-gray-400 shrink-0">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -379,7 +450,6 @@ function HomeContent() {
                       </svg>
                     </div>
 
-                    {/* Input Bölümü: min-w-[200px] KALDIRILDI. Yerine flex-1 ve min-w-0 eklendi */}
                     <input
                       type="text"
                       value={code}
@@ -389,7 +459,6 @@ function HomeContent() {
                       onKeyDown={(e) => e.key === "Enter" && handleJoin()}
                     />
 
-                    {/* Buton Bölümü: Padding mobilde biraz kısıldı (px-3), masaüstünde geniş (md:px-5) */}
                     <button
                       type="submit"
                       className="shrink-0 px-3 py-2.5 md:px-5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 rounded-xl font-bold shadow-sm transition-all duration-200 whitespace-nowrap text-xs md:text-sm"
@@ -524,7 +593,6 @@ function HomeContent() {
                     <DashboardSkeleton />
                   ) : createdSessions.length > 0 ? (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-2">
-                      {/* BURASI GÜNCELLENDİ: sortSessions KULLANILDI */}
                       {sortSessions(createdSessions).map((session) => (
                         <SessionCard
                           key={session.id}
@@ -578,7 +646,6 @@ function HomeContent() {
                     <DashboardSkeleton />
                   ) : mySessions.length > 0 ? (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2 custom-scrollbar pb-2">
-                      {/* BURASI GÜNCELLENDİ: sortSessions KULLANILDI */}
                       {sortSessions(mySessions).map((session) => (
                         <SessionCard
                           key={session.id}
@@ -622,7 +689,7 @@ function HomeContent() {
 }
 
 function GlobalLoading() {
-  const { t } = useLanguage(); // i18n hook eklendi
+  const { t } = useLanguage();
   const [isSlowLoad, setIsSlowLoad] = useState(false);
 
   useEffect(() => {
@@ -640,12 +707,11 @@ function GlobalLoading() {
 
       {isSlowLoad && (
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-          {t("serverWakingUpPart1") || "Sunucu uyandırılıyor. Bu işlem "}
+          {t("serverWakingUpPart1")}
           <span className="font-bold text-emerald-600 dark:text-emerald-400">
-            30-40 {t("seconds") || "saniye"}
+            30-40 {t("seconds")}
           </span>{" "}
-          {t("serverWakingUpPart2") ||
-            "sürebilir, lütfen sekneyi kapatmadan bekleyin."}
+          {t("serverWakingUpPart2")}
         </p>
       )}
     </div>
@@ -710,7 +776,7 @@ function EmptyState({ title, actionLink, actionText }: any) {
 }
 
 function DashboardSkeleton() {
-  const { t } = useLanguage(); // i18n hook eklendi
+  const { t } = useLanguage();
   const [isSlowLoad, setIsSlowLoad] = useState(false);
 
   useEffect(() => {
@@ -730,12 +796,11 @@ function DashboardSkeleton() {
       {isSlowLoad && (
         <div className="p-4 mt-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-1000">
           <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            {t("serverWakingUpPart1") ||
-              "Sunucu uyandırılıyor... Verilerin yüklenmesi "}
+            {t("serverWakingUpPart1")}
             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-              30-40 {t("seconds") || "saniye"}
+              30-40 {t("seconds")}
             </span>{" "}
-            {t("serverWakingUpPart2") || "sürebilir, lütfen bekleyin."}
+            {t("serverWakingUpPart2")}
           </p>
         </div>
       )}

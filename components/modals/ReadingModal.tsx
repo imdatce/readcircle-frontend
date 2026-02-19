@@ -61,7 +61,7 @@ async function fetchKurdishForPage(structureData: any) {
         `https://quranenc.com/api/v1/translation/sura/kurmanji_ismail/${surahNo}`,
       )
         .then(async (res) => {
-          if (!res.ok) throw new Error(`QuranEnc API hatası: ${res.status}`);
+          if (!res.ok) throw new Error(`QuranEnc API error: ${res.status}`);
           return res.json();
         })
         .then((data) => ({ surahNo, result: data.result as any[] })),
@@ -80,12 +80,12 @@ async function fetchKurdishForPage(structureData: any) {
       const key = `${String(ayah.surah.number)}:${String(ayah.numberInSurah)}`;
       return {
         ...ayah,
-        text: translationMap[key] || `[Çeviri bulunamadı] ${ayah.text}`,
+        text: translationMap[key] || `[Translation not found] ${ayah.text}`,
       };
     });
     return { ayahs: mergedData };
   } catch (error) {
-    console.error("Kürtçe API Hatası:", error);
+    console.error("Kurdish API Error:", error);
     return null;
   }
 }
@@ -113,7 +113,7 @@ async function fetchQuranTranslationPage(
       return { ayahs: data.data.ayahs };
     return null;
   } catch (error) {
-    console.error("Meal çekilemedi:", error);
+    console.error("Could not fetch translation:", error);
     return null;
   }
 }
@@ -268,7 +268,7 @@ const GridRow = ({
   );
 };
 
-// ── SURE AYETLERİ GRID ──────────────────────────────────────
+// ── SURAH VERSES GRID ──────────────────────────────────────
 const SurahVerseGrid = ({
   babs,
   activeTab,
@@ -296,7 +296,7 @@ const SurahVerseGrid = ({
     )
     .filter((t) => t?.trim().length > 0);
 
-  // "1- metin" veya "1. metin" formatından numarayı ayır
+  // Extract the number from "1- text" or "1. text" format
   const parsed = items.map((item, idx) => {
     const cleaned = item.replace(/^"+|"+$/g, "").trim();
     const m = cleaned.match(/^(\d+)[-.:]\s*([\s\S]*)/);
@@ -465,7 +465,7 @@ const CevsenGridDisplay = ({
 };
 
 // ================================================================
-// ANA MODAL
+// MAIN MODAL
 // ================================================================
 const ReadingModal: React.FC<ReadingModalProps> = ({
   content,
@@ -681,13 +681,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 onClick={() => setActiveQuranTab("ORIGINAL")}
                 className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
-                {t("Original") || "Orijinal"}
+                {t("Original") || "Original"}
               </button>
               <button
                 onClick={() => setActiveQuranTab("MEAL")}
                 className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
-                {t("tabMeaning") || "Meal"}
+                {t("tabMeaning") || "Meaning"}
               </button>
             </div>
           )}
@@ -777,13 +777,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
             processedData && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
-                {/* SURAH_CARD: tüm ayetleri tek grid'de göster */}
+                {/* SURAH_CARD: show all verses in a single grid */}
                 {processedData.mode === "SURAH_CARD" && (
                   <>
-                    {/* Arapça tab:
-                      - content.cevsenData'daki orijinal arabic'e bak (processedData'da arabic boş kalıyor)
-                      - IMAGE_MODE varsa resim göster
-                      - Yoksa SurahVerseGrid ile ayetleri grid'de göster */}
+                    {/* Arabic tab:
+                      - Check original arabic in content.cevsenData (arabic is left empty in processedData)
+                      - If IMAGE_MODE is present, display image
+                      - Otherwise, display verses in a grid with SurahVerseGrid */}
                     {activeTab === "ARABIC" &&
                       (content.cevsenData &&
                       content.cevsenData[0]?.arabic?.includes(
@@ -797,7 +797,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                 .replace("IMAGE_MODE:::", "")
                                 .trim()}
                               className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4"
-                              alt="Sure"
+                              alt="Surah"
                             />
                           ) : null,
                         )
@@ -808,7 +808,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           fontLevel={fontLevel}
                         />
                       ))}
-                    {/* Latin ve Meal tabları */}
+                    {/* Latin and Meaning tabs */}
                     {(activeTab === "LATIN" || activeTab === "MEANING") && (
                       <SurahVerseGrid
                         babs={processedData.data}
@@ -819,7 +819,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   </>
                 )}
 
-                {/* BLOCK ve LIST modları — eski davranış */}
+                {/* BLOCK and LIST modes — original behavior */}
                 {processedData.mode !== "SURAH_CARD" &&
                   processedData.data.map((bab, index) => {
                     const mode = processedData.mode;
@@ -870,7 +870,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                     .replace("IMAGE_MODE:::", "")
                                     .trim()}
                                   className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
-                                  alt="Arapça"
+                                  alt="Arabic"
                                 />
                               ) : isCard ? (
                                 renderUhudList(

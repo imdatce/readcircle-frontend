@@ -20,7 +20,6 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
-// Yardımcı Tip Tanımları
 type TranslationValue = string | { [key: string]: string | object };
 type TranslationStructure = {
   [key in Language]: { [key: string]: TranslationValue };
@@ -38,14 +37,14 @@ const translations: TranslationStructure = {
       sessionCreated: "Oturum oluşturuldu",
       tapToCount: "Saymak için dokun",
       refresh: "Yenile",
-      serverWakingUpPart1:
-        "Sunucu uyku modundan çıkarılıyor. İlk girişte bu işlem",
+      unauthorizedAccess:
+        "Yetkisiz Erişim: Bu paneli sadece dağıtımı oluşturan kişi görebilir.",
+      serverWakingUpPart1: "Kaynaklar yüklaniyor. İlk girişte bu işlem",
       seconds: "saniye",
       serverWakingUpPart2: "sürebilir, lütfen sekmeyi kapatmadan bekleyin.",
       add: "Ekle",
       status: "Durum",
-      yourNamePlaceholder: "Adınız?", // tr
-
+      yourNamePlaceholder: "Adınız?",
       undo: "Geri Al",
       taken: "Alındı",
       completed: "Tamamlandı",
@@ -131,6 +130,7 @@ const translations: TranslationStructure = {
       registering: "Kaydediliyor...",
       loginRequiredMsg: "Bir cüz seçmek için giriş yapmalısınız.",
       loginOrRegister: "Giriş Yap veya Kayıt Ol",
+      defaultSessionName: "Manevi Halka",
     },
     landingSection: {
       landingHeroTitle: "Manevi Birliktelik ve Kaynak Dağıtım Platformu",
@@ -258,7 +258,22 @@ const translations: TranslationStructure = {
       errorOccurred: "Bir hata oluştu.",
       unexpectedError: "Beklenmeyen bir hata oluştu.",
       homeVerseContent:
-        "Bilesiniz ki, kalpler ancak Allah'ı anmakla huzur bulur.",
+        "Bilesiniz ki kalpler ancak Allah'ı anmakla huzur bulur.",
+      verseBaqarah152:
+        "Öyleyse beni anın ki ben de sizi anayım. Bana şükredin ve nankörlük etmeyin.",
+      verseGafir60:
+        "Rabbiniz şöyle buyurdu: Bana dua edin, duanıza cevap vereyim.",
+      verseAhzab41: "Ey iman edenler! Allah'ı çokça zikredin.",
+      verseBaqarah186:
+        "Kullarım sana beni sorduklarında bilsinler ki şüphesiz ben yakınım, bana dua ettiğinde dua edenin dileğine karşılık veririm.",
+      verseAliImran191:
+        "Onlar ayaktayken, otururken ve yanları üzerine yatarken Allah'ı anarlar.",
+      verseAraf55: "Rabbinize yalvara yakara ve gizlice dua edin.",
+      verseAraf205:
+        "Kendi kendine, yalvararak ve ürpererek, yüksek olmayan bir sesle sabah akşam Rabbini an.",
+      verseTaha14:
+        "Şüphe yok ki ben Allah'ım. Benden başka hiçbir ilâh yoktur. O hâlde bana ibadet et ve beni anmak için namaz kıl.",
+
       connectionError: "Bağlantı hatası.",
       original: "Orijinal",
       errorFetchFailed: "Veri çekilemedi. Hata Kodu:",
@@ -305,16 +320,32 @@ const translations: TranslationStructure = {
       sessionCreated: "Civat hat avakirin",
       tapToCount: "Ji bo hejmartinê bitikîne",
       refresh: "Nû bike",
+      unauthorizedAccess:
+        "Gihîştina bêdestûr: Tenê kesê ku vê belavkirinê çêkir dike dikare vê panê bibîne.",
       add: "Zêde bike",
+      defaultSessionName: "Dûra Rûhî",
       status: "Rewş",
       undo: "Vegerîne",
-      yourNamePlaceholder: "Navê te?", // ku
-
+      yourNamePlaceholder: "Navê te?",
+      homeVerseContent: "Bi rastî dil tenê bi bîranîna Allah re aram dibin.",
+      verseBaqarah152:
+        "Ji ber vê yekê min bîr bikin ku ez jî we bîr bikim. Spasê min bikin û nekin kufr.",
+      verseGafir60: "Xwedê we got: Min gazî bikin, ez bersivê bidim we.",
+      verseAhzab41: "Ey yên bawer kirine! Allah pir bîr bikin.",
+      verseBaqarah186:
+        "Dema ku xulamên min ji te li ser min dipirsin, ez nêzîkim. Dema ku gazî min dike, ez bersivê gazîker didim.",
+      verseAliImran191:
+        "Ew kes in ku li ser lingan, rûniştî û li ser aliyên xwe Allah dibîr in.",
+      verseAraf55: "Bi dilsozî û di nepenî de Xwedê xwe gazî bikin.",
+      verseAraf205:
+        "Di dilê xwe de bi dilsozî û tirsê, bi dengekî ne bilind, sibeh û êvaran Xwedê xwe bîr bike.",
+      verseTaha14:
+        "Bi rastî ez Allah im. Ji min pêştir tu ilah tune ye. Ji ber vê yekê min perestî bike û ji bo bîranîna min nimêjê bi cih bîne.",
       taken: "Hat girtin",
       completed: "Temam bû",
       target: "Hejmara Hedef",
       serverWakingUpPart1:
-        "Server tê destpêkirin. Di barkirina yekem de ev dikare bidome",
+        "Tê bar kirin. Di barkirina yekem de ev dikare bidome",
       seconds: "çirke",
       serverWakingUpPart2: "ji kerema xwe re bê girtina tabê bisekine.",
       selectPlaceholder: "Hilbijêre...",
@@ -345,7 +376,7 @@ const translations: TranslationStructure = {
       part: "Cuz/Parçe",
       person: "Kes",
       total: "Giştî",
-      pieces: "Heb", // veya 'Dan'
+      pieces: "Heb",
       menuLanguage: "Mîhengên Ziman",
       default: "Standart",
       targetLabel: "Hedef",
@@ -572,14 +603,32 @@ const translations: TranslationStructure = {
       rightsReserved: "All rights reserved.",
       sessionCreated: "Session created",
       tapToCount: "Tap to count",
-      yourNamePlaceholder: "Your Name?", // en
-
+      yourNamePlaceholder: "Your Name?",
+      defaultSessionName: "Spiritual Circle",
+      homeVerseContent:
+        "Verily, in the remembrance of Allah do hearts find rest.",
+      verseBaqarah152:
+        "So remember Me; I will remember you. Be grateful to Me and do not be ungrateful.",
+      verseGafir60: "Your Lord says: Call upon Me; I will respond to you.",
+      verseAhzab41: "O you who believe! Remember Allah with much remembrance.",
+      verseBaqarah186:
+        "When My servants ask you concerning Me, indeed I am near. I respond to the call of the supplicant when he calls upon Me.",
+      verseAliImran191:
+        "Those who remember Allah while standing, sitting, and lying on their sides.",
+      verseAraf55: "Call upon your Lord humbly and privately.",
+      verseAraf205:
+        "Remember your Lord within yourself in humility and fear, without loudness in words, in the mornings and evenings.",
+      verseTaha14:
+        "Indeed, I am Allah. There is no deity except Me, so worship Me and establish prayer for My remembrance.",
       refresh: "Refresh",
       add: "Add",
       status: "Status",
       undo: "Undo",
+      unauthorizedAccess:
+        "Unauthorized Access: Only the person who created this distribution can view this panel.",
       taken: "Taken",
-      serverWakingUpPart1: "Waking up the server. On first load, this may take",
+      serverWakingUpPart1:
+        "The sources are loading. On first load, this may take",
       seconds: "seconds",
       serverWakingUpPart2: "please wait without closing the tab.",
       completed: "Completed",
@@ -621,10 +670,9 @@ const translations: TranslationStructure = {
       continueButton: "CONTINUE",
       startReading: "Start Reading",
       adminButton: "Login as Admin!",
-      reading: "Reading", // EKLENDİ (Düzeltme için)
+      reading: "Reading",
     },
     authSection: {
-      // Kategori ismi değiştirildi
       loginTitle: "Login",
       welcomeBack: "Welcome back!",
       sessionExpired: "Your session has expired. Please login again.",
@@ -668,7 +716,6 @@ const translations: TranslationStructure = {
       loginOrRegister: "Login or Register",
     },
     landingSection: {
-      // Kategori ismi değiştirildi
       landingHeroTitle: "Spiritual Union and Resource Distribution Platform",
       landingHeroSubtitle:
         "Easily organize Quran khatms, Cevshen circles, and dhikr programs. Achieve your spiritual goals with your loved ones.",
@@ -697,7 +744,6 @@ const translations: TranslationStructure = {
       step3Desc: "Everyone reads their part, see progress instantly.",
     },
     dashboardSection: {
-      // Kategori ismi değiştirildi
       dashboard: "Dashboard",
       welcome: "Welcome",
       dashboardIntro:
@@ -722,11 +768,10 @@ const translations: TranslationStructure = {
       adminTitle: "Admin Dashboard",
     },
     distSection: {
-      // Kategori ismi değiştirildi
       createDistTitle: "Start New Circle",
       resourceSelection: "Resource Selection",
       codeCopied: "Code copied to clipboard!",
-      copyLink: "Copy Link", // Eğer yoksa
+      copyLink: "Copy Link",
       createDistDesc:
         "Create a Quran, Yasin, or Dhikr circle and share the link.",
       joinDistTitle: "Join a Circle",
@@ -762,7 +807,6 @@ const translations: TranslationStructure = {
         "* The added resource is distributed equally or as a single piece to all participants.",
     },
     readingSection: {
-      // Kategori ismi değiştirildi (HATAYI ÇÖZEN KISIM)
       readingTitle: "Reading",
       joinTitle: "Join Circle",
       joinIntro: "Please enter your name (Guest)",
@@ -845,9 +889,21 @@ const translations: TranslationStructure = {
       sessionCreated: "تم إنشاء الحلقة",
       tapToCount: "اضغط للعد",
       refresh: "تحديث",
-      add: "إضافة",
-      yourNamePlaceholder: "ما اسمك؟", // ar
+      defaultSessionName: "الدائرة الروحية",
 
+      add: "إضافة",
+      yourNamePlaceholder: "ما اسمك؟",
+      homeVerseContent: "ذكر الله يطمئن القلوب",
+      verseBaqarah152: "اذكروني أذكركم واشكروا لي",
+      verseGafir60: "ادعوني أستجب لكم",
+      verseAhzab41: "اذكروا الله كثيرا",
+      unauthorizedAccess:
+        "الوصول غير المصرح به: يمكن فقط للشخص الذي أنشأ هذا التوزيع عرض هذه اللوحة.",
+      verseBaqarah186: "إني قريب أجيب دعوة الداع إذا دعان",
+      verseAliImran191: "يذكرون الله قياما وقعودا وعلى جنوبهم",
+      verseAraf55: "ادعوا ربكم تضرعا وخفية",
+      verseAraf205: "اذكر ربك في نفسك تضرعا وخيفة ودون الجهر",
+      verseTaha14: "أنا الله لا إله إلا أنا فاعبدني وأقم الصلاة لذكري",
       status: "الحالة",
       undo: "تراجع",
       taken: "مأخوذ",
@@ -1108,12 +1164,30 @@ const translations: TranslationStructure = {
       tapToCount: "Appuyer pour compter",
       refresh: "Actualiser",
       add: "Ajouter",
+      unauthorizedAccess:
+        "Accès non autorisé : Seule la personne ayant créé cette distribution peut voir ce panneau.",
       serverWakingUpPart1:
         "Démarrage du serveur. Lors du premier chargement, cela peut prendre",
       seconds: "secondes",
       serverWakingUpPart2: "veuillez patienter sans fermer l’onglet.",
-      yourNamePlaceholder: "Votre nom ?", // fr
-
+      yourNamePlaceholder: "Votre nom ?",
+      defaultSessionName: "Cercle Spirituel",
+      homeVerseContent:
+        "En vérité, c’est par l’évocation d’Allah que les cœurs se tranquillisent.",
+      verseBaqarah152:
+        "Rappelez-vous de Moi, Je Me souviendrai de vous. Soyez reconnaissants envers Moi et ne soyez pas ingrats.",
+      verseGafir60: "Votre Seigneur a dit : Invoquez-Moi, Je vous répondrai.",
+      verseAhzab41:
+        "Ô vous qui croyez ! Évoquez Allah d’une abondante évocation.",
+      verseBaqarah186:
+        "Quand Mes serviteurs t’interrogent sur Moi, Je suis tout proche. Je réponds à l’appel de celui qui Me prie lorsqu’il M’invoque.",
+      verseAliImran191:
+        "Ceux qui évoquent Allah debout, assis et couchés sur leurs côtés.",
+      verseAraf55: "Invoquez votre Seigneur en toute humilité et en secret.",
+      verseAraf205:
+        "Évoque ton Seigneur en toi-même, avec humilité et crainte, à voix basse, le matin et le soir.",
+      verseTaha14:
+        "Certes, c’est Moi Allah. Nulle divinité en dehors de Moi. Adore-Moi donc et accomplis la prière pour te souvenir de Moi.",
       status: "Statut",
       undo: "Annuler",
       taken: "Pris",

@@ -9,40 +9,41 @@ import { useSearchParams } from "next/navigation";
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
 
-// --- KATEGORİ TANIMLARI ---
+// --- CATEGORY DEFINITIONS ---
 const CATEGORY_ORDER = [
-  "MAIN", // Kuran
-  "SURAHS", // Sureler (Yasin, Fetih)
-  "PRAYERS", // Dualar (Cevşen, Tevhidname)
-  "SALAWATS", // Salavatlar
-  "NAMES", // İsimler (Bedir, Uhud)
-  "DHIKRS", // Zikirler (Kalanlar)
+  "MAIN", // Quran
+  "SURAHS", // Surahs (Yasin, Fetih)
+  "PRAYERS", // Prayers (Cevşen, Tevhidname)
+  "SALAWATS", // Salawats
+  "NAMES", // Names (Bedir, Uhud)
+  "DHIKRS", // Dhikrs (Others)
 ] as const;
 
 const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  // Kuran
+  // Quran
   QURAN: "MAIN",
 
-  // Sureler
+  // Surahs
   FETIH: "SURAHS",
   YASIN: "SURAHS",
   WAQIA: "SURAHS",
-  FATIHA: "SURAHS", // <-- FATİHA EKLENDİ
-  IHLAS: "SURAHS", // <-- İHLAS EKLENDİ
-  // Dualar
+  FATIHA: "SURAHS", // <-- FATIHA ADDED
+  IHLAS: "SURAHS", // <-- IHLAS ADDED
+
+  // Prayers
   CEVSEN: "PRAYERS",
   TEVHIDNAME: "PRAYERS",
 
-  // Salavatlar
+  // Salawats
   OZELSALAVAT: "SALAWATS",
   TEFRICIYE: "SALAWATS",
   MUNCIYE: "SALAWATS",
 
-  // İsimler
+  // Names
   BEDIR: "NAMES",
   UHUD: "NAMES",
 
-  // Zikirler
+  // Dhikrs
   YALATIF: "DHIKRS",
   YAHAFIZ: "DHIKRS",
   YAFETTAH: "DHIKRS",
@@ -50,7 +51,7 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   LAHAVLE: "DHIKRS",
 };
 
-// Kaynakların kendi içindeki sıralaması
+// Priority sorting of resources within their respective categories
 const RESOURCE_PRIORITY = [
   "QURAN",
   "FETIH",
@@ -166,6 +167,18 @@ function MonitorContent() {
       }
 
       const data: DistributionSession = await res.json();
+
+      const currentUser = localStorage.getItem("username");
+      const creator = data.creatorName || (data as any).ownerName;
+
+      // Check authorization
+      if (!currentUser || currentUser !== creator) {
+        throw new Error(
+          t("unauthorizedAccess") ||
+            "Unauthorized Access: Only the creator of the distribution can view this dashboard.",
+        );
+      }
+
       setError("");
       setSession(data);
     } catch (err: any) {
@@ -215,7 +228,6 @@ function MonitorContent() {
       );
 
       if (res.ok) {
-        // GÜNCELLEME: Alert mesajı i18n'e bağlandı
         alert(t("resourceAdded"));
         setIsAddModalOpen(false);
         setTargetCount("1");
@@ -232,7 +244,7 @@ function MonitorContent() {
     }
   };
 
-  // --- GRUPLAMA VE KATEGORİLENDİRME ---
+  // --- GROUPING AND CATEGORIZATION ---
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
@@ -242,7 +254,7 @@ function MonitorContent() {
       resourceName: string;
     };
 
-    // 1. Kaynakları Grupla
+    // 1. Group Resources
     const rawGroups: Record<string, GroupData> = {};
 
     session.assignments.forEach((a) => {
@@ -259,14 +271,14 @@ function MonitorContent() {
       rawGroups[name].assignments.push(a);
     });
 
-    // Her grup içindeki atamaları sırala
+    // Sort assignments within each group
     Object.values(rawGroups).forEach((group) => {
       group.assignments.sort(
         (a, b) => a.participantNumber - b.participantNumber,
       );
     });
 
-    // 2. Kaynakları Kategorilere Dağıt
+    // 2. Distribute Resources to Categories
     const categories: Record<string, GroupData[]> = {};
     CATEGORY_ORDER.forEach((cat) => (categories[cat] = []));
 
@@ -280,12 +292,12 @@ function MonitorContent() {
       }
     });
 
-    // 3. Kategorileri ve içlerini sırala
+    // 3. Sort Categories and their contents
     return CATEGORY_ORDER.map((catKey) => {
       const items = categories[catKey];
       if (items.length === 0) return null;
 
-      // Kategori içi sıralama
+      // Sorting within category
       items.sort((a, b) => {
         const indexA = RESOURCE_PRIORITY.indexOf(a.codeKey.toUpperCase());
         const indexB = RESOURCE_PRIORITY.indexOf(b.codeKey.toUpperCase());
@@ -444,7 +456,6 @@ function MonitorContent() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                {/* GÜNCELLEME: Sabit metin yerine t() kullanıldı */}
                 <span>{t("addResource")}</span>
               </button>
             )}
@@ -558,12 +569,12 @@ function MonitorContent() {
           </div>
         )}
 
-        {/* ... Kategoriler ve Listeler ... */}
+        {/* Resources and Assignments */}
         {session && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {categorizedGroups.map((category: any) => (
               <div key={category.key}>
-                {/* Kategori Ayracı */}
+                {/* Category Separator */}
                 <div className="flex items-center gap-4 mb-4 px-1">
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
                   <h2 className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-center whitespace-nowrap">
@@ -836,7 +847,7 @@ function MonitorContent() {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
-            {/* Başlık */}
+            {/* Title */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <svg
@@ -853,16 +864,14 @@ function MonitorContent() {
                   />
                 </svg>
               </div>
-              {/* GÜNCELLEME: t() kullanıldı */}
               <h3 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
                 {t("addResourceToSession")}
               </h3>
             </div>
 
             <div className="space-y-6">
-              {/* Kaynak Seçimi */}
+              {/* Resource Selection */}
               <div>
-                {/* GÜNCELLEME: t() kullanıldı */}
                 <label
                   htmlFor="resource-selector"
                   className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1"
@@ -879,7 +888,6 @@ function MonitorContent() {
                     value={selectedResourceId}
                     onChange={(e) => setSelectedResourceId(e.target.value)}
                   >
-                    {/* GÜNCELLEME: t() kullanıldı */}
                     <option value="">{t("selectPlaceholder")}</option>
                     {allResources.map((res) => (
                       <option key={res.id} value={res.id}>
@@ -905,9 +913,8 @@ function MonitorContent() {
                 </div>
               </div>
 
-              {/* Hedef Sayı / Adet */}
+              {/* Target Count / Quantity */}
               <div>
-                {/* GÜNCELLEME: t() kullanıldı ve fallback kaldırıldı */}
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
                   {t("target")}
                 </label>
@@ -921,17 +928,15 @@ function MonitorContent() {
                     placeholder="100"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-tighter pointer-events-none bg-white dark:bg-gray-900 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-800">
-                    {/* GÜNCELLEME: t() kullanıldı ve fallback kaldırıldı */}
                     {t("pieces")}
                   </div>
                 </div>
-                {/* GÜNCELLEME: Türkçe metin yerine t('addResourceNote') kullanıldı */}
                 <p className="mt-2 text-[10px] text-gray-400 font-medium ml-1">
                   {t("addResourceNote")}
                 </p>
               </div>
 
-              {/* Butonlar */}
+              {/* Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setIsAddModalOpen(false)}
@@ -949,7 +954,6 @@ function MonitorContent() {
                   {addingResource ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   ) : (
-                    // GÜNCELLEME: t() kullanıldı
                     <span>{t("add")}</span>
                   )}
                 </button>
@@ -977,6 +981,40 @@ export default function MonitorPage() {
       >
         <MonitorContent />
       </Suspense>
+    </div>
+  );
+}
+
+function LoadingScreen({ t }: { t: any }) {
+  const [isSlowLoad, setIsSlowLoad] = useState(false);
+
+  useEffect(() => {
+    // Assume the server is in sleep mode after 4 seconds
+    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-transparent px-4 text-center">
+      <div className="flex flex-col items-center gap-5">
+        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin"></div>
+
+        <div className="flex flex-col gap-3 items-center">
+          <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-base md:text-lg">
+            {t("loading")}
+          </p>
+
+          {isSlowLoad && (
+            <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+              {t("serverWakingUpPart1")}
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                30-40 {t("seconds")}
+              </span>{" "}
+              {t("serverWakingUpPart2")}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
