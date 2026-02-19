@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 import React, { useState, useMemo, useEffect } from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
@@ -10,10 +11,8 @@ import {
   formatStyledText,
   renderUhudList,
   fontSizes,
-  renderCevsenGrid, // <-- BUNU EKLEYİN
 } from "@/utils/text-formatter";
 
-// --- TİPLER ---
 export interface ReadingModalContent {
   title: string;
   type: "SIMPLE" | "CEVSEN" | "SALAVAT" | "QURAN" | "SURAS";
@@ -39,7 +38,6 @@ interface ReadingModalProps {
   t: (key: string) => string;
 }
 
-// --- SABİTLER: Dil Koduna Göre Kaynak Eşleştirmesi ---
 const EDITION_MAPPING: Record<string, string> = {
   tr: "tr.diyanet",
   en: "en.sahih",
@@ -54,65 +52,44 @@ const EDITION_MAPPING: Record<string, string> = {
   default: "en.sahih",
 };
 
-// --- YARDIMCI FONKSİYON: QuranEnc API'den Veri İşleme ---
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchKurdishForPage(structureData: any) {
   try {
     const surahsOnPage = new Set<number>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     structureData.forEach((ayah: any) => surahsOnPage.add(ayah.surah.number));
-
     const quranEncPromises = Array.from(surahsOnPage).map((surahNo) =>
       fetch(
         `https://quranenc.com/api/v1/translation/sura/kurmanji_ismail/${surahNo}`,
       )
         .then(async (res) => {
-          if (!res.ok) {
-            console.error(
-              `QuranEnc Hatası (Sure: ${surahNo}):`,
-              res.status,
-              res.statusText,
-            );
-            throw new Error(`QuranEnc API hatası: ${res.status}`);
-          }
+          if (!res.ok) throw new Error(`QuranEnc API hatası: ${res.status}`);
           return res.json();
         })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((data) => ({ surahNo, result: data.result as any[] })),
     );
-
     const translations = await Promise.all(quranEncPromises);
     const translationMap: { [key: string]: string } = {};
-
     translations.forEach(({ surahNo, result }) => {
       if (Array.isArray(result)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.forEach((item: any) => {
           const key = `${String(surahNo)}:${String(item.aya)}`;
           translationMap[key] = item.translation;
         });
       }
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mergedData = structureData.map((ayah: any) => {
       const key = `${String(ayah.surah.number)}:${String(ayah.numberInSurah)}`;
-      const kurdishText = translationMap[key];
-
       return {
         ...ayah,
-        text: kurdishText || `[Çeviri bulunamadı] ${ayah.text}`,
+        text: translationMap[key] || `[Çeviri bulunamadı] ${ayah.text}`,
       };
     });
-
     return { ayahs: mergedData };
   } catch (error) {
-    console.error("Kürtçe API Hatası (Detay):", error);
+    console.error("Kürtçe API Hatası:", error);
     return null;
   }
 }
 
-// --- YARDIMCI FONKSİYON: Ana API Çağrısı ---
 async function fetchQuranTranslationPage(
   pageNumber: number,
   editionOrKey: string,
@@ -123,21 +100,17 @@ async function fetchQuranTranslationPage(
         `https://api.alquran.cloud/v1/page/${pageNumber}/quran-uthmani`,
       );
       const structData = await structRes.json();
-
-      if (structData.code === 200 && structData.data && structData.data.ayahs) {
-        const kurdishResult = await fetchKurdishForPage(structData.data.ayahs);
-        return kurdishResult;
+      if (structData.code === 200 && structData.data?.ayahs) {
+        return await fetchKurdishForPage(structData.data.ayahs);
       }
       return null;
     }
-
     const res = await fetch(
       `https://api.alquran.cloud/v1/page/${pageNumber}/${editionOrKey}`,
     );
     const data = await res.json();
-    if (data.code === 200 && data.data && data.data.ayahs) {
+    if (data.code === 200 && data.data?.ayahs)
       return { ayahs: data.data.ayahs };
-    }
     return null;
   } catch (error) {
     console.error("Meal çekilemedi:", error);
@@ -145,6 +118,355 @@ async function fetchQuranTranslationPage(
   }
 }
 
+// ================================================================
+// CEVSEN GRID DISPLAY
+// ================================================================
+const SUBHANEKE_RE = /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك/i;
+
+const Medal = ({ number }: { number: number }) => (
+  <span className="relative flex items-center justify-center shrink-0 w-9 h-9 md:w-11 md:h-11">
+    <svg
+      className="absolute inset-0 w-full h-full text-amber-700/80 dark:text-amber-500/80 drop-shadow"
+      viewBox="0 0 100 100"
+    >
+      <path
+        fill="currentColor"
+        d="M50 5 L55 30 L75 15 L65 38 L92 38 L73 55 L85 80 L62 68 L50 95 L38 68 L15 80 L27 55 L8 38 L35 38 L25 15 L45 30 Z"
+      />
+      <circle
+        cx="50"
+        cy="50"
+        r="25"
+        fill="none"
+        stroke="rgba(255,255,255,0.5)"
+        strokeWidth="1.5"
+      />
+    </svg>
+    <span className="relative z-10 text-white font-bold text-[11px] md:text-sm drop-shadow font-sans leading-none">
+      {number}
+    </span>
+  </span>
+);
+
+function parseArabic(raw: string) {
+  const text = raw.replace(/###\s*$/, "").trim();
+  const parts = text
+    .split(/[\u0660-\u0669]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  if (parts.length < 2) return { header: "", items: [text], subhaneke: "" };
+  const subhaneke = SUBHANEKE_RE.test(parts[parts.length - 1])
+    ? parts.pop()!
+    : "";
+  let header = "";
+  const items = [...parts];
+  if (items[0]?.includes("بِسْمِ") || items[0]?.includes("اَللّٰهُمَّ")) {
+    const lastYaIdx = items[0].lastIndexOf("يَا");
+    if (lastYaIdx > 10) {
+      header = items[0].slice(0, lastYaIdx).trim();
+      items[0] = items[0].slice(lastYaIdx).trim();
+    }
+  }
+  return { header, items, subhaneke };
+}
+
+function parseLatin(raw: string) {
+  const text = raw.replace(/###\s*$/, "").trim();
+  const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
+  const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
+  const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
+
+  const tokens: { num: number; start: number }[] = [];
+  const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(mainText)) !== null) {
+    tokens.push({ num: parseInt(m[1]), start: m.index + m[0].length });
+  }
+  if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
+
+  const header = mainText
+    .slice(0, tokens[0].start - tokens[0].num.toString().length - 1)
+    .trim();
+  const items: string[] = tokens.map((tok, i) => {
+    const end =
+      i + 1 < tokens.length
+        ? tokens[i + 1].start - tokens[i + 1].num.toString().length - 1
+        : mainText.length;
+    return mainText.slice(tok.start, end).trim();
+  });
+  return { header, items, subhaneke };
+}
+
+function parseMeaning(raw: string) {
+  const text = raw.replace(/###\s*$/, "").trim();
+  let paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\n/g, " ").trim())
+    .filter((p) => p.length > 0);
+  if (paragraphs.length < 3) {
+    paragraphs = text
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+  }
+  const subhIdx = paragraphs.findIndex((p) => SUBHANEKE_RE.test(p));
+  const subhaneke = subhIdx >= 0 ? paragraphs.splice(subhIdx).join(" ") : "";
+  return { header: "", items: paragraphs, subhaneke };
+}
+
+const DecoStar = () => (
+  <span className="text-amber-400/30 text-xs select-none opacity-0 group-hover:opacity-100 transition-opacity">
+    ✦
+  </span>
+);
+
+const GridRow = ({
+  right,
+  left,
+  rightNum,
+  leftNum,
+  fontClass,
+  isRtl,
+  mode,
+}: {
+  right: string;
+  left: string | null;
+  rightNum: number;
+  leftNum: number;
+  fontClass: string;
+  isRtl: boolean;
+  mode: "ARABIC" | "LATIN" | "MEANING";
+}) => {
+  const cellClass =
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
+    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
+  const textClass = [
+    "flex-1 font-serif",
+    mode === "ARABIC"
+      ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
+      : mode === "LATIN"
+        ? `leading-loose text-gray-800 dark:text-gray-200 ${fontClass}`
+        : `leading-relaxed text-gray-700 dark:text-gray-300 ${fontClass}`,
+  ].join(" ");
+  return (
+    <React.Fragment>
+      <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+        <Medal number={rightNum} />
+        <span className={textClass}>{right}</span>
+        <DecoStar />
+      </div>
+      {left ? (
+        <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+          <Medal number={leftNum} />
+          <span className={textClass}>{left}</span>
+          <DecoStar />
+        </div>
+      ) : (
+        <div />
+      )}
+    </React.Fragment>
+  );
+};
+
+// ── SURE AYETLERİ GRID ──────────────────────────────────────
+const SurahVerseGrid = ({
+  babs,
+  activeTab,
+  fontLevel,
+}: {
+  babs: CevsenBab[];
+  activeTab: "ARABIC" | "LATIN" | "MEANING";
+  fontLevel: number;
+}) => {
+  const isRtl = activeTab === "ARABIC";
+  const fontClass =
+    activeTab === "ARABIC"
+      ? fontSizes.ARABIC[fontLevel]
+      : activeTab === "LATIN"
+        ? fontSizes.LATIN[fontLevel]
+        : fontSizes.MEANING[fontLevel];
+
+  const items = babs
+    .map((b) =>
+      activeTab === "ARABIC"
+        ? b.arabic
+        : activeTab === "LATIN"
+          ? b.transcript
+          : b.meaning,
+    )
+    .filter((t) => t?.trim().length > 0);
+
+  // "1- metin" veya "1. metin" formatından numarayı ayır
+  const parsed = items.map((item, idx) => {
+    const cleaned = item.replace(/^"+|"+$/g, "").trim();
+    const m = cleaned.match(/^(\d+)[-.:]\s*([\s\S]*)/);
+    const rawText = m ? m[2].trim() : cleaned;
+    const finalText = rawText.replace(/^"+|"+$/g, "").trim();
+    return { num: m ? parseInt(m[1]) : idx + 1, text: finalText };
+  });
+
+  const rows: Array<[(typeof parsed)[0], (typeof parsed)[0] | null]> = [];
+  for (let i = 0; i < parsed.length; i += 2) {
+    rows.push([parsed[i], parsed[i + 1] ?? null]);
+  }
+
+  const cellClass =
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
+    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
+  const textClass = [
+    "flex-1 font-serif",
+    activeTab === "ARABIC"
+      ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
+      : activeTab === "LATIN"
+        ? `leading-loose text-gray-800 dark:text-gray-200 ${fontClass}`
+        : `leading-relaxed text-gray-700 dark:text-gray-300 ${fontClass}`,
+  ].join(" ");
+
+  return (
+    <div
+      className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-2xl max-w-5xl mx-auto my-4 overflow-hidden"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
+      <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
+          }}
+        />
+        <div className="relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+            {rows.map((row, i) => (
+              <React.Fragment key={i}>
+                <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+                  <Medal number={row[0].num} />
+                  <span className={textClass}>{row[0].text}</span>
+                  <DecoStar />
+                </div>
+                {row[1] ? (
+                  <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+                    <Medal number={row[1].num} />
+                    <span className={textClass}>{row[1].text}</span>
+                    <DecoStar />
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CevsenGridDisplay = ({
+  text,
+  fontLevel,
+  mode = "ARABIC",
+}: {
+  text: string;
+  fontLevel: number;
+  mode?: "ARABIC" | "LATIN" | "MEANING";
+}) => {
+  const parsed = useMemo(() => {
+    if (mode === "ARABIC") return parseArabic(text);
+    if (mode === "LATIN") return parseLatin(text);
+    return parseMeaning(text);
+  }, [text, mode]);
+
+  const { header, items, subhaneke } = parsed;
+  const isRtl = mode === "ARABIC";
+  const fontClass =
+    mode === "ARABIC"
+      ? fontSizes.ARABIC[fontLevel]
+      : mode === "LATIN"
+        ? fontSizes.LATIN[fontLevel]
+        : fontSizes.MEANING[fontLevel];
+
+  if (items.length < 2) {
+    return (
+      <div
+        className={`font-serif leading-[2.4] py-2 text-center text-gray-800 dark:text-gray-100 ${fontClass}`}
+        dir={isRtl ? "rtl" : "ltr"}
+      >
+        {text.replace(/###\s*$/, "").trim()}
+      </div>
+    );
+  }
+
+  const rows: Array<[string, string | null]> = [];
+  for (let i = 0; i < items.length; i += 2) {
+    rows.push([items[i], items[i + 1] ?? null]);
+  }
+
+  return (
+    <div
+      className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-2xl max-w-5xl mx-auto my-4 overflow-hidden"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
+      <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
+          }}
+        />
+        <div className="relative z-10">
+          {header && (
+            <div className="mb-6 text-center">
+              <p
+                className={`font-serif text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
+                dir={isRtl ? "rtl" : "ltr"}
+              >
+                {header}
+              </p>
+              <div className="mx-auto mt-3 w-48 h-[2px] bg-gradient-to-r from-transparent via-amber-700/40 dark:via-amber-500/40 to-transparent rounded-full" />
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+            {rows.map((row, i) => (
+              <GridRow
+                key={i}
+                right={row[0]}
+                left={row[1]}
+                rightNum={i * 2 + 1}
+                leftNum={i * 2 + 2}
+                fontClass={fontClass}
+                isRtl={isRtl}
+                mode={mode}
+              />
+            ))}
+          </div>
+          {subhaneke && (
+            <div className="mt-8 pt-6 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#fdf9f2] dark:bg-[#0f1117] px-3 text-red-700/30 dark:text-red-500/35 text-xl select-none">
+                ۞
+              </span>
+              <p
+                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
+                  mode === "ARABIC"
+                    ? fontClass
+                    : mode === "LATIN"
+                      ? `italic ${fontSizes.LATIN[fontLevel]}`
+                      : fontSizes.MEANING[fontLevel]
+                }`}
+                dir={isRtl ? "rtl" : "ltr"}
+              >
+                {subhaneke}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ================================================================
+// ANA MODAL
+// ================================================================
 const ReadingModal: React.FC<ReadingModalProps> = ({
   content,
   onClose,
@@ -158,11 +480,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const { language } = useLanguage();
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
-
   const [activeQuranTab, setActiveQuranTab] = useState<"ORIGINAL" | "MEAL">(
     "ORIGINAL",
   );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mealData, setMealData] = useState<any[]>([]);
   const [loadingMeal, setLoadingMeal] = useState(false);
 
@@ -172,15 +492,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (content.type === "QURAN" && activeQuranTab === "MEAL") {
       setLoadingMeal(true);
       setMealData([]);
-
       const targetEdition =
         EDITION_MAPPING[language] || EDITION_MAPPING["default"];
-
       fetchQuranTranslationPage(currentPage, targetEdition)
         .then((result) => {
-          if (result) {
-            setMealData(result.ayahs);
-          }
+          if (result) setMealData(result.ayahs);
         })
         .finally(() => setLoadingMeal(false));
     }
@@ -200,10 +516,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       !content.cevsenData
     )
       return null;
-
     const codeKey = (content.codeKey || "").toUpperCase();
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
-    // BURASI KRİTİK: Fatiha ve İhlas eklendi
     const isSurahGroup =
       content.type === "SURAS" ||
       ["YASIN", "FETIH", "FATIHA", "IHLAS"].includes(codeKey);
@@ -212,7 +526,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
       const rawLatin = content.cevsenData.map((b) => b.transcript).join("\n");
       const splitRegex = /###|\r\n|\r|\n/g;
-
       const arabicLines = rawArabic
         .split(splitRegex)
         .map((l) => l.trim())
@@ -221,27 +534,23 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         .split(splitRegex)
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
-
       const totalLen = Math.max(arabicLines.length, latinLines.length);
       const masterList: CevsenBab[] = [];
-
       for (let i = 0; i < totalLen; i++) {
         masterList.push({
           babNumber: i + 1,
           arabic: arabicLines[i] || "",
           transcript: latinLines[i] || "",
           meaning: "",
-        } as CevsenBab);
+        });
       }
-
       if (content.startUnit && content.endUnit) {
         const rangeCount = content.endUnit - content.startUnit + 1;
         const slicedData: CevsenBab[] = [];
         for (let i = 0; i < rangeCount; i++) {
           const targetIndex = (content.startUnit - 1 + i) % totalLen;
-          if (masterList[targetIndex]) {
+          if (masterList[targetIndex])
             slicedData.push({ ...masterList[targetIndex] });
-          }
         }
         return { mode: "LIST", data: slicedData, isSurah: false };
       }
@@ -266,7 +575,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               arabic: "",
               transcript: latinLines[i] || "",
               meaning: meaningLines[i] || "",
-            } as CevsenBab);
+            });
           }
         }
       });
@@ -276,6 +585,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         isSurah: true,
       };
     }
+
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
   }, [content]);
 
@@ -284,9 +594,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const min = content.startUnit || 1;
     const max = content.endUnit || 604;
     const next = Math.min(Math.max(current + offset, min), max);
-    if (next !== current) {
-      onUpdateContent({ ...content, currentUnit: next });
-    }
+    if (next !== current) onUpdateContent({ ...content, currentUnit: next });
   };
 
   const isFirstPage = currentPage === (content.startUnit || 1);
@@ -319,6 +627,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-gray-100 dark:bg-black rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/10 dark:border-gray-800">
+        {/* HEADER */}
         <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20">
           <div className="flex justify-between items-center">
             <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
@@ -403,6 +712,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           )}
         </div>
 
+        {/* CONTENT */}
         <div className="flex-1 overflow-y-auto bg-gray-100 dark:bg-black p-4 md:p-6 scroll-smooth">
           {content.type === "SIMPLE" && content.simpleItems && (
             <div className="space-y-3 max-w-2xl mx-auto">
@@ -422,7 +732,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {/* BURASI KRİTİK: isSurahGroup zorlaması silindi, sadece QURAN ise API açılacak */}
           {content.type === "QURAN" && (
             <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
               <PaginationBar />
@@ -434,10 +743,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       alt={`Page ${currentPage}`}
                       className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
                       loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement!.innerHTML += `<div class="text-red-500 p-4 text-center text-xs">Page not found</div>`;
-                      }}
                     />
                   </div>
                 ) : (
@@ -445,13 +750,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     {loadingMeal ? (
                       <div className="flex flex-col items-center justify-center h-40 space-y-4">
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                          {t("loading")}
-                        </p>
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {mealData.map((ayah: any, idx: number) => (
                           <div key={idx} className="flex flex-col gap-2">
                             <div className="flex items-start gap-3">
@@ -473,114 +774,171 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
           )}
 
-          {/* BURASI KRİTİK: Engel silindi, CEVSEN ve SURAS rahatça açılacak */}
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
             processedData && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
-                {processedData.data.map((bab, index) => {
-                  const mode = processedData.mode;
-                  let displayLabel: string | number = bab.babNumber;
-                  if (mode === "SURAH_CARD")
-                    displayLabel = `${t("verse") || "Ayet"} ${bab.babNumber}`;
-                  const isCard = mode === "LIST" || mode === "SURAH_CARD";
-                  const containerClasses = isCard
-                    ? "bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-[1.5rem] p-4 md:p-5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors"
-                    : "";
-                  return (
-                    <div
-                      key={index}
-                      className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${containerClasses}`}
-                      style={{ animationDelay: `${index * 10}ms` }}
-                    >
-                      {mode === "BLOCK" && (
-                        <div className="flex items-center justify-center gap-4 my-8 opacity-90 group">
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                            <div className="w-1 h-1 bg-emerald-400/60 rounded-full ml-auto translate-x-2"></div>
-                          </div>
-                          <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
-                            <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-45 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-[225deg]"></div>
-                            <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-0 bg-white dark:bg-gray-900 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-180"></div>
-                            <span className="relative z-10 font-serif font-bold text-lg text-emerald-700 dark:text-emerald-400 drop-shadow-sm">
-                              {bab.babNumber}
-                            </span>
-                          </div>
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                            <div className="w-1 h-1 bg-emerald-400/60 rounded-full mr-auto -translate-x-2"></div>
-                          </div>
-                        </div>
-                      )}
-                      <div className="w-full">
-                        {activeTab === "ARABIC" && (
-                          <div
-                            className={
-                              isCard || content.type === "CEVSEN"
-                                ? "w-full"
-                                : "text-center font-serif leading-[2.4] py-2 text-gray-800 dark:text-gray-100"
-                            }
-                            dir="rtl"
-                          >
-                            {bab.arabic.includes("IMAGE_MODE:::") ? (
-                              <img
-                                src={bab.arabic
-                                  .replace("IMAGE_MODE:::", "")
-                                  .trim()}
-                                className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
-                                alt="Arapça"
-                              />
-                            ) : isCard ? (
-                              renderUhudList(
-                                bab.arabic,
-                                "ARABIC",
-                                fontLevel,
-                                displayLabel,
-                              )
-                            ) : content.type === "CEVSEN" ? (
-                              renderCevsenGrid(bab.arabic, fontLevel) // <-- CEVŞEN GÖRÜNÜMÜ BURADA ÇALIŞACAK
-                            ) : (
-                              formatArabicText(bab.arabic, fontLevel)
-                            )}
+                {/* SURAH_CARD: tüm ayetleri tek grid'de göster */}
+                {processedData.mode === "SURAH_CARD" && (
+                  <>
+                    {/* Arapça tab:
+                      - content.cevsenData'daki orijinal arabic'e bak (processedData'da arabic boş kalıyor)
+                      - IMAGE_MODE varsa resim göster
+                      - Yoksa SurahVerseGrid ile ayetleri grid'de göster */}
+                    {activeTab === "ARABIC" &&
+                      (content.cevsenData &&
+                      content.cevsenData[0]?.arabic?.includes(
+                        "IMAGE_MODE:::",
+                      ) ? (
+                        content.cevsenData.map((bab, i) =>
+                          bab.arabic.includes("IMAGE_MODE:::") ? (
+                            <img
+                              key={i}
+                              src={bab.arabic
+                                .replace("IMAGE_MODE:::", "")
+                                .trim()}
+                              className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4"
+                              alt="Sure"
+                            />
+                          ) : null,
+                        )
+                      ) : (
+                        <SurahVerseGrid
+                          babs={processedData.data}
+                          activeTab="ARABIC"
+                          fontLevel={fontLevel}
+                        />
+                      ))}
+                    {/* Latin ve Meal tabları */}
+                    {(activeTab === "LATIN" || activeTab === "MEANING") && (
+                      <SurahVerseGrid
+                        babs={processedData.data}
+                        activeTab={activeTab}
+                        fontLevel={fontLevel}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* BLOCK ve LIST modları — eski davranış */}
+                {processedData.mode !== "SURAH_CARD" &&
+                  processedData.data.map((bab, index) => {
+                    const mode = processedData.mode;
+                    const displayLabel: string | number = bab.babNumber;
+                    const isCard = mode === "LIST";
+                    const containerClasses = isCard
+                      ? "bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-[1.5rem] p-4 md:p-5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors"
+                      : "";
+
+                    return (
+                      <div
+                        key={index}
+                        className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${containerClasses}`}
+                        style={{ animationDelay: `${index * 10}ms` }}
+                      >
+                        {mode === "BLOCK" && (
+                          <div className="flex items-center justify-center gap-4 my-8 opacity-90 group">
+                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
+                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full ml-auto translate-x-2"></div>
+                            </div>
+                            <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
+                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-45 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-[225deg]"></div>
+                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-0 bg-white dark:bg-gray-900 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-180"></div>
+                              <span className="relative z-10 font-serif font-bold text-lg text-emerald-700 dark:text-emerald-400 drop-shadow-sm">
+                                {bab.babNumber}
+                              </span>
+                            </div>
+                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
+                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full mr-auto -translate-x-2"></div>
+                            </div>
                           </div>
                         )}
-                        {activeTab === "LATIN" && (
-                          <div
-                            className={
-                              isCard
-                                ? "w-full"
-                                : "text-left font-serif leading-relaxed py-2 text-gray-700 dark:text-gray-300"
-                            }
-                          >
-                            {isCard
-                              ? renderUhudList(
+
+                        <div className="w-full">
+                          {/* ARABIC */}
+                          {activeTab === "ARABIC" && (
+                            <div
+                              className={
+                                isCard || content.type === "CEVSEN"
+                                  ? "w-full"
+                                  : "text-center font-serif leading-[2.4] py-2 text-gray-800 dark:text-gray-100"
+                              }
+                              dir="rtl"
+                            >
+                              {bab.arabic.includes("IMAGE_MODE:::") ? (
+                                <img
+                                  src={bab.arabic
+                                    .replace("IMAGE_MODE:::", "")
+                                    .trim()}
+                                  className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
+                                  alt="Arapça"
+                                />
+                              ) : isCard ? (
+                                renderUhudList(
+                                  bab.arabic,
+                                  "ARABIC",
+                                  fontLevel,
+                                  displayLabel,
+                                )
+                              ) : content.type === "CEVSEN" ? (
+                                <CevsenGridDisplay
+                                  text={bab.arabic}
+                                  fontLevel={fontLevel}
+                                  mode="ARABIC"
+                                />
+                              ) : (
+                                formatArabicText(bab.arabic, fontLevel)
+                              )}
+                            </div>
+                          )}
+
+                          {/* LATIN */}
+                          {activeTab === "LATIN" && (
+                            <div
+                              className={
+                                isCard
+                                  ? "w-full"
+                                  : "text-left font-serif leading-relaxed py-2 text-gray-700 dark:text-gray-300"
+                              }
+                            >
+                              {isCard ? (
+                                renderUhudList(
                                   bab.transcript,
                                   "LATIN",
                                   fontLevel,
                                   displayLabel,
                                 )
-                              : formatLatinText(bab.transcript, fontLevel)}
-                          </div>
-                        )}
-                        {activeTab === "MEANING" &&
-                          mode !== "LIST" &&
-                          (isCard ? (
-                            <div className="w-full">
-                              {renderUhudList(
-                                bab.meaning,
-                                "MEANING",
-                                fontLevel,
-                                displayLabel,
+                              ) : content.type === "CEVSEN" ? (
+                                <CevsenGridDisplay
+                                  text={bab.transcript}
+                                  fontLevel={fontLevel}
+                                  mode="LATIN"
+                                />
+                              ) : (
+                                formatLatinText(bab.transcript, fontLevel)
                               )}
                             </div>
-                          ) : (
-                            <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
-                              <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
-                                {formatMeaningText(bab.meaning, fontLevel)}
+                          )}
+
+                          {/* MEANING */}
+                          {activeTab === "MEANING" &&
+                            mode !== "LIST" &&
+                            (content.type === "CEVSEN" ? (
+                              <CevsenGridDisplay
+                                text={bab.meaning}
+                                fontLevel={fontLevel}
+                                mode="MEANING"
+                              />
+                            ) : (
+                              <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
+                                <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
+                                  {formatMeaningText(bab.meaning, fontLevel)}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             )}
 
@@ -674,6 +1032,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           )}
         </div>
 
+        {/* FOOTER */}
         <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20">
           <button
             onClick={onClose}
