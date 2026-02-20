@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
 import Zikirmatik from "../common/Zikirmatik";
 import { useLanguage } from "@/context/LanguageContext";
@@ -490,45 +496,125 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   // Özellik Stateleri
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSepia, setIsSepia] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Teleprompter Stateleri
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState(1); // 0.5, 1, 1.5, 2, 3
 
   const currentPage = content.currentUnit || content.startUnit || 1;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
-  // --- İLERLEME ÇUBUĞU (PROGRESS BAR) KONTROLÜ ---
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        scrollContainerRef.current;
-      const totalScroll = scrollHeight - clientHeight;
-      if (totalScroll <= 0) {
-        setScrollProgress(100);
-      } else {
-        setScrollProgress(
-          Math.min(100, Math.max(0, (scrollTop / totalScroll) * 100)),
-        );
-      }
-    }
-  };
-
+  // Hesaplamalar
   const safeStart = content.startUnit || currentPage;
   const safeEnd = content.endUnit || currentPage;
   const totalPages = safeEnd - safeStart + 1;
   const currentPageIdx = currentPage - safeStart;
+  const initialProgress =
+    totalPages > 1 ? (currentPageIdx * 100) / totalPages : 0;
 
-  // Hem kaydırma hem de sayfa değişimini baz alan bütünleşik ilerleme yüzdesi
-  const overallProgress =
-    totalPages > 1
-      ? (currentPageIdx * 100 + scrollProgress) / totalPages
-      : scrollProgress;
+  // --- İLERLEME ÇUBUĞU (GPU ACCELERATED - RE-RENDER YOK) ---
+  // useCallback ile sarmalıyoruz ki useEffect bağımlılık dizisinde kullanabilelim
+  const updateProgressBar = useCallback(
+    (scrollTop: number, maxScroll: number) => {
+      if (!progressBarRef.current) return;
+      const scrollPct =
+        maxScroll <= 0
+          ? 100
+          : Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100));
+      const unifiedPct =
+        totalPages > 1
+          ? (currentPageIdx * 100 + scrollPct) / totalPages
+          : scrollPct;
+
+      // ScaleX ile donanım hızlandırmalı genişleme (0 ile 1 arası değer alır)
+      progressBarRef.current.style.transform = `scaleX(${unifiedPct / 100})`;
+    },
+    [totalPages, currentPageIdx],
+  );
+
+  const handleScroll = () => {
+    // LAYOUT THRASHING İPTALİ: Otomatik akarken buraya girme!
+    if (isAutoScrolling) return;
+
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        scrollContainerRef.current;
+      updateProgressBar(scrollTop, scrollHeight - clientHeight);
+    }
+  };
 
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
+      // Doğrudan updateProgressBar çağrısı ile resetliyoruz
+      const { scrollHeight, clientHeight } = scrollContainerRef.current;
+      updateProgressBar(0, scrollHeight - clientHeight);
     }
-    setTimeout(handleScroll, 50); // Ekran çizildikten sonra scroll'u hesapla
-  }, [currentPage, activeTab, activeQuranTab, isFullscreen]);
-  // ----------------------------------------------
+  }, [currentPage, activeTab, activeQuranTab, isFullscreen, updateProgressBar]);
+
+  // --- LAYOUT THRASHING'SİZ YAĞ GİBİ AKAN OTOMATİK KAYDIRMA ---
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !isAutoScrolling) return;
+
+    let animationFrameId: number;
+    let lastTime: number | null = null;
+    let exactScrollY = el.scrollTop;
+
+    // Performans için DOM ölçülerini bir kere önbelleğe (cache) alıyoruz.
+    const cachedScrollHeight = el.scrollHeight;
+    const cachedClientHeight = el.clientHeight;
+    const maxScroll = cachedScrollHeight - cachedClientHeight;
+
+    const baseSpeed = 40;
+
+    const scrollStep = (timestamp: number) => {
+      if (lastTime === null) lastTime = timestamp;
+      const deltaTime = timestamp - lastTime;
+      lastTime = timestamp;
+
+      // Uygulama alta atılıp gelindiğinde aniden zıplamayı önler
+      if (deltaTime > 0 && deltaTime < 100) {
+        const moveBy = (baseSpeed * autoScrollSpeed * deltaTime) / 1000;
+        exactScrollY += moveBy;
+
+        if (exactScrollY >= maxScroll - 1) {
+          el.scrollTop = maxScroll;
+          updateProgressBar(maxScroll, maxScroll);
+          setIsAutoScrolling(false);
+          return;
+        }
+
+        // SADECE YAZMA İŞLEMİ (Sıfır DOM Okuması = Sıfır Takılma)
+        el.scrollTop = exactScrollY;
+        updateProgressBar(exactScrollY, maxScroll);
+      }
+
+      animationFrameId = requestAnimationFrame(scrollStep);
+    };
+
+    animationFrameId = requestAnimationFrame(scrollStep);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [
+    isAutoScrolling,
+    autoScrollSpeed,
+    currentPageIdx,
+    totalPages,
+    updateProgressBar,
+  ]);
+
+  const cycleSpeed = () => {
+    const speeds = [0.5, 1, 1.5, 2, 3];
+    const nextIdx = (speeds.indexOf(autoScrollSpeed) + 1) % speeds.length;
+    setAutoScrollSpeed(speeds[nextIdx]);
+    if (typeof navigator !== "undefined" && navigator.vibrate)
+      navigator.vibrate(15);
+  };
+  // ------------------------------------------------
 
   // --- WAKE LOCK API ---
   const wakeLockRef = useRef<any>(null);
@@ -698,6 +784,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
 
+    if (isAutoScrolling) {
+      setIsAutoScrolling(false);
+      return;
+    }
+
     if (content.assignmentId && isOwner) {
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
@@ -718,11 +809,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
-  // --- KAYDIRMA (SWIPE) KONTROLÜ ---
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isAutoScrolling) setIsAutoScrolling(false);
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
@@ -741,7 +832,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     touchStartX.current = null;
     touchStartY.current = null;
   };
-  // --------------------------------
 
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
@@ -777,11 +867,12 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       <div
         className={`relative w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
       >
-        {/* İNCE OKUMA İLERLEME ÇUBUĞU (READING PROGRESS BAR) */}
+        {/* DONANIMSAL (GPU) İVMELİ İLERLEME ÇUBUĞU */}
         <div className="absolute top-0 left-0 w-full h-[3px] bg-black/5 dark:bg-white/5 z-[60]">
           <div
-            className="h-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)] transition-all duration-150 ease-out"
-            style={{ width: `${overallProgress}%` }}
+            ref={progressBarRef}
+            className="h-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)] origin-left"
+            style={{ transform: `scaleX(${initialProgress / 100})` }}
           />
         </div>
 
@@ -811,6 +902,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       >
                         A+
                       </button>
+
                       <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                       <button
                         onClick={() => {
@@ -841,6 +933,58 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
+                      </button>
+
+                      {/* Hız Kontrol Butonu */}
+                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                      <button
+                        onClick={cycleSpeed}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        title={t("scrollSpeed") || "Kaydırma Hızı"}
+                      >
+                        {autoScrollSpeed}x
+                      </button>
+
+                      {/* Teleprompter Oynat/Duraklat Butonu */}
+                      <button
+                        onClick={() => {
+                          setIsAutoScrolling(!isAutoScrolling);
+                          if (
+                            typeof navigator !== "undefined" &&
+                            navigator.vibrate
+                          )
+                            navigator.vibrate(20);
+                        }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
+                          isAutoScrolling
+                            ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
+                            : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
+                        }`}
+                        title={
+                          isAutoScrolling
+                            ? t("stopAutoScroll") || "Durdur"
+                            : t("startAutoScroll") || "Oynat"
+                        }
+                      >
+                        {isAutoScrolling ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        )}
                       </button>
                     </div>
                   )}
@@ -907,7 +1051,15 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className={`flex-1 overflow-y-auto scroll-smooth cursor-pointer ${isSepia ? "!bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
+          onWheel={(e) => {
+            if (isAutoScrolling && Math.abs(e.deltaY) > 10)
+              setIsAutoScrolling(false);
+          }}
+          className={`flex-1 overflow-y-auto cursor-pointer overscroll-none ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isSepia ? "!bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
+          style={{
+            willChange: "scroll-position",
+            WebkitOverflowScrolling: "touch",
+          }}
           onClick={handleContentClick}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
