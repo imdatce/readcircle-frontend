@@ -176,7 +176,6 @@ function parseLatin(raw: string) {
   const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
   const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
 
-  // index alanını da tutacağımız şekilde tokens array'ini güncelliyoruz
   const tokens: { num: number; index: number; start: number }[] = [];
   const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
   let m: RegExpExecArray | null;
@@ -184,17 +183,14 @@ function parseLatin(raw: string) {
   while ((m = re.exec(mainText)) !== null) {
     tokens.push({
       num: parseInt(m[1]),
-      index: m.index, // Sayının başladığı tam index
-      start: m.index + m[0].length, // Sayının bittiği index
+      index: m.index,
+      start: m.index + m[0].length,
     });
   }
 
   if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
 
-  // Başlık, ilk sayının başladığı yere (index'e) kadar olan kısımdır.
   const header = mainText.slice(0, tokens[0].index).trim();
-
-  // Maddeleri (items) ayırırken matematiksel hesap yerine direkt index kullanıyoruz.
   const items: string[] = tokens.map((tok, i) => {
     const end = i + 1 < tokens.length ? tokens[i + 1].index : mainText.length;
     return mainText.slice(tok.start, end).trim();
@@ -302,7 +298,6 @@ const SurahVerseGrid = ({
     )
     .filter((t) => t?.trim().length > 0);
 
-  // Extract the number from "1- text" or "1. text" format
   const parsed = items.map((item, idx) => {
     const cleaned = item.replace(/^"+|"+$/g, "").trim();
     const m = cleaned.match(/^(\d+)[-.:]\s*([\s\S]*)/);
@@ -495,6 +490,44 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const currentPage = content.currentUnit || content.startUnit || 1;
 
+  // --- WAKE LOCK API ---
+  const wakeLockRef = useRef<any>(null);
+
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLockRef.current = await (navigator as any).wakeLock.request(
+            "screen",
+          );
+        }
+      } catch (err) {
+        console.error(`Wake Lock hatası:`, err);
+      }
+    };
+
+    const releaseWakeLock = () => {
+      if (wakeLockRef.current !== null) {
+        wakeLockRef.current.release().then(() => {
+          wakeLockRef.current = null;
+        });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") requestWakeLock();
+    };
+
+    requestWakeLock();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, []);
+  // -----------------------
+
   useEffect(() => {
     if (content.type === "QURAN" && activeQuranTab === "MEAL") {
       setLoadingMeal(true);
@@ -604,11 +637,53 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (next !== current) onUpdateContent({ ...content, currentUnit: next });
   };
 
+  // Zikirmatik yetki ve sayı değişkenlerini ana scope'a aldık
+  const currentAssignment = content.assignmentId
+    ? session?.assignments.find((a) => a.id === content.assignmentId)
+    : undefined;
+  const isOwner =
+    currentAssignment && currentAssignment.assignedToName === userName;
+  const totalTarget = currentAssignment
+    ? currentAssignment.endUnit - currentAssignment.startUnit + 1
+    : 0;
+  const safeCount = content.assignmentId
+    ? (localCounts[content.assignmentId] ?? totalTarget)
+    : 0;
+
+  // --- ÇİFT TIKLAMA VE TAM EKRAN KONTROLÜ ---
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleContentClick = (e: React.MouseEvent) => {
-    // Tıklanan şey bir buton, link veya input ise tam ekrana geçmeyi engelle
+    // Tıklanan şey bir buton, link veya input ise engelle
     if ((e.target as HTMLElement).closest("button, a, input")) return;
-    setIsFullscreen((prev) => !prev);
+
+    // Eğer okunan şey bir görevse ve kişi bunu okumaya yetkiliyse çift tıklama zikirmatik gibi davranır
+    if (content.assignmentId && isOwner) {
+      if (clickTimeoutRef.current) {
+        // Çift Tıklama Yakalandı
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+
+        if (safeCount > 0) {
+          onDecrementCount(content.assignmentId);
+          // Haptic Feedback (Titreşim) - Tarayıcı destekliyorsa
+          if (typeof navigator !== "undefined" && navigator.vibrate) {
+            navigator.vibrate(50);
+          }
+        }
+      } else {
+        // İlk Tıklama - 250ms bekle, ikinci tıklama gelmezse tam ekran yap
+        clickTimeoutRef.current = setTimeout(() => {
+          setIsFullscreen((prev) => !prev);
+          clickTimeoutRef.current = null;
+        }, 250);
+      }
+    } else {
+      // Zikirmatik/Görev durumu yoksa doğrudan tam ekran modunu açıp kapat
+      setIsFullscreen((prev) => !prev);
+    }
   };
+  // ------------------------------------------
 
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
@@ -636,48 +711,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       </button>
     </div>
   );
-
-  // --- WAKE LOCK API  ---
-  const wakeLockRef = useRef<any>(null);
-
-  useEffect(() => {
-     const requestWakeLock = async () => {
-      try {
-        if ("wakeLock" in navigator) {
-          wakeLockRef.current = await (navigator as any).wakeLock.request(
-            "screen",
-          );
-          console.log("Wake Lock aktif: Ekran kapanmayacak.");
-        }
-      } catch (err: any) {
-        console.error(`Wake Lock hatası: ${err.name}, ${err.message}`);
-      }
-    };
-
-     const releaseWakeLock = () => {
-      if (wakeLockRef.current !== null) {
-        wakeLockRef.current.release().then(() => {
-          wakeLockRef.current = null;
-          console.log("Wake Lock bırakıldı: Ekran normal davranacak.");
-        });
-      }
-    };
-
-     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        requestWakeLock();
-      }
-    };
-
-     requestWakeLock();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      releaseWakeLock();
-    };
-  }, []);
-  // -----------------------------------------------------
 
   return (
     <div
@@ -841,13 +874,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
             processedData && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
-                {/* SURAH_CARD: show all verses in a single grid */}
                 {processedData.mode === "SURAH_CARD" && (
                   <>
-                    {/* Arabic tab:
-                      - Check original arabic in content.cevsenData (arabic is left empty in processedData)
-                      - If IMAGE_MODE is present, display image
-                      - Otherwise, display verses in a grid with SurahVerseGrid */}
                     {activeTab === "ARABIC" &&
                       (content.cevsenData &&
                       content.cevsenData[0]?.arabic?.includes(
@@ -872,7 +900,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           fontLevel={fontLevel}
                         />
                       ))}
-                    {/* Latin and Meaning tabs */}
                     {(activeTab === "LATIN" || activeTab === "MEANING") && (
                       <SurahVerseGrid
                         babs={processedData.data}
@@ -883,7 +910,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   </>
                 )}
 
-                {/* BLOCK and LIST modes — original behavior */}
                 {processedData.mode !== "SURAH_CARD" &&
                   processedData.data.map((bab, index) => {
                     const mode = processedData.mode;
@@ -918,7 +944,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         )}
 
                         <div className="w-full">
-                          {/* ARABIC */}
                           {activeTab === "ARABIC" && (
                             <div
                               className={
@@ -955,7 +980,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                             </div>
                           )}
 
-                          {/* LATIN */}
                           {activeTab === "LATIN" && (
                             <div
                               className={
@@ -983,7 +1007,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                             </div>
                           )}
 
-                          {/* MEANING */}
                           {activeTab === "MEANING" &&
                             mode !== "LIST" &&
                             (content.type === "CEVSEN" ? (
@@ -1058,38 +1081,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               )}
               {content.assignmentId && (
                 <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-md border border-gray-100 dark:border-gray-800">
-                  {(() => {
-                    const currentAssignment = session?.assignments.find(
-                      (a) => a.id === content.assignmentId,
-                    );
-                    const isOwner =
-                      currentAssignment &&
-                      currentAssignment.assignedToName === userName;
-                    const safeCount =
-                      localCounts[content.assignmentId!] ??
-                      (currentAssignment
-                        ? currentAssignment.endUnit -
-                          currentAssignment.startUnit +
-                          1
-                        : 0);
-                    const totalTarget = currentAssignment
-                      ? currentAssignment.endUnit -
-                        currentAssignment.startUnit +
-                        1
-                      : 0;
-                    return (
-                      <Zikirmatik
-                        currentCount={safeCount}
-                        onDecrement={() =>
-                          onDecrementCount(content.assignmentId!)
-                        }
-                        isModal={true}
-                        t={t}
-                        readOnly={!isOwner}
-                        totalCount={totalTarget}
-                      />
-                    );
-                  })()}
+                  <Zikirmatik
+                    currentCount={safeCount}
+                    onDecrement={() => onDecrementCount(content.assignmentId!)}
+                    isModal={true}
+                    t={t}
+                    readOnly={!isOwner}
+                    totalCount={totalTarget}
+                  />
                 </div>
               )}
             </div>
