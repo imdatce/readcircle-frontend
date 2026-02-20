@@ -446,13 +446,12 @@ const CevsenGridDisplay = ({
                 ۞
               </span>
               <p
-                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
-                  mode === "ARABIC"
+                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${mode === "ARABIC"
                     ? fontClass
                     : mode === "LATIN"
                       ? `italic ${fontSizes.LATIN[fontLevel]}`
                       : fontSizes.MEANING[fontLevel]
-                }`}
+                  }`}
                 dir={isRtl ? "rtl" : "ltr"}
               >
                 {subhaneke}
@@ -489,7 +488,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
-
+  const [isSepia, setIsSepia] = useState(false);
   // --- WAKE LOCK API ---
   const wakeLockRef = useRef<any>(null);
 
@@ -752,8 +751,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
     >
       <div
-        className={`bg-gray-100 dark:bg-black w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
-      >
+        className={`w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}>
         {/* HEADER */}
         {!isFullscreen && (
           <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
@@ -779,6 +777,37 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
                       >
                         A+
+                      </button>
+                      {/* BURADAN İTİBAREN EKLİYORUZ - SEPYA BUTONU */}
+                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                      <button
+                        onClick={() => {
+                          setIsSepia(!isSepia);
+                          if (
+                            typeof navigator !== "undefined" &&
+                            navigator.vibrate
+                          )
+                            navigator.vibrate(20);
+                        }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia
+                            ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
+                            : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
+                          }`}
+                        title={t("eyeProtection") || "Okuma Modu (Sepya)"}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
                       </button>
                     </div>
                   )}
@@ -843,7 +872,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
         {/* CONTENT */}
         <div
-          className={`flex-1 overflow-y-auto bg-gray-100 dark:bg-black scroll-smooth cursor-pointer ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
+          className={`flex-1 overflow-y-auto scroll-smooth cursor-pointer ${isSepia ? "!bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
           onClick={handleContentClick}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -915,9 +944,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   <>
                     {activeTab === "ARABIC" &&
                       (content.cevsenData &&
-                      content.cevsenData[0]?.arabic?.includes(
-                        "IMAGE_MODE:::",
-                      ) ? (
+                        content.cevsenData[0]?.arabic?.includes(
+                          "IMAGE_MODE:::",
+                        ) ? (
                         content.cevsenData.map((bab, i) =>
                           bab.arabic.includes("IMAGE_MODE:::") ? (
                             <img
@@ -1070,10 +1099,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-6">
               {(activeTab === "ARABIC" &&
                 content.salavatData.arabic.includes("IMAGE_MODE")) ||
-              (activeTab === "LATIN" &&
-                content.salavatData.transcript.includes("IMAGE_MODE")) ||
-              (activeTab === "MEANING" &&
-                content.salavatData.meaning.includes("IMAGE_MODE")) ? (
+                (activeTab === "LATIN" &&
+                  content.salavatData.transcript.includes("IMAGE_MODE")) ||
+                (activeTab === "MEANING" &&
+                  content.salavatData.meaning.includes("IMAGE_MODE")) ? (
                 <div className="flex flex-col gap-4 w-full">
                   {(activeTab === "ARABIC"
                     ? content.salavatData.arabic

@@ -6,3 +6,37 @@
   --foreground: #171717;
 }
 
+/* === SEPYA (OKUMA) MODU === */
+.sepia-theme {
+  background-color: #F4ECD8 !important;
+  color: #432C0A !important;
+}
+
+/* Sepya açıkken tüm gri/beyaz/siyah arkaplanları kağıt rengine çevirir */
+.sepia-theme [class*="bg-white"],
+.sepia-theme [class*="bg-gray-900"],
+.sepia-theme [class*="bg-black"],
+.sepia-theme [class*="bg-gray-100"],
+.sepia-theme [class*="bg-[#fdf9f2]"],
+.sepia-theme [class*="bg-[#0f1117]"] {
+  background-color: #F4ECD8 !important;
+}
+
+/* Modal içindeki hafif farklı tonları desteklemek için */
+.sepia-theme [class*="bg-gray-50"],
+.sepia-theme [class*="bg-gray-800"] {
+  background-color: #EFE4CA !important;
+}
+
+/* Siyah ve beyaz yazıları koyu kahverengiye (mürekkep rengine) çevirir */
+.sepia-theme [class*="text-gray-"],
+.sepia-theme [class*="text-white"] {
+  color: #432C0A !important;
+}
+
+/* Gri kenarlıkları yumuşak kahverengiye çevirir */
+.sepia-theme [class*="border-gray-"],
+.sepia-theme [class*="border-white"],
+.sepia-theme [class*="border-[#fdf9f2]"] {
+  border-color: #E2D4B7 !important;
+}
