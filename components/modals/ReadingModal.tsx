@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { CevsenBab, ViewMode, DistributionSession } from "@/types";
 import Zikirmatik from "../common/Zikirmatik";
 import { useLanguage } from "@/context/LanguageContext";
@@ -636,6 +636,48 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       </button>
     </div>
   );
+
+  // --- WAKE LOCK API  ---
+  const wakeLockRef = useRef<any>(null);
+
+  useEffect(() => {
+     const requestWakeLock = async () => {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLockRef.current = await (navigator as any).wakeLock.request(
+            "screen",
+          );
+          console.log("Wake Lock aktif: Ekran kapanmayacak.");
+        }
+      } catch (err: any) {
+        console.error(`Wake Lock hatası: ${err.name}, ${err.message}`);
+      }
+    };
+
+     const releaseWakeLock = () => {
+      if (wakeLockRef.current !== null) {
+        wakeLockRef.current.release().then(() => {
+          wakeLockRef.current = null;
+          console.log("Wake Lock bırakıldı: Ekran normal davranacak.");
+        });
+      }
+    };
+
+     const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    };
+
+     requestWakeLock();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, []);
+  // -----------------------------------------------------
 
   return (
     <div
