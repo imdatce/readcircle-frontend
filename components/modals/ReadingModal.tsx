@@ -497,6 +497,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSepia, setIsSepia] = useState(false);
 
+  // Geri Yükleme ve Hafıza Stateleri
+  const [isRestoring, setIsRestoring] = useState(true);
+  const latestScrollY = useRef<number>(0);
+
   // Teleprompter Stateleri
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1); // 0.5, 1, 1.5, 2, 3
@@ -513,8 +517,64 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const initialProgress =
     totalPages > 1 ? (currentPageIdx * 100) / totalPages : 0;
 
+  // --- HAFIZA (LOCALSTORAGE) ANAHTARI OLUŞTURMA ---
+  const storageKey = useMemo(() => {
+    if (content.assignmentId)
+      return `readcircle_progress_assign_${content.assignmentId}`;
+    if (content.codeKey) return `readcircle_progress_code_${content.codeKey}`;
+    return `readcircle_progress_type_${content.type}`;
+  }, [content.assignmentId, content.codeKey, content.type]);
+
+  // --- BAŞLANGIÇTA FONT VE KALDIĞI YERİ GERİ YÜKLEME ---
+  useEffect(() => {
+    // 1. Font Büyüklüğünü Geri Yükle
+    const savedFont = localStorage.getItem("readcircle_font_level");
+    if (savedFont) setFontLevel(Number(savedFont));
+
+    // 2. Kaldığı Sayfayı ve Pozisyonu Geri Yükle
+    setIsRestoring(true);
+    try {
+      const savedProgress = localStorage.getItem(storageKey);
+      if (savedProgress) {
+        const { unit, scrollY } = JSON.parse(savedProgress);
+
+        const validUnit = Math.max(
+          content.startUnit || 1,
+          Math.min(unit, content.endUnit || 604),
+        );
+        if (validUnit !== (content.currentUnit || content.startUnit || 1)) {
+          onUpdateContent({ ...content, currentUnit: validUnit });
+        }
+
+        // DOM'un render olabilmesi için küçük bir gecikme
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollY;
+            latestScrollY.current = scrollY;
+            const { scrollHeight, clientHeight } = scrollContainerRef.current;
+            updateProgressBar(scrollY, scrollHeight - clientHeight);
+          }
+          setIsRestoring(false);
+        }, 200);
+      } else {
+        setIsRestoring(false);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      setIsRestoring(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+  // ----------------------------------------------------
+
+  // Font Değişimini Kaydetme Fonksiyonu
+  const handleFontChange = (newLevel: number) => {
+    setFontLevel(newLevel);
+    localStorage.setItem("readcircle_font_level", newLevel.toString());
+  };
+
   // --- İLERLEME ÇUBUĞU (GPU ACCELERATED - RE-RENDER YOK) ---
-  // useCallback ile sarmalıyoruz ki useEffect bağımlılık dizisinde kullanabilelim
   const updateProgressBar = useCallback(
     (scrollTop: number, maxScroll: number) => {
       if (!progressBarRef.current) return;
@@ -527,31 +587,67 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           ? (currentPageIdx * 100 + scrollPct) / totalPages
           : scrollPct;
 
-      // ScaleX ile donanım hızlandırmalı genişleme (0 ile 1 arası değer alır)
       progressBarRef.current.style.transform = `scaleX(${unifiedPct / 100})`;
     },
     [totalPages, currentPageIdx],
   );
 
   const handleScroll = () => {
-    // LAYOUT THRASHING İPTALİ: Otomatik akarken buraya girme!
     if (isAutoScrolling) return;
 
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         scrollContainerRef.current;
+      latestScrollY.current = scrollTop; // Kullanıcı kaydırdıkça konumu hafızaya al
       updateProgressBar(scrollTop, scrollHeight - clientHeight);
     }
   };
 
+ // 1. SADECE Sayfa (İleri/Geri) değiştiğinde Scroll'u en başa (0'a) al
   useEffect(() => {
+    if (isRestoring) return; 
+    
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
-      // Doğrudan updateProgressBar çağrısı ile resetliyoruz
+      latestScrollY.current = 0;
       const { scrollHeight, clientHeight } = scrollContainerRef.current;
       updateProgressBar(0, scrollHeight - clientHeight);
     }
-  }, [currentPage, activeTab, activeQuranTab, isFullscreen, updateProgressBar]);
+    // Sekme (Arapça/Latin) veya Tam Ekran değişiminde başa sarmaması için sadece currentPage'i dinliyoruz
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  // 2. Sekme veya Tam Ekran (isFullscreen) değiştiğinde Scroll'u SIFIRLAMA, sadece Çubuğu o anki yerine göre güncelle
+  useEffect(() => {
+    if (isRestoring) return;
+    
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      updateProgressBar(scrollTop, scrollHeight - clientHeight);
+    }
+  }, [activeTab, activeQuranTab, isFullscreen, updateProgressBar, isRestoring]);
+
+  // --- KALDIĞI YERİ KAYDETME (PERİYODİK VE UNMOUNT) ---
+  useEffect(() => {
+    if (isRestoring) return;
+
+    const saveProgress = () => {
+      const payload = JSON.stringify({
+        unit: currentPage,
+        scrollY: latestScrollY.current,
+      });
+      localStorage.setItem(storageKey, payload);
+    };
+
+    // Her 2 saniyede bir arka planda kaydet
+    const interval = setInterval(saveProgress, 2000);
+
+    return () => {
+      clearInterval(interval);
+      saveProgress(); // Modal kapanırken kesinlikle kaydet
+    };
+  }, [storageKey, currentPage, isRestoring]);
+  // ----------------------------------------------------
 
   // --- LAYOUT THRASHING'SİZ YAĞ GİBİ AKAN OTOMATİK KAYDIRMA ---
   useEffect(() => {
@@ -562,7 +658,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     let lastTime: number | null = null;
     let exactScrollY = el.scrollTop;
 
-    // Performans için DOM ölçülerini bir kere önbelleğe (cache) alıyoruz.
     const cachedScrollHeight = el.scrollHeight;
     const cachedClientHeight = el.clientHeight;
     const maxScroll = cachedScrollHeight - cachedClientHeight;
@@ -574,20 +669,20 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
 
-      // Uygulama alta atılıp gelindiğinde aniden zıplamayı önler
       if (deltaTime > 0 && deltaTime < 100) {
         const moveBy = (baseSpeed * autoScrollSpeed * deltaTime) / 1000;
         exactScrollY += moveBy;
 
         if (exactScrollY >= maxScroll - 1) {
           el.scrollTop = maxScroll;
+          latestScrollY.current = maxScroll;
           updateProgressBar(maxScroll, maxScroll);
           setIsAutoScrolling(false);
           return;
         }
 
-        // SADECE YAZMA İŞLEMİ (Sıfır DOM Okuması = Sıfır Takılma)
         el.scrollTop = exactScrollY;
+        latestScrollY.current = exactScrollY;
         updateProgressBar(exactScrollY, maxScroll);
       }
 
@@ -888,7 +983,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   content.type !== "QURAN" && (
                     <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
                       <button
-                        onClick={() => setFontLevel((p) => Math.max(0, p - 1))}
+                        onClick={() =>
+                          handleFontChange(Math.max(0, fontLevel - 1))
+                        }
                         disabled={fontLevel === 0}
                         className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
                       >
@@ -896,7 +993,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       </button>
                       <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                       <button
-                        onClick={() => setFontLevel((p) => Math.min(8, p + 1))}
+                        onClick={() =>
+                          handleFontChange(Math.min(8, fontLevel + 1))
+                        }
                         disabled={fontLevel === 8}
                         className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
                       >
