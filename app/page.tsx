@@ -247,8 +247,15 @@ function HomeContent() {
     }
   }, [searchParams]);
 
-  const handleJoin = () => {
-    if (!code.trim()) return;
+  const handleJoin = (e?: React.FormEvent) => {
+     if (e) e.preventDefault();
+
+    if (!code.trim()) {
+       alert(
+        t("emptyCodeWarning"),
+      );
+      return;
+    }
 
     let sessionCode = code.trim();
     if (sessionCode.includes("/join/")) {

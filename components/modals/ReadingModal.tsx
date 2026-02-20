@@ -170,30 +170,63 @@ function parseArabic(raw: string) {
   return { header, items, subhaneke };
 }
 
+// function parseLatin(raw: string) {
+//   const text = raw.replace(/###\s*$/, "").trim();
+//   const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
+//   const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
+//   const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
+
+//   const tokens: { num: number; start: number }[] = [];
+//   const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
+//   let m: RegExpExecArray | null;
+//   while ((m = re.exec(mainText)) !== null) {
+//     tokens.push({ num: parseInt(m[1]), start: m.index + m[0].length });
+//   }
+//   if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
+
+//   const header = mainText
+//     .slice(0, tokens[0].start - tokens[0].num.toString().length - 1)
+//     .trim();
+//   const items: string[] = tokens.map((tok, i) => {
+//     const end =
+//       i + 1 < tokens.length
+//         ? tokens[i + 1].start - tokens[i + 1].num.toString().length - 1
+//         : mainText.length;
+//     return mainText.slice(tok.start, end).trim();
+//   });
+//   return { header, items, subhaneke };
+// }
+
 function parseLatin(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
   const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
   const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
   const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
 
-  const tokens: { num: number; start: number }[] = [];
+  // index alanını da tutacağımız şekilde tokens array'ini güncelliyoruz
+  const tokens: { num: number; index: number; start: number }[] = [];
   const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
   let m: RegExpExecArray | null;
+
   while ((m = re.exec(mainText)) !== null) {
-    tokens.push({ num: parseInt(m[1]), start: m.index + m[0].length });
+    tokens.push({
+      num: parseInt(m[1]),
+      index: m.index, // Sayının başladığı tam index
+      start: m.index + m[0].length, // Sayının bittiği index
+    });
   }
+
   if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
 
-  const header = mainText
-    .slice(0, tokens[0].start - tokens[0].num.toString().length - 1)
-    .trim();
+  // Başlık, ilk sayının başladığı yere (index'e) kadar olan kısımdır.
+  const header = mainText.slice(0, tokens[0].index).trim();
+
+  // Maddeleri (items) ayırırken matematiksel hesap yerine direkt index kullanıyoruz.
   const items: string[] = tokens.map((tok, i) => {
-    const end =
-      i + 1 < tokens.length
-        ? tokens[i + 1].start - tokens[i + 1].num.toString().length - 1
-        : mainText.length;
+    const end = i + 1 < tokens.length ? tokens[i + 1].index : mainText.length;
     return mainText.slice(tok.start, end).trim();
   });
+
   return { header, items, subhaneke };
 }
 

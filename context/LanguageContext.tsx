@@ -49,6 +49,7 @@ const translations: TranslationStructure = {
       taken: "Alındı",
       completed: "Tamamlandı",
       target: "Hedef Miktar",
+      emptyCodeWarning: "Lütfen bir oturum kodu veya linki girin.",
       selectPlaceholder: "Seçiniz...",
       pasteCodeOrLink: "Kod veya link yapıştır",
       allahAccept: "Allah kabul etsin.",
@@ -327,6 +328,7 @@ const translations: TranslationStructure = {
       status: "Rewş",
       undo: "Vegerîne",
       yourNamePlaceholder: "Navê te?",
+      emptyCodeWarning: "Ji kerema xwe kodê rûniştinê an jî linkê binivîse.",
       homeVerseContent: "Bi rastî dil tenê bi bîranîna Allah re aram dibin.",
       verseBaqarah152:
         "Ji ber vê yekê min bîr bikin ku ez jî we bîr bikim. Spasê min bikin û nekin kufr.",
@@ -604,6 +606,8 @@ const translations: TranslationStructure = {
       sessionCreated: "Session created",
       tapToCount: "Tap to count",
       yourNamePlaceholder: "Your Name?",
+      emptyCodeWarning: "Please enter a session code or link.",
+
       defaultSessionName: "Spiritual Circle",
       homeVerseContent:
         "Verily, in the remembrance of Allah do hearts find rest.",
@@ -897,6 +901,7 @@ const translations: TranslationStructure = {
       verseBaqarah152: "اذكروني أذكركم واشكروا لي",
       verseGafir60: "ادعوني أستجب لكم",
       verseAhzab41: "اذكروا الله كثيرا",
+      emptyCodeWarning: "يرجى إدخال رمز الجلسة أو الرابط.",
       unauthorizedAccess:
         "الوصول غير المصرح به: يمكن فقط للشخص الذي أنشأ هذا التوزيع عرض هذه اللوحة.",
       verseBaqarah186: "إني قريب أجيب دعوة الداع إذا دعان",
@@ -1164,6 +1169,7 @@ const translations: TranslationStructure = {
       tapToCount: "Appuyer pour compter",
       refresh: "Actualiser",
       add: "Ajouter",
+      emptyCodeWarning: "Veuillez entrer un code de session ou un lien.",
       unauthorizedAccess:
         "Accès non autorisé : Seule la personne ayant créé cette distribution peut voir ce panneau.",
       serverWakingUpPart1:
