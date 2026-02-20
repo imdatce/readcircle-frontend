@@ -527,11 +527,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   // --- BAŞLANGIÇTA FONT VE KALDIĞI YERİ GERİ YÜKLEME ---
   useEffect(() => {
-    // 1. Font Büyüklüğünü Geri Yükle
     const savedFont = localStorage.getItem("readcircle_font_level");
     if (savedFont) setFontLevel(Number(savedFont));
 
-    // 2. Kaldığı Sayfayı ve Pozisyonu Geri Yükle
     setIsRestoring(true);
     try {
       const savedProgress = localStorage.getItem(storageKey);
@@ -546,7 +544,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           onUpdateContent({ ...content, currentUnit: validUnit });
         }
 
-        // DOM'un render olabilmesi için küçük bir gecikme
         setTimeout(() => {
           if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollTop = scrollY;
@@ -559,8 +556,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       } else {
         setIsRestoring(false);
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       setIsRestoring(false);
     }
@@ -568,7 +563,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   }, [storageKey]);
   // ----------------------------------------------------
 
-  // Font Değişimini Kaydetme Fonksiyonu
   const handleFontChange = (newLevel: number) => {
     setFontLevel(newLevel);
     localStorage.setItem("readcircle_font_level", newLevel.toString());
@@ -598,31 +592,32 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         scrollContainerRef.current;
-      latestScrollY.current = scrollTop; // Kullanıcı kaydırdıkça konumu hafızaya al
+      latestScrollY.current = scrollTop;
       updateProgressBar(scrollTop, scrollHeight - clientHeight);
     }
   };
 
- // 1. SADECE Sayfa (İleri/Geri) değiştiğinde Scroll'u en başa (0'a) al
+  // 1. SADECE Sayfa (İleri/Geri) değiştiğinde Scroll'u en başa (0'a) al
   useEffect(() => {
-    if (isRestoring) return; 
-    
+    if (isRestoring) return;
+
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
       latestScrollY.current = 0;
       const { scrollHeight, clientHeight } = scrollContainerRef.current;
       updateProgressBar(0, scrollHeight - clientHeight);
     }
-    // Sekme (Arapça/Latin) veya Tam Ekran değişiminde başa sarmaması için sadece currentPage'i dinliyoruz
+    // Sekme/Tam Ekran değişiminde başa sarmaması için sadece currentPage'i dinliyoruz
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-  // 2. Sekme veya Tam Ekran (isFullscreen) değiştiğinde Scroll'u SIFIRLAMA, sadece Çubuğu o anki yerine göre güncelle
+  // 2. Sekme veya Tam Ekran (isFullscreen) değiştiğinde Scroll'u SIFIRLAMA, Çubuğu güncelle
   useEffect(() => {
     if (isRestoring) return;
-    
+
     if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } =
+        scrollContainerRef.current;
       updateProgressBar(scrollTop, scrollHeight - clientHeight);
     }
   }, [activeTab, activeQuranTab, isFullscreen, updateProgressBar, isRestoring]);
@@ -639,12 +634,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       localStorage.setItem(storageKey, payload);
     };
 
-    // Her 2 saniyede bir arka planda kaydet
     const interval = setInterval(saveProgress, 2000);
-
     return () => {
       clearInterval(interval);
-      saveProgress(); // Modal kapanırken kesinlikle kaydet
+      saveProgress();
     };
   }, [storageKey, currentPage, isRestoring]);
   // ----------------------------------------------------
@@ -876,13 +869,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Ekrana Tıklanma: Artık otomatik kaymayı durdurmaz, sadece tam ekranı açar/kapatır
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
-
-    if (isAutoScrolling) {
-      setIsAutoScrolling(false);
-      return;
-    }
 
     if (content.assignmentId && isOwner) {
       if (clickTimeoutRef.current) {
@@ -907,10 +896,30 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
+  // Ekrana Dokunma: Artık kaymayı hemen durdurmaz
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (isAutoScrolling) setIsAutoScrolling(false);
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
+  };
+
+  // Ekranda Sürükleme: Kullanıcı parmağını belirgin şekilde hareket ettirirse (manuel müdahale) kaymayı durdurur
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (
+      !isAutoScrolling ||
+      touchStartX.current === null ||
+      touchStartY.current === null
+    )
+      return;
+
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+
+    if (
+      Math.abs(currentX - touchStartX.current) > 10 ||
+      Math.abs(currentY - touchStartY.current) > 10
+    ) {
+      setIsAutoScrolling(false);
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -1161,6 +1170,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           }}
           onClick={handleContentClick}
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {content.type === "SIMPLE" && content.simpleItems && (
