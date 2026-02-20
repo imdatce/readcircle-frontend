@@ -170,33 +170,6 @@ function parseArabic(raw: string) {
   return { header, items, subhaneke };
 }
 
-// function parseLatin(raw: string) {
-//   const text = raw.replace(/###\s*$/, "").trim();
-//   const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
-//   const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
-//   const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
-
-//   const tokens: { num: number; start: number }[] = [];
-//   const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
-//   let m: RegExpExecArray | null;
-//   while ((m = re.exec(mainText)) !== null) {
-//     tokens.push({ num: parseInt(m[1]), start: m.index + m[0].length });
-//   }
-//   if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
-
-//   const header = mainText
-//     .slice(0, tokens[0].start - tokens[0].num.toString().length - 1)
-//     .trim();
-//   const items: string[] = tokens.map((tok, i) => {
-//     const end =
-//       i + 1 < tokens.length
-//         ? tokens[i + 1].start - tokens[i + 1].num.toString().length - 1
-//         : mainText.length;
-//     return mainText.slice(tok.start, end).trim();
-//   });
-//   return { header, items, subhaneke };
-// }
-
 function parseLatin(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
   const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
@@ -518,6 +491,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   );
   const [mealData, setMealData] = useState<any[]>([]);
   const [loadingMeal, setLoadingMeal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
 
@@ -630,6 +604,12 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (next !== current) onUpdateContent({ ...content, currentUnit: next });
   };
 
+  const handleContentClick = (e: React.MouseEvent) => {
+    // Tıklanan şey bir buton, link veya input ise tam ekrana geçmeyi engelle
+    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    setIsFullscreen((prev) => !prev);
+  };
+
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
   const isSurahGroup = processedData?.isSurah || false;
@@ -658,95 +638,104 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-gray-100 dark:bg-black rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] border border-white/10 dark:border-gray-800">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
+    >
+      <div
+        className={`bg-gray-100 dark:bg-black w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
+      >
         {/* HEADER */}
-        <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20">
-          <div className="flex justify-between items-center">
-            <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
-              {getDisplayTitle()}
-            </h3>
-            <div className="flex items-center gap-2 md:gap-3">
-              {!(isSurahGroup && activeTab === "ARABIC") &&
-                content.type !== "QURAN" && (
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => setFontLevel((p) => Math.max(0, p - 1))}
-                      disabled={fontLevel === 0}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
-                    >
-                      A-
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={() => setFontLevel((p) => Math.min(8, p + 1))}
-                      disabled={fontLevel === 8}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
-                    >
-                      A+
-                    </button>
-                  </div>
-                )}
-              <button
-                onClick={onClose}
-                className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
+        {!isFullscreen && (
+          <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
+                {getDisplayTitle()}
+              </h3>
+              <div className="flex items-center gap-2 md:gap-3">
+                {!(isSurahGroup && activeTab === "ARABIC") &&
+                  content.type !== "QURAN" && (
+                    <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => setFontLevel((p) => Math.max(0, p - 1))}
+                        disabled={fontLevel === 0}
+                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
+                      >
+                        A-
+                      </button>
+                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                      <button
+                        onClick={() => setFontLevel((p) => Math.min(8, p + 1))}
+                        disabled={fontLevel === 8}
+                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
+                      >
+                        A+
+                      </button>
+                    </div>
+                  )}
+                <button
+                  onClick={onClose}
+                  className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18 18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {content.type === "QURAN" && (
-            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => setActiveQuranTab("ORIGINAL")}
-                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
-              >
-                {t("Original") || "Original"}
-              </button>
-              <button
-                onClick={() => setActiveQuranTab("MEAL")}
-                className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
-              >
-                {t("tabMeaning") || "Meaning"}
-              </button>
-            </div>
-          )}
-
-          {content.type !== "SIMPLE" && content.type !== "QURAN" && (
-            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-              {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
-                if (tab === "MEANING" && isBedirGroup) return null;
-                if (content.codeKey === "OZELSALAVAT" && tab === "LATIN")
-                  return null;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${activeTab === tab ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                    stroke="currentColor"
                   >
-                    {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`)}
-                  </button>
-                );
-              })}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18 18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+
+            {content.type === "QURAN" && (
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => setActiveQuranTab("ORIGINAL")}
+                  className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+                >
+                  {t("Original") || "Original"}
+                </button>
+                <button
+                  onClick={() => setActiveQuranTab("MEAL")}
+                  className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+                >
+                  {t("tabMeaning") || "Meaning"}
+                </button>
+              </div>
+            )}
+
+            {content.type !== "SIMPLE" && content.type !== "QURAN" && (
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
+                  if (tab === "MEANING" && isBedirGroup) return null;
+                  if (content.codeKey === "OZELSALAVAT" && tab === "LATIN")
+                    return null;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${activeTab === tab ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}
+                    >
+                      {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto bg-gray-100 dark:bg-black p-4 md:p-6 scroll-smooth">
+        <div
+          className={`flex-1 overflow-y-auto bg-gray-100 dark:bg-black scroll-smooth cursor-pointer ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
+          onClick={handleContentClick}
+        >
           {content.type === "SIMPLE" && content.simpleItems && (
             <div className="space-y-3 max-w-2xl mx-auto">
               {content.simpleItems.map((item, index) => (
@@ -1066,14 +1055,16 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         </div>
 
         {/* FOOTER */}
-        <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20">
-          <button
-            onClick={onClose}
-            className="w-full py-4 bg-gray-900 dark:bg-gray-800 text-white rounded-2xl hover:bg-black dark:hover:bg-gray-700 transition-all font-black uppercase tracking-[0.2em] text-xs shadow-lg active:scale-[0.98]"
-          >
-            {t("close")}
-          </button>
-        </div>
+        {!isFullscreen && (
+          <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20 animate-in slide-in-from-bottom-4">
+            <button
+              onClick={onClose}
+              className="w-full py-4 bg-gray-900 dark:bg-gray-800 text-white rounded-2xl hover:bg-black dark:hover:bg-gray-700 transition-all font-black uppercase tracking-[0.2em] text-xs shadow-lg active:scale-[0.98]"
+            >
+              {t("close")}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
