@@ -637,7 +637,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
     if (next !== current) {
       onUpdateContent({ ...content, currentUnit: next });
-
+      // Sayfa Değiştiğinde Titreşim
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(30);
       }
@@ -656,40 +656,69 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     ? (localCounts[content.assignmentId] ?? totalTarget)
     : 0;
 
-  // --- ÇİFT TIKLAMA VE TAM EKRAN KONTROLÜ ---
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleContentClick = (e: React.MouseEvent) => {
-    // Tıklanan şey bir buton, link veya input ise engelle
     if ((e.target as HTMLElement).closest("button, a, input")) return;
 
-    // Eğer okunan şey bir görevse ve kişi bunu okumaya yetkiliyse çift tıklama zikirmatik gibi davranır
     if (content.assignmentId && isOwner) {
       if (clickTimeoutRef.current) {
-        // Çift Tıklama Yakalandı
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
 
         if (safeCount > 0) {
           onDecrementCount(content.assignmentId);
-          // Haptic Feedback (Titreşim) - Tarayıcı destekliyorsa
           if (typeof navigator !== "undefined" && navigator.vibrate) {
             navigator.vibrate(50);
           }
         }
       } else {
-        // İlk Tıklama - 250ms bekle, ikinci tıklama gelmezse tam ekran yap
         clickTimeoutRef.current = setTimeout(() => {
           setIsFullscreen((prev) => !prev);
           clickTimeoutRef.current = null;
         }, 250);
       }
     } else {
-      // Zikirmatik/Görev durumu yoksa doğrudan tam ekran modunu açıp kapat
       setIsFullscreen((prev) => !prev);
     }
   };
-  // ------------------------------------------
+
+  // --- KAYDIRMA (SWIPE) GESTURE KONTROLÜ ---
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Parmağın ekrana ilk değdiği koordinatları kaydet
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    // Parmağın ekrandan kalktığı koordinatlar
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchStartX.current - touchEndX;
+    const deltaY = touchStartY.current - touchEndY;
+
+    // Eğer kullanıcı dikey değil yatay kaydırdıysa ve yeterli mesafeye ulaştıysa (50px)
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 0) {
+        // Sola kaydırıldı -> Sonraki Sayfa
+        changePage(1);
+      } else {
+        // Sağa kaydırıldı -> Önceki Sayfa
+        changePage(-1);
+      }
+    }
+
+    // Değerleri sıfırla
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+  // ----------------------------------------
 
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
@@ -816,6 +845,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         <div
           className={`flex-1 overflow-y-auto bg-gray-100 dark:bg-black scroll-smooth cursor-pointer ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
           onClick={handleContentClick}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {content.type === "SIMPLE" && content.simpleItems && (
             <div className="space-y-3 max-w-2xl mx-auto">
