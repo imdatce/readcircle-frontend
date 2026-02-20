@@ -19,7 +19,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SURA - Spiritual Union",
-  description: "Resource Distribution Platform for Spiritual Union for Reflection & Affinity "
+  description: "Resource Distribution Platform for Spiritual Union for Reflection & Affinity ",
+  manifest: "/manifest.json", // PWA için manifest eklendi
+};
+
+export const viewport = {
+  themeColor: "#10B981", // PWA tarayıcı çubuğu rengi eklendi
 };
 
 export default function RootLayout({
