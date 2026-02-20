@@ -15,16 +15,24 @@ const Zikirmatik = ({
 }: ExtendedZikirmatikProps) => {
   const isCompleted = currentCount <= 0;
 
+  // 1. Maksimum değeri tuttuğumuz state
   const [localMax, setLocalMax] = useState<number>(
     currentCount > 0 ? currentCount : 1,
   );
 
-  if (!totalCount && currentCount > localMax) {
-    setLocalMax(currentCount);
+  // 2. Önceki count değerini tuttuğumuz state (Kıyaslama yapabilmek için)
+  const [prevCount, setPrevCount] = useState<number>(currentCount);
+
+  // 3. EFFECT YERİNE RENDER SIRASINDA GÜNCELLEME (React'ın resmi tavsiyesi)
+  // Eğer dışarıdan gelen currentCount değişmişse, state'leri güncelleriz.
+  if (currentCount !== prevCount) {
+    setPrevCount(currentCount); // Sonsuz döngüyü engellemek için prevCount'u güncelliyoruz
+    if (!totalCount && currentCount > localMax) {
+      setLocalMax(currentCount);
+    }
   }
 
   const finalMax = totalCount && totalCount > 0 ? totalCount : localMax;
-
   const safeMax = finalMax > 0 ? finalMax : 1;
 
   const percentage = Math.min(100, Math.max(0, (currentCount / safeMax) * 100));
@@ -36,6 +44,19 @@ const Zikirmatik = ({
   const containerSize = isModal ? "w-64 h-64" : "w-48 h-48";
   const buttonSize = isModal ? "w-40 h-40" : "w-28 h-28";
   const textSize = isModal ? "text-6xl" : "text-4xl";
+
+  // --- TİTREŞİM (HAPTIC FEEDBACK) FONKSİYONU ---
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Tıklamanın alt elementlere yansımasını engeller
+
+    if (!readOnly && currentCount > 0) {
+      onDecrement();
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }
+  };
 
   return (
     <div
@@ -93,7 +114,7 @@ const Zikirmatik = ({
           <div className="absolute top-3 w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-700 shadow-inner"></div>
 
           <button
-            onClick={readOnly ? undefined : onDecrement}
+            onClick={readOnly ? undefined : handleDecrement}
             disabled={isCompleted || readOnly}
             aria-label={t("decrease")}
             className={`

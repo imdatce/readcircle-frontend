@@ -634,10 +634,16 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const min = content.startUnit || 1;
     const max = content.endUnit || 604;
     const next = Math.min(Math.max(current + offset, min), max);
-    if (next !== current) onUpdateContent({ ...content, currentUnit: next });
+
+    if (next !== current) {
+      onUpdateContent({ ...content, currentUnit: next });
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }
   };
 
-  // Zikirmatik yetki ve sayı değişkenlerini ana scope'a aldık
   const currentAssignment = content.assignmentId
     ? session?.assignments.find((a) => a.id === content.assignmentId)
     : undefined;
