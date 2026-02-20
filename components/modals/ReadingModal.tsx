@@ -446,12 +446,13 @@ const CevsenGridDisplay = ({
                 ۞
               </span>
               <p
-                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${mode === "ARABIC"
+                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
+                  mode === "ARABIC"
                     ? fontClass
                     : mode === "LATIN"
                       ? `italic ${fontSizes.LATIN[fontLevel]}`
                       : fontSizes.MEANING[fontLevel]
-                  }`}
+                }`}
                 dir={isRtl ? "rtl" : "ltr"}
               >
                 {subhaneke}
@@ -485,13 +486,52 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   );
   const [mealData, setMealData] = useState<any[]>([]);
   const [loadingMeal, setLoadingMeal] = useState(false);
+
+  // Özellik Stateleri
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSepia, setIsSepia] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
-  const [isSepia, setIsSepia] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- İLERLEME ÇUBUĞU (PROGRESS BAR) KONTROLÜ ---
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        scrollContainerRef.current;
+      const totalScroll = scrollHeight - clientHeight;
+      if (totalScroll <= 0) {
+        setScrollProgress(100);
+      } else {
+        setScrollProgress(
+          Math.min(100, Math.max(0, (scrollTop / totalScroll) * 100)),
+        );
+      }
+    }
+  };
+
+  const safeStart = content.startUnit || currentPage;
+  const safeEnd = content.endUnit || currentPage;
+  const totalPages = safeEnd - safeStart + 1;
+  const currentPageIdx = currentPage - safeStart;
+
+  // Hem kaydırma hem de sayfa değişimini baz alan bütünleşik ilerleme yüzdesi
+  const overallProgress =
+    totalPages > 1
+      ? (currentPageIdx * 100 + scrollProgress) / totalPages
+      : scrollProgress;
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+    setTimeout(handleScroll, 50); // Ekran çizildikten sonra scroll'u hesapla
+  }, [currentPage, activeTab, activeQuranTab, isFullscreen]);
+  // ----------------------------------------------
+
   // --- WAKE LOCK API ---
   const wakeLockRef = useRef<any>(null);
-
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
@@ -636,10 +676,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
     if (next !== current) {
       onUpdateContent({ ...content, currentUnit: next });
-      // Sayfa Değiştiğinde Titreşim
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
+      if (typeof navigator !== "undefined" && navigator.vibrate)
         navigator.vibrate(30);
-      }
     }
   };
 
@@ -664,12 +702,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
-
         if (safeCount > 0) {
           onDecrementCount(content.assignmentId);
-          if (typeof navigator !== "undefined" && navigator.vibrate) {
+          if (typeof navigator !== "undefined" && navigator.vibrate)
             navigator.vibrate(50);
-          }
         }
       } else {
         clickTimeoutRef.current = setTimeout(() => {
@@ -682,42 +718,30 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
-  // --- KAYDIRMA (SWIPE) GESTURE KONTROLÜ ---
+  // --- KAYDIRMA (SWIPE) KONTROLÜ ---
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Parmağın ekrana ilk değdiği koordinatları kaydet
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null || touchStartY.current === null) return;
-
-    // Parmağın ekrandan kalktığı koordinatlar
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-
     const deltaX = touchStartX.current - touchEndX;
     const deltaY = touchStartY.current - touchEndY;
 
-    // Eğer kullanıcı dikey değil yatay kaydırdıysa ve yeterli mesafeye ulaştıysa (50px)
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 0) {
-        // Sola kaydırıldı -> Sonraki Sayfa
-        changePage(1);
-      } else {
-        // Sağa kaydırıldı -> Önceki Sayfa
-        changePage(-1);
-      }
+      if (deltaX > 0) changePage(1);
+      else changePage(-1);
     }
-
-    // Değerleri sıfırla
     touchStartX.current = null;
     touchStartY.current = null;
   };
-  // ----------------------------------------
+  // --------------------------------
 
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
@@ -751,7 +775,16 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
     >
       <div
-        className={`w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}>
+        className={`relative w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
+      >
+        {/* İNCE OKUMA İLERLEME ÇUBUĞU (READING PROGRESS BAR) */}
+        <div className="absolute top-0 left-0 w-full h-[3px] bg-black/5 dark:bg-white/5 z-[60]">
+          <div
+            className="h-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)] transition-all duration-150 ease-out"
+            style={{ width: `${overallProgress}%` }}
+          />
+        </div>
+
         {/* HEADER */}
         {!isFullscreen && (
           <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
@@ -778,7 +811,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       >
                         A+
                       </button>
-                      {/* BURADAN İTİBAREN EKLİYORUZ - SEPYA BUTONU */}
                       <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                       <button
                         onClick={() => {
@@ -789,10 +821,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           )
                             navigator.vibrate(20);
                         }}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
+                          isSepia
                             ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
                             : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                          }`}
+                        }`}
                         title={t("eyeProtection") || "Okuma Modu (Sepya)"}
                       >
                         <svg
@@ -872,6 +905,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
         {/* CONTENT */}
         <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
           className={`flex-1 overflow-y-auto scroll-smooth cursor-pointer ${isSepia ? "!bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
           onClick={handleContentClick}
           onTouchStart={handleTouchStart}
@@ -944,9 +979,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   <>
                     {activeTab === "ARABIC" &&
                       (content.cevsenData &&
-                        content.cevsenData[0]?.arabic?.includes(
-                          "IMAGE_MODE:::",
-                        ) ? (
+                      content.cevsenData[0]?.arabic?.includes(
+                        "IMAGE_MODE:::",
+                      ) ? (
                         content.cevsenData.map((bab, i) =>
                           bab.arabic.includes("IMAGE_MODE:::") ? (
                             <img
@@ -1099,10 +1134,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-6">
               {(activeTab === "ARABIC" &&
                 content.salavatData.arabic.includes("IMAGE_MODE")) ||
-                (activeTab === "LATIN" &&
-                  content.salavatData.transcript.includes("IMAGE_MODE")) ||
-                (activeTab === "MEANING" &&
-                  content.salavatData.meaning.includes("IMAGE_MODE")) ? (
+              (activeTab === "LATIN" &&
+                content.salavatData.transcript.includes("IMAGE_MODE")) ||
+              (activeTab === "MEANING" &&
+                content.salavatData.meaning.includes("IMAGE_MODE")) ? (
                 <div className="flex flex-col gap-4 w-full">
                   {(activeTab === "ARABIC"
                     ? content.salavatData.arabic
