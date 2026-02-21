@@ -233,16 +233,21 @@ export function useDistributionSession(code: string) {
 
     const openReadingModal = (assignment: Assignment, startPage?: number, endPage?: number) => {
         if (assignment.resource.type === "PAGED" && startPage && endPage) {
-            setReadingModalContent({
-                title: `${t("page")} ${startPage} - ${endPage}`,
-                type: "QURAN",
-                startUnit: startPage,
-                endUnit: endPage,
-                currentUnit: startPage,
-                assignmentId: assignment.id,
-            });
-            return;
-        }
+        
+         const isQuran = assignment.resource?.codeKey?.toUpperCase().includes("QURAN") || assignment.resource?.codeKey?.toUpperCase().includes("KURAN");
+        const displayStart = isQuran && startPage > 1 ? startPage - 1 : startPage;
+        const displayEnd = isQuran && endPage > 1 ? endPage - 1 : endPage;
+
+        setReadingModalContent({
+            title: `${t("page")} ${displayStart} - ${displayEnd}`,  
+            type: "QURAN",
+            startUnit: startPage,  
+            endUnit: endPage,
+            currentUnit: startPage,
+            assignmentId: assignment.id,
+        });
+        return;
+    }
 
         const resource = assignment.resource;
         let translation = resource.translations?.find((trans) => trans.langCode === language);

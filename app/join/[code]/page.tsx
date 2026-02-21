@@ -606,6 +606,15 @@ function AssignmentCard({
               const typeName = getTypeName(a.resource);
               const isPaged = typeName === "PAGED";
               const count = a.endUnit - a.startUnit + 1;
+
+              const isQuran =
+                a.resource?.codeKey?.toUpperCase().includes("QURAN") ||
+                a.resource?.codeKey?.toUpperCase().includes("KURAN");
+              const displayStart =
+                isQuran && a.startUnit > 1 ? a.startUnit - 1 : a.startUnit;
+              const displayEnd =
+                isQuran && a.endUnit > 1 ? a.endUnit - 1 : a.endUnit;
+
               return (
                 <span
                   key={idx}
@@ -618,7 +627,7 @@ function AssignmentCard({
                   }`}
                 >
                   {isPaged
-                    ? `${t("page")}: ${a.startUnit}-${a.endUnit}`
+                    ? `${t("page")}: ${displayStart}-${displayEnd}` // BURASI GÜNCELLENDİ
                     : `${count} ${t("pieces")}`}
                 </span>
               );
