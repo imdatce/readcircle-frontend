@@ -8,7 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
 import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
-
+import QRCode from "react-qr-code";
 // --- CATEGORY DEFINITIONS ---
 const CATEGORY_ORDER = [
   "MAIN",

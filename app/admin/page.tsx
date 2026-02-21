@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Resource } from "@/types";
 import Link from "next/link";
-
+import QRCode from "react-qr-code";
 /**
  * CATEGORY DEFINITIONS
  * Defines the strict order of categories for the UI display.
@@ -624,6 +624,22 @@ export default function AdminPage() {
                 {createdCode}
               </span>
             </div>
+
+            {/* YENİ EKLENEN QR KOD BÖLÜMÜ */}
+            <div className="flex flex-col items-center justify-center mb-8 p-6 bg-white rounded-[1.5rem] border-2 border-gray-100 shadow-sm mx-auto w-fit">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                {t("scanQrToJoin") || "KATILMAK İÇİN TARATIN"}
+              </p>
+              <div className="p-2 bg-white rounded-xl">
+                <QRCode 
+                  value={createdLink} 
+                  size={160}
+                  level="H" /* Yüksek hata düzeltme seviyesi, daha okunaklı yapar */
+                />
+              </div>
+            </div>
+            {/* YENİ EKLENEN BÖLÜMÜN SONU */}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <button
                 onClick={() => {
