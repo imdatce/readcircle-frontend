@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -410,6 +411,32 @@ function MonitorContent() {
               <h1 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
                 {t("monitorTitle")}
               </h1>
+              {/* --- YENİ EKLENEN TARİH BÖLÜMÜ --- */}
+              {session?.createdAt && (
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>
+                    {new Date(session.createdAt).toLocaleDateString(
+                      language === "tr" ? "tr-TR" : "en-US",
+                      { year: "numeric", month: "long", day: "numeric" },
+                    )}
+                  </span>
+                </div>
+              )}
+              {/* -------------------------------- */}
             </div>
             {session && (
               <h1 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white text-center leading-none">

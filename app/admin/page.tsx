@@ -410,9 +410,6 @@ export default function AdminPage() {
           </svg>
           <span>{t("backHome")}</span>
         </Link>
-        <h1 className="text-lg md:text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
-          {t("createDistTitle")}
-        </h1>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6 md:space-y-8">
@@ -631,15 +628,15 @@ export default function AdminPage() {
                 {t("scanQrToJoin") || "KATILMAK İÇİN TARATIN"}
               </p>
               <div className="p-2 bg-white rounded-xl">
-                <QRCode 
-                  value={createdLink} 
+                <QRCode
+                  value={createdLink}
                   size={160}
                   level="H" /* Yüksek hata düzeltme seviyesi, daha okunaklı yapar */
                 />
               </div>
             </div>
             {/* YENİ EKLENEN BÖLÜMÜN SONU */}
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <button
                 onClick={() => {
