@@ -134,22 +134,17 @@ export default function JoinPage({
 
   const getCategoryTitle = useCallback(
     (catKey: string) => {
-      const titles: Record<string, Record<string, string>> = {
-        MAIN: {
-          tr: "Kuran-ı Kerim",
-          en: "The Holy Quran",
-          ar: "القرآن الكريم",
-        },
-        SURAHS: { tr: "Sureler", en: "Surahs", ar: "سور" },
-        PRAYERS: { tr: "Dualar", en: "Prayers", ar: "الأدعية" },
-        SALAWATS: { tr: "Salavatlar", en: "Salawats", ar: "الصلوات" },
-        NAMES: { tr: "İsimler", en: "Names", ar: "الأسماء" },
-        DHIKRS: { tr: "Zikirler", en: "Dhikrs", ar: "الأذكار" },
+      const keys: Record<string, string> = {
+        MAIN: "catMain",
+        SURAHS: "catSurahs",
+        PRAYERS: "catPrayers",
+        SALAWATS: "catSalawats",
+        NAMES: "catNames",
+        DHIKRS: "catDhikrs",
       };
-      const langKey = ["tr", "en", "ar"].includes(language) ? language : "en";
-      return titles[catKey]?.[langKey] || titles[catKey]?.["en"] || catKey;
+      return t(keys[catKey] || catKey);
     },
-    [language],
+    [t],
   );
 
   const stats = useMemo(() => {
@@ -629,7 +624,7 @@ function AssignmentCard({
                 >
                   {isPaged
                     ? isQuran
-                      ? `Cüz ${juzNumber} | ${t("page")}: ${displayStart}-${displayEnd}`
+                      ? `${t("juz")} ${juzNumber} | ${t("page")}: ${displayStart}-${displayEnd}`
                       : `${t("page")}: ${displayStart}-${displayEnd}`
                     : `${count} ${t("pieces")}`}
                 </span>
@@ -734,7 +729,7 @@ function AssignmentCard({
                     {t("readText")}{" "}
                     {assignments.length > 1
                       ? isQuran
-                        ? `(Cüz ${juzNumber}, ${displayStart}-${displayEnd})`
+                        ? `(${t("juz")} ${juzNumber}, ${displayStart}-${displayEnd})`
                         : `(${displayStart}-${displayEnd})`
                       : ""}
                   </span>

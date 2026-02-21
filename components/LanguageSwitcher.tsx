@@ -50,6 +50,11 @@ import { Language } from "@/types";
     native: "FR",
     icon: <span className="text-lg leading-none">🇫🇷</span>,
   },
+  nl: {
+    label: "Nederlands",
+    native: "NL",
+    icon: <span className="text-lg leading-none">🇳🇱</span>,
+  },
 };
 
 export default function LanguageSwitcher() {

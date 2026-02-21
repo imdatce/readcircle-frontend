@@ -55,6 +55,7 @@ const EDITION_MAPPING: Record<string, string> = {
   ar: "ar.jalalayn",
   ku: "special_quranenc_kurmanji",
   kmr: "special_quranenc_kurmanji",
+  nl: "nl.keyzer",
   default: "en.sahih",
 };
 
@@ -990,7 +991,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em] flex flex-col items-center leading-tight max-w-[150px] md:max-w-xs text-center">
           {content.type === "QURAN" && (
             <span className="text-[9px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
-              CÜZ {currentJuz}{" "}
+              {t("juz").toUpperCase()} {currentJuz}{" "}
               {currentSurahName && <span className="mx-1.5 opacity-50">•</span>}{" "}
               {currentSurahName}
             </span>
