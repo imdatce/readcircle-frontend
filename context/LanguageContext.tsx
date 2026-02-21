@@ -28,7 +28,7 @@ type TranslationStructure = {
 const translations: TranslationStructure = {
   tr: {
     common: {
-      appTitle: "Tefekkür ve Ünsiyet Birliği",
+      appTitle: "SURA: Manevi Halka",
       subtitle: "Kaynak Dağıtım Platformu",
       backHome: "Ana Sayfa",
       distributed: "Dağıtılan",
@@ -323,7 +323,7 @@ const translations: TranslationStructure = {
 
   ku: {
     common: {
-      appTitle: "Yekîtiya Manewî ya Tefekkur û Unsiyetê",
+      appTitle: "SURA: Xeleka Manewî",
       subtitle: "Platforma Belavkirina Çavkaniyan",
       backHome: "Serûpel",
       distributed: "Hat Belavkirin",
@@ -619,7 +619,7 @@ const translations: TranslationStructure = {
 
   en: {
     common: {
-      appTitle: "Spiritual Union for Reflection & Affinity",
+      appTitle: "SURA: Spiritual Circle",
       subtitle: "Resource Distribution Platform",
       backHome: "Home",
       distributed: "Distributed",
@@ -917,7 +917,7 @@ const translations: TranslationStructure = {
 
   ar: {
     common: {
-      appTitle: "اتحاد التفكر والأنس",
+      appTitle: "SURA: الحلقة الروحية",
       subtitle: "منصة توزيع الأوراد والمصادر",
       backHome: "الرئيسية",
       distributed: "الموزعة",
@@ -1202,7 +1202,7 @@ const translations: TranslationStructure = {
 
   fr: {
     common: {
-      appTitle: "Union Spirituelle de Réflexion & d'Affinité",
+      appTitle: "SURA: Union Spirituelle",
       subtitle: "Plateforme de Distribution de Ressources",
       backHome: "Accueil",
       distributed: "Distribué",
@@ -1504,7 +1504,7 @@ const translations: TranslationStructure = {
   },
   nl: {
     common: {
-      appTitle: "Spirituele Unie voor Reflectie & Verbondenheid",
+      appTitle: "SURA: Spirituele Cirkel",
       subtitle: "Bron Distributie Platform",
       backHome: "Home",
       distributed: "Gedistribueerd",

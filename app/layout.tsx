@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SURA - Spiritual Union",
-  description: "Resource Distribution Platform for Spiritual Union for Reflection & Affinity ",
+  title: "SURA | Zikir ve Hatim Platformu",
+description: "SURA ile Kuran hatimleri, Cevşen halkaları ve zikir programlarını kolayca organize edin.",
   manifest: "/manifest.json", // PWA için manifest eklendi
 };
 
