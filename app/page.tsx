@@ -19,6 +19,8 @@ const ORDER_PRIORITY = [
   "YASIN", // 5. Yasin
   "FATIHA",
   "IHLAS",
+  "FELAK",
+  "NAS",
   "WAQIA",
   "BEDIR", // 6. Bedir
   "UHUD", // 7. Uhud

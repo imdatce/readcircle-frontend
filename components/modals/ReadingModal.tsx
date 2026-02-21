@@ -799,7 +799,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
     const isSurahGroup =
       content.type === "SURAS" ||
-      ["YASIN", "FETIH", "FATIHA", "IHLAS"].includes(codeKey);
+      ["YASIN", "FETIH", "FATIHA",  "WAQIA", "IHLAS", "FELAK", "NAS"].includes(codeKey);
 
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");

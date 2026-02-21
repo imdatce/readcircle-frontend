@@ -32,8 +32,10 @@ const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   FETIH: "SURAHS",
   YASIN: "SURAHS",
   WAQIA: "SURAHS",
-  FATIHA: "SURAHS", // <-- FATIHA ADDED
-  IHLAS: "SURAHS", // <-- IHLAS ADDED
+  FATIHA: "SURAHS",
+  IHLAS: "SURAHS",
+  FELAK: "SURAHS",
+  NAS: "SURAHS",
 
   // Prayers
   CEVSEN: "PRAYERS",
@@ -67,6 +69,9 @@ const RESOURCE_PRIORITY = [
   "WAQIA",
   "FATIHA",
   "IHLAS",
+  "FELAK",
+  "NAS",
+
   "CEVSEN",
   "TEVHIDNAME",
   "OZELSALAVAT",
