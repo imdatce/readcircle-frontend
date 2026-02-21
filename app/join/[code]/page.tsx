@@ -614,6 +614,7 @@ function AssignmentCard({
                 isQuran && a.startUnit > 1 ? a.startUnit - 1 : a.startUnit;
               const displayEnd =
                 isQuran && a.endUnit > 1 ? a.endUnit - 1 : a.endUnit;
+              const juzNumber = isQuran ? Math.ceil(displayStart / 20) : 0;
 
               return (
                 <span
@@ -627,7 +628,9 @@ function AssignmentCard({
                   }`}
                 >
                   {isPaged
-                    ? `${t("page")}: ${displayStart}-${displayEnd}` // BURASI GÜNCELLENDİ
+                    ? isQuran
+                      ? `Cüz ${juzNumber} | ${t("page")}: ${displayStart}-${displayEnd}`
+                      : `${t("page")}: ${displayStart}-${displayEnd}`
                     : `${count} ${t("pieces")}`}
                 </span>
               );
@@ -700,31 +703,44 @@ function AssignmentCard({
           )}
         {isMyAssignment && !isCompleted && (
           <div className="w-full space-y-2 md:space-y-2.5 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
-            {assignments.map((a: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() =>
-                  actions.openReadingModal(a, a.startUnit, a.endUnit)
-                }
-                className="w-full py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl md:rounded-[1.2rem] font-black text-[10px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.15em] shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 border-b-2 md:border-b-4 border-blue-800"
-              >
-                <svg
-                  className="w-4 h-4 md:w-5 md:h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
+            {assignments.map((a: any, idx: number) => {
+              const isQuran =
+                a.resource?.codeKey?.toUpperCase().includes("QURAN") ||
+                a.resource?.codeKey?.toUpperCase().includes("KURAN");
+              const displayStart =
+                isQuran && a.startUnit > 1 ? a.startUnit - 1 : a.startUnit;
+              const displayEnd =
+                isQuran && a.endUnit > 1 ? a.endUnit - 1 : a.endUnit;
+              const juzNumber = isQuran ? Math.ceil(displayStart / 20) : 0;
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() =>
+                    actions.openReadingModal(a, a.startUnit, a.endUnit)
+                  }
+                  className="w-full py-3 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl md:rounded-[1.2rem] font-black text-[10px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.15em] shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 border-b-2 md:border-b-4 border-blue-800"
                 >
-                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span>
-                  {t("readText")}{" "}
-                  {assignments.length > 1
-                    ? `(${a.startUnit}-${a.endUnit})`
-                    : ""}
-                </span>
-              </button>
-            ))}
+                  <svg
+                    className="w-4 h-4 md:w-5 md:h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span>
+                    {t("readText")}{" "}
+                    {assignments.length > 1
+                      ? isQuran
+                        ? `(Cüz ${juzNumber}, ${displayStart}-${displayEnd})`
+                        : `(${displayStart}-${displayEnd})`
+                      : ""}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

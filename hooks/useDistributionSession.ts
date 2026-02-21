@@ -237,6 +237,7 @@ export function useDistributionSession(code: string) {
          const isQuran = assignment.resource?.codeKey?.toUpperCase().includes("QURAN") || assignment.resource?.codeKey?.toUpperCase().includes("KURAN");
         const displayStart = isQuran && startPage > 1 ? startPage - 1 : startPage;
         const displayEnd = isQuran && endPage > 1 ? endPage - 1 : endPage;
+        const juzNumber = isQuran ? Math.ceil(displayStart / 20) : 0;
 
         setReadingModalContent({
             title: `${t("page")} ${displayStart} - ${displayEnd}`,  

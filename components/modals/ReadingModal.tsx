@@ -944,38 +944,40 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const isBedirGroup = processedData?.mode === "LIST";
 
   const PaginationBar = () => {
-    // GÖRÜNEN SAYFA NUMARASINI HESAPLA
-    const displayCurrentPage =
-      content.type === "QURAN" && currentPage > 1
-        ? currentPage - 1
-        : currentPage;
+  const displayCurrentPage = content.type === "QURAN" && currentPage > 1 ? currentPage - 1 : currentPage;
+  // Cüz numarasını mevcut sayfaya göre hesapla
+  const currentJuz = content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
 
-    return (
-      <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <button
-          onClick={() => changePage(-1)}
-          disabled={isFirstPage}
-          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
-        >
-          <span>←</span> {t("previous")}
-        </button>
-
-        {/* BURADAKİ currentPage DEĞİŞKENİNİ displayCurrentPage İLE DEĞİŞTİRİN */}
-        <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em]">
-          {t("page")} {displayCurrentPage}
-        </span>
-
-        <button
-          onClick={() => changePage(1)}
-          disabled={isLastPage}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
-        >
-          {t("next")} <span>→</span>
-        </button>
-      </div>
-    );
-  };
-
+  return (
+    <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+      <button
+        onClick={() => changePage(-1)}
+        disabled={isFirstPage}
+        className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+      >
+        <span>←</span> {t("previous")}
+      </button>
+      
+      {/* BURASI GÜNCELLENDİ: Hem Cüz Hem Sayfa alt alta veya yan yana şık duracak şekilde ayarlandı */}
+      <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em] flex flex-col items-center leading-tight">
+        {content.type === "QURAN" && (
+          <span className="text-[9px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5">
+            CÜZ {currentJuz}
+          </span>
+        )}
+        <span>{t("page")} {displayCurrentPage}</span>
+      </span>
+      
+      <button
+        onClick={() => changePage(1)}
+        disabled={isLastPage}
+        className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+      >
+        {t("next")} <span>→</span>
+      </button>
+    </div>
+  );
+};
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
