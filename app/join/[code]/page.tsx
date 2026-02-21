@@ -9,6 +9,7 @@ import Zikirmatik from "@/components/common/Zikirmatik";
 import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
 import QRCode from "react-qr-code";
+
 // --- CATEGORY DEFINITIONS ---
 const CATEGORY_ORDER = [
   "MAIN",
@@ -18,6 +19,87 @@ const CATEGORY_ORDER = [
   "NAMES",
   "DHIKRS",
 ] as const;
+
+// --- MÜJDELENEN AYETLER (GLAD TIDINGS) ---
+const GLAD_TIDINGS = [
+  {
+    arabic:
+      "إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ كَانَتْ لَهُمْ جَنَّاتُ الْفِرْدَوْسِ نُزُلًا",
+    translationKey: "gladTiding1_text",
+    refKey: "gladTiding1_ref",
+  },
+  {
+    arabic:
+      "أَلَا إِنَّ أَوْلِيَاءَ اللَّهِ لَا خَوْفٌ عَلَيْهِمْ وَلَا هُمْ يَحْزَنُونَ... لَهُمُ الْبُشْرَىٰ فِي الْحَيَاةِ الدُّنْيَا وَفِي الْآخِرَةِ",
+    translationKey: "gladTiding2_text",
+    refKey: "gladTiding2_ref",
+  },
+  {
+    arabic:
+      "إِنَّ الَّذِينَ قَالُوا رَبُّنَا اللَّهُ ثُمَّ اسْتَقَامُوا تَتَنَزَّلُ عَلَيْهِمُ الْمَلَائِكَةُ أَلَّا تَخَافُوا وَلَا تَحْزَنُوا وَأَبْشِرُوا بِالْجَنَّةِ الَّتِي كُنتُمْ تُوعَدُونَ",
+    translationKey: "gladTiding3_text",
+    refKey: "gladTiding3_ref",
+  },
+  {
+    arabic:
+      "يُبَشِّرُهُمْ رَبُّهُم بِرَحْمَةٍ مِّنْهُ وَرِضْوَانٍ وَجَنَّاتٍ لَّهُمْ فِيهَا نَعِيمٌ مُّقِيمٌ",
+    translationKey: "gladTiding4_text",
+    refKey: "gladTiding4_ref",
+  },
+  {
+    arabic:
+      "يُبَشِّرُكُمُ الْيَوْمَ جَنَّاتٌ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ",
+    translationKey: "gladTiding5_text",
+    refKey: "gladTiding5_ref",
+  },
+  {
+    arabic: "قُلْ بِفَضْلِ اللَّهِ وَبِرَحْمَتِهِ فَبِذَٰلِكَ فَلْيَفْرَحُوا",
+    translationKey: "gladTiding6_text",
+    refKey: "gladTiding6_ref",
+  },
+  {
+    arabic:
+      "وَبَشِّرِ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ أَنَّ لَهُمْ جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ",
+    translationKey: "gladTiding7_text",
+    refKey: "gladTiding7_ref",
+  },
+  {
+    arabic:
+      "إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ لَهُمْ جَنَّاتُ النَّعِيمِ ۝ خَالِدِينَ فِيهَا",
+    translationKey: "gladTiding8_text",
+    refKey: "gladTiding8_ref",
+  },
+  {
+    arabic:
+      "إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ أُولَٰئِكَ هُمْ خَيْرُ الْبَرِيَّةِ ۝ جَزَاؤُهُمْ عِندَ رَبِّهِمْ جَنَّاتُ عَدْنٍ",
+    translationKey: "gladTiding9_text",
+    refKey: "gladTiding9_ref",
+  },
+  {
+    arabic:
+      "وَالَّذِينَ اجْتَنَبُوا الطَّاغُوتَ أَن يَعْبُدُوهَا وَأَنَابُوا إِلَى اللَّهِ لَهُمُ الْبُشْرَىٰ",
+    translationKey: "gladTiding10_text",
+    refKey: "gladTiding10_ref",
+  },
+  {
+    arabic:
+      "يَغْفِرْ لَكُمْ ذُنُوبَكُمْ ... وَأُخْرَىٰ تُحِبُّونَهَا نَصْرٌ مِّنَ اللَّهِ وَفَتْحٌ قَرِيبٌ وَبَشِّرِ الْمُؤْمِنِينَ",
+    translationKey: "gladTiding11_text",
+    refKey: "gladTiding11_ref",
+  },
+  {
+    arabic:
+      "مَنْ عَمِلَ صَالِحًا مِّن ذَكَرٍ أَوْ أُنثَىٰ وَهُوَ مُؤْمِنٌ فَلَنُحْيِيَنَّهُ حَيَاةً طَيِّبَةً",
+    translationKey: "gladTiding12_text",
+    refKey: "gladTiding12_ref",
+  },
+  {
+    arabic:
+      "لَهُم مَّا يَشَاءُونَ عِندَ رَبِّهِمْ ذَٰلِكَ هُوَ الْفَضْلُ الْكَبِيرُ",
+    translationKey: "gladTiding13_text",
+    refKey: "gladTiding13_ref",
+  },
+];
 
 const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
   QURAN: "MAIN",
@@ -92,6 +174,13 @@ export default function JoinPage({
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [pendingPartId, setPendingPartId] = useState<number | null>(null);
 
+  // DİKKAT: translationKey yerine text alanını kullandık
+  const [completedAyah, setCompletedAyah] = useState<{
+    arabic: string;
+    refKey: string;
+    translationKey: string;
+  } | null>(null);
+
   const isGuestUser =
     !userName ||
     userName.toLowerCase().startsWith("guest") ||
@@ -135,6 +224,28 @@ export default function JoinPage({
 
     setIsNameModalOpen(false);
     setPendingPartId(null);
+  };
+
+  // --- ZİKİR TAMAMLAMA VE MÜJDE GÖSTERME ---
+  const handleFinishClick = async (partId: number, resource: any) => {
+    // 1. Zikri tamamla
+    actions.handleCompletePart(partId);
+
+    // 2. Sayacı sıfırla (Eğer zikirmatikse)
+    const typeName =
+      typeof resource.type === "string" ? resource.type : resource.type?.name;
+    const upperType = typeName?.toUpperCase();
+    if (
+      (upperType === "COUNTABLE" || upperType === "JOINT") &&
+      actions.updateLocalCount
+    ) {
+      actions.updateLocalCount(partId, 0);
+    }
+
+    // 3. Rastgele bir müjde ayeti seç ve Modalı aç
+    const randomAyah =
+      GLAD_TIDINGS[Math.floor(Math.random() * GLAD_TIDINGS.length)];
+    setCompletedAyah(randomAyah);
   };
 
   const getCategoryTitle = useCallback(
@@ -394,6 +505,7 @@ export default function JoinPage({
                                 isOwner={isOwner}
                                 deviceId={deviceId}
                                 onTakeClick={handlePartClick}
+                                onFinishClick={handleFinishClick}
                               />
                             ))}
                         </div>
@@ -461,6 +573,63 @@ export default function JoinPage({
         </div>
       )}
 
+      {/* --- MÜJDE (TEBRİKLER) MODALI --- */}
+      {completedAyah && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 md:p-10 w-full max-w-md shadow-2xl border border-emerald-100 dark:border-emerald-900/30 animate-in zoom-in-95 duration-300 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+
+            <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-emerald-50 dark:ring-emerald-900/10">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+
+            <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-6 uppercase tracking-wider">
+              {t("completed") || "Tamamlandı!"}
+            </h3>
+            {/* --- YENİ EKLENEN DUA CÜMLESİ --- */}
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-6 px-2 font-medium">
+              {t("prayerMessage") ||
+                "Allah kabul etsin. İnşallah bu ayetteki müjdeye mazhar olursun..."}
+            </p>
+
+          <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-5 rounded-3xl mb-8 border border-emerald-100/50 dark:border-emerald-800/30">
+              <p
+                className="font-serif text-2xl md:text-3xl text-gray-800 dark:text-gray-100 mb-4 leading-relaxed"
+                dir="rtl"
+                lang="ar"
+              >
+                {completedAyah.arabic}
+              </p>
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium italic mb-3">
+                &quot;{t(completedAyah.translationKey)}&quot;
+              </p>
+              <span className="inline-block px-3 py-1 bg-white dark:bg-gray-800 rounded-lg text-xs font-bold text-emerald-600 dark:text-emerald-500 shadow-sm border border-emerald-50 dark:border-emerald-900/50">
+                {t(completedAyah.refKey)}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setCompletedAyah(null)}
+              className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/30 active:scale-95"
+            >
+              {t("close") || "Kapat"}
+            </button>
+          </div>
+        </div>
+      )}
       {readingModalContent && (
         <ReadingModal
           content={readingModalContent}
@@ -471,6 +640,14 @@ export default function JoinPage({
           localCounts={localCounts}
           onDecrementCount={actions.decrementCount}
           t={t}
+          // --- YENİ EKLENEN SATIRLAR ---
+          onCompleteAssignment={(id) => {
+            const assignment = session?.assignments.find((a) => a.id === id);
+            if (assignment) {
+              handleFinishClick(id, assignment.resource);
+            }
+          }}
+          // -----------------------------
         />
       )}
     </div>
@@ -513,6 +690,7 @@ function AssignmentCard({
   isOwner,
   deviceId,
   onTakeClick,
+  onFinishClick,
 }: any) {
   const first = assignments[0];
   const isTaken = first.isTaken;
@@ -695,7 +873,21 @@ function AssignmentCard({
                 currentCount={
                   localCounts[first.id] ?? first.endUnit - first.startUnit + 1
                 }
-                onDecrement={() => actions.decrementCount(first.id)}
+                onDecrement={() => {
+                  // Mevcut sayıyı al
+                  const currentCount =
+                    localCounts[first.id] ??
+                    first.endUnit - first.startUnit + 1;
+
+                  // Sayacı 1 azalt
+                  actions.decrementCount(first.id);
+
+                  // Eğer sayı tam bu tıklamayla 1'den 0'a düşüyorsa ve henüz tamamlanmamışsa
+                  if (currentCount === 1 && !isCompleted) {
+                    // Otomatik olarak bitir ve müjde modalını aç!
+                    onFinishClick(first.id, first.resource);
+                  }
+                }}
                 t={t}
                 readOnly={!isMyAssignment || isCompleted}
               />
@@ -767,14 +959,8 @@ function AssignmentCard({
               {!isCompleted && (
                 <button
                   onClick={() => {
-                    actions.handleCompletePart(first.id);
-                    const typeName = getTypeName(first.resource);
-                    if (
-                      (typeName === "COUNTABLE" || typeName === "JOINT") &&
-                      actions.updateLocalCount
-                    ) {
-                      actions.updateLocalCount(first.id, 0);
-                    }
+                    // DİKKAT: Artık işlemi yalnızca onFinishClick devralıyor
+                    onFinishClick(first.id, first.resource);
                   }}
                   className="w-full py-3.5 md:py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl md:rounded-[1.2rem] font-black text-xs md:text-xs uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-xl shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 border-b-2 md:border-b-4 border-emerald-700"
                 >

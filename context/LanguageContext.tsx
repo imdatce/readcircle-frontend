@@ -88,6 +88,44 @@ const translations: TranslationStructure = {
       page: "Sayfa",
       part: "Cüz/Parça",
       person: "Kişi",
+      gladTiding1_text:
+        "İman edip salih amel işleyenler için Firdevs cennetleri konaktır.",
+      gladTiding1_ref: "Kehf Suresi, 107–108",
+      gladTiding2_text:
+        "Allah’ın dostlarına korku yoktur, onlar üzülmeyeceklerdir… Dünya hayatında da ahirette de müjde onlaradır.",
+      gladTiding2_ref: "Yunus Suresi, 62–64",
+      gladTiding3_text:
+        "Rabbimiz Allah’tır deyip dosdoğru olanlara melekler iner ve ‘Korkmayın, üzülmeyin; size vaad edilen cennetle sevinin’ derler.",
+      gladTiding3_ref: "Fussilet Suresi, 30",
+      gladTiding4_text:
+        "Rableri onlara kendisinden bir rahmet, rıza ve içlerinde sürekli nimet bulunan cennetler müjdeler.",
+      gladTiding4_ref: "Tevbe Suresi, 21–22",
+      gladTiding5_text:
+        "Bugün size altlarından ırmaklar akan cennetler müjdelenir.",
+      gladTiding5_ref: "Hadid Suresi, 12",
+      gladTiding6_text:
+        "Allah’ın lütfu ve rahmetiyle işte bununla sevinsinler…",
+      gladTiding6_ref: "Yunus Suresi, 58",
+      gladTiding7_text:
+        "İman edip salih amel işleyenleri müjdele: Altlarından ırmaklar akan cennetler onlarındır…",
+      gladTiding7_ref: "Bakara Suresi, 25",
+      gladTiding8_text:
+        "İman edip salih amel işleyenler için nimet cennetleri vardır; orada ebedî kalacaklardır.",
+      gladTiding8_re: "Lokman Suresi, 8–9",
+      gladTiding9_text:
+        "İman edip salih amel işleyenler var ya, işte onlar yaratılmışların en hayırlılarıdır. Rableri katında mükâfatları Adn cennetleridir…",
+      gladTiding9_ref: "Beyyine Suresi, 7–8",
+      gladTiding10_text: "Tağuttan kaçınıp Allah’a yönelenlere müjde vardır…",
+      gladTiding10_ref: "Zümer Suresi, 17–18",
+      gladTiding11_text:
+        "…Günahlarınızı bağışlar… hoşunuza gidecek başka bir şey daha var: Allah’tan yardım ve yakın bir fetih. Müminleri müjdele!",
+      gladTiding11_ref: "Saf Suresi, 12–13",
+      gladTiding12_text:
+        "Erkek veya kadın, kim mümin olarak salih amel işlerse ona güzel bir hayat yaşatırız ve mükâfatlarını en güzeliyle veririz.",
+      gladTiding12_ref: "Nahl Suresi, 97",
+      gladTiding13_text:
+        "…Onlar için diledikleri her şey Rableri katında vardır. İşte büyük lütuf budur.",
+      gladTiding13_ref: "Şura Suresi, 22",
       total: "Toplam",
       pieces: "Adet",
       menuLanguage: "Dil Ayarları",
@@ -176,6 +214,8 @@ const translations: TranslationStructure = {
       welcome: "Hoşgeldiniz",
       dashboardIntro: "Bugün manevi yolculuğunuzda ne yapmak istersiniz?",
       myCirclesTitle: "Halkalarım",
+      prayerMessage:
+        "Allah kabul etsin. İnşallah bu ayetteki müjdeye mazhar olursun:",
       loggingIn: "Giriş yapılıyor...",
 
       myCreatedTitle: "Dağıtımlarım",
@@ -336,6 +376,8 @@ const translations: TranslationStructure = {
       catMain: "Qurana Pîroz",
       catSurahs: "Sûre",
       catPrayers: "Dua",
+      prayerMessage:
+        "Xwedê qebûl bike. Inşallah tu bibî xwedî mizgîniya ku di vê ayetê de hatiye gotin:",
       catSalawats: "Selawat",
       catNames: "Nav",
       catDhikrs: "Zikir",
@@ -350,6 +392,57 @@ const translations: TranslationStructure = {
       status: "Rewş",
       undo: "Vegerîne",
       yourNamePlaceholder: "Navê te?",
+      gladTiding1_text:
+        "Bêguman ewên ku îman anîne û karên qenc kirine, ji bo wan bihiştên Firdewsê bûne cîhê mêhvandariyê.",
+      gladTiding1_ref: "Sûreya Kehf, 107-108",
+
+      gladTiding2_text:
+        "Hay jê hebin, bêguman tirs li ser dostên Xwedê nîne û ew xemgîn nabin... Mizgînî ji bo wan di jiyana dinyayê û di axretê de heye.",
+      gladTiding2_ref: "Sûreya Yûnus, 62-64",
+
+      gladTiding3_text:
+        "Bêguman ewên ku gotine: 'Xwedayê me Allah e' û paşê rast mane, melek bi ser wan de peya dibin û dibêjin: 'Netirsin û xemgîn nebin, bi wê bihişta ku ji we re hatibû sozdayîn şa bibin.'",
+      gladTiding3_ref: "Sûreya Fussilet, 30",
+
+      gladTiding4_text:
+        "Xwedayê wan bi rehm û qenciyek ji xwe û bihiştên ku tê de nîmetên hertimî hene mizgîniyê dide wan.",
+      gladTiding4_ref: "Sûreya Tewbe, 21-22",
+
+      gladTiding5_text:
+        "Îro mizgîniya we bihiştên ku di binê wan de çem diherikin e.",
+      gladTiding5_ref: "Sûreya Hedîd, 12",
+
+      gladTiding6_text:
+        "Bêje: 'Bila bi qencî û rehma Xwedê, bi vê yekê şa bibin...'",
+      gladTiding6_ref: "Sûreya Yûnus, 58",
+
+      gladTiding7_text:
+        "Mizgîniyê bide wan ên ku îman anîne û karên qenc kirine ku bihiştên ku di binê wan de çem diherikin ji bo wan in...",
+      gladTiding7_ref: "Sûreya Beqere, 25",
+
+      gladTiding8_text:
+        "Bêguman ewên ku îman anîne û karên qenc kirine, ji bo wan bihiştên nîmetan hene; wê tê de her bimînin.",
+      gladTiding8_ref: "Sûreya Luqman, 8-9",
+
+      gladTiding9_text:
+        "Bêguman ewên ku îman anîne û karên qenc kirine, ev in yên herî çêtirîn ji mirovahiyê. Xelata wan li cem Xwedayê wan bihiştên Edn in...",
+      gladTiding9_ref: "Sûreya Beyyîne, 7-8",
+
+      gladTiding10_text:
+        "Û ewên ku xwe ji perestina tagût dane alî û berê xwe dane Xwedê, mizgînî ji wan re heye...",
+      gladTiding10_ref: "Sûreya Zumer, 17-18",
+
+      gladTiding11_text:
+        "...Gunehên we dibexşîne... tiştekî din jî heye ku hûn jê hez dikin: Alîkariyek ji Xwedê û fetheke nêzîk. Û mizgîniyê bide bawermendan!",
+      gladTiding11_ref: "Sûreya Sef, 12-13",
+
+      gladTiding12_text:
+        "Kî ji mêr an jin, dema ku bawermend be, karekî qenc bike, bêguman em ê wî bi jiyaneke xweş bidin jiyîn û xelata wan a herî xweş bidin wan.",
+      gladTiding12_ref: "Sûreya Nehl, 97",
+
+      gladTiding13_text:
+        "...Ji bo wan çi ku bixwazin li cem Xwedayê wan heye. Eva qenciya mezin bi xwe ye.",
+      gladTiding13_ref: "Sûreya Şûra, 22",
       emptyCodeWarning: "Ji kerema xwe kodê rûniştinê an jî linkê binivîse.",
       homeVerseContent: "Bi rastî dil tenê bi bîranîna Allah re aram dibin.",
       verseBaqarah152:
@@ -635,6 +728,8 @@ const translations: TranslationStructure = {
       catMain: "The Holy Quran",
       catSurahs: "Surahs",
       catPrayers: "Prayers",
+      prayerMessage:
+        "May Allah accept it. InshaAllah, may you attain the glad tidings mentioned in this verse:",
       catSalawats: "Salawats",
       catNames: "Names",
       catDhikrs: "Dhikrs",
@@ -642,6 +737,58 @@ const translations: TranslationStructure = {
       scrollSpeed: "Scroll Speed",
       stopAutoScroll: "Stop",
       startAutoScroll: "Play",
+      gladTiding1_text:
+        "Indeed, those who have believed and done righteous deeds - they will have the Gardens of Paradise as a lodging.",
+
+      gladTiding1_ref: "Surah Al-Kahf, 107-108",
+
+      gladTiding2_text:
+        "Unquestionably, for the allies of Allah there will be no fear concerning them, nor will they grieve... For them are good tidings in the worldly life and in the Hereafter.",
+      gladTiding2_ref: "Surah Yunus, 62-64",
+
+      gladTiding3_text:
+        "Indeed, those who have said, 'Our Lord is Allah' and then remained on a right course - the angels will descend upon them, [saying], 'Do not fear and do not grieve but receive good tidings of Paradise, which you were promised.'",
+      gladTiding3_ref: "Surah Fussilat, 30",
+
+      gladTiding4_text:
+        "Their Lord gives them good tidings of mercy from Him and approval and of gardens for them wherein is enduring pleasure.",
+      gladTiding4_ref: "Surah At-Tawbah, 21-22",
+
+      gladTiding5_text:
+        "Good tidings to you today are of gardens beneath which rivers flow.",
+      gladTiding5_ref: "Surah Al-Hadid, 12",
+
+      gladTiding6_text:
+        "Say, 'In the bounty of Allah and in His mercy - in that let them rejoice...'",
+      gladTiding6_ref: "Surah Yunus, 58",
+
+      gladTiding7_text:
+        "And give good tidings to those who believe and do righteous deeds that they will have gardens beneath which rivers flow...",
+      gladTiding7_ref: "Surah Al-Baqarah, 25",
+
+      gladTiding8_text:
+        "Indeed, those who believe and do righteous deeds - for them are the Gardens of Pleasure, wherein they abide eternally.",
+      gladTiding8_ref: "Surah Luqman, 8-9",
+
+      gladTiding9_text:
+        "Indeed, they who have believed and done righteous deeds - those are the best of creatures. Their reward with Allah will be gardens of perpetual residence...",
+      gladTiding9_ref: "Surah Al-Bayyinah, 7-8",
+
+      gladTiding10_text:
+        "But those who have avoided illicit worship and turned back to Allah - for them are good tidings...",
+      gladTiding10_ref: "Surah Az-Zumar, 17-18",
+
+      gladTiding11_text:
+        "...He will forgive for you your sins... And [you will obtain] another [favor] that you love - victory from Allah and an imminent conquest; and give good tidings to the believers.",
+      gladTiding11_ref: "Surah As-Saff, 12-13",
+
+      gladTiding12_text:
+        "Whoever does righteousness, whether male or female, while he is a believer - We will surely cause him to live a good life, and We will surely give them their reward...",
+      gladTiding12_ref: "Surah An-Nahl, 97",
+
+      gladTiding13_text:
+        "...They will have whatever they will in the presence of their Lord. That is the great bounty.",
+      gladTiding13_ref: "Surah Ash-Shuraa, 22",
       homeVerseContent:
         "Verily, in the remembrance of Allah do hearts find rest.",
       verseBaqarah152:
@@ -932,6 +1079,8 @@ const translations: TranslationStructure = {
       catPrayers: "الأدعية",
       catSalawats: "الصلوات",
       catNames: "الأسماء",
+      prayerMessage:
+        "تقبل الله. نسأل الله أن تنال البشارة المذكورة في هذه الآية:",
       catDhikrs: "الأذكار",
       eyeProtection: "وضع القراءة (سيبيا)",
       scrollSpeed: "سرعة التمرير",
@@ -955,6 +1104,53 @@ const translations: TranslationStructure = {
       verseTaha14: "أنا الله لا إله إلا أنا فاعبدني وأقم الصلاة لذكري",
       status: "الحالة",
       undo: "تراجع",
+      gladTiding1_text:
+        "إن الذين آمنوا وعملوا الصالحات كانت لهم جنات الفردوس نزلا",
+      gladTiding1_ref: "سورة الكهف، ١٠٧-١٠٨",
+
+      gladTiding2_text:
+        "ألا إن أولياء الله لا خوف عليهم ولا هم يحزنون... لهم البشرى في الحياة الدنيا وفي الآخرة",
+      gladTiding2_ref: "سورة يونس، ٦٢-٦٤",
+
+      gladTiding3_text:
+        "إن الذين قالوا ربنا الله ثم استقاموا تتنزل عليهم الملائكة ألا تخافوا ولا تحزنوا وأبشروا بالجنة التي كنتم توعدون",
+      gladTiding3_ref: "سورة فصلت، ٣٠",
+
+      gladTiding4_text: "يبشرهم ربهم برحمة منه ورضوان وجنات لهم فيها نعيم مقيم",
+      gladTiding4_ref: "سورة التوبة، ٢١-٢٢",
+
+      gladTiding5_text: "يبشركم اليوم جنات تجري من تحتها الأنهار",
+      gladTiding5_ref: "سورة الحديد، ١٢",
+
+      gladTiding6_text: "قل بفضل الله وبرحمته فبذلك فليفرحوا",
+      gladTiding6_ref: "سورة يونس، ٥٨",
+
+      gladTiding7_text:
+        "وبشر الذين آمنوا وعملوا الصالحات أن لهم جنات تجري من تحتها الأنهار",
+      gladTiding7_ref: "سورة البقرة، ٢٥",
+
+      gladTiding8_text:
+        "إن الذين آمنوا وعملوا الصالحات لهم جنات النعيم خالدين فيها",
+      gladTiding8_ref: "سورة لقمان، ٨-٩",
+
+      gladTiding9_text:
+        "إن الذين آمنوا وعملوا الصالحات أولئك هم خير البرية جزاؤهم عند ربهم جنات عدن",
+      gladTiding9_ref: "سورة البينة، ٧-٨",
+
+      gladTiding10_text:
+        "والذين اجتنبوا الطاغوت أن يعبدوها وأنابوا إلى الله لهم البشرى",
+      gladTiding10_ref: "سورة الزمر، ١٧-١٨",
+
+      gladTiding11_text:
+        "يغفر لكم ذنوبكم ... وأخرى تحبونها نصر من الله وفتح قريب وبشر المؤمنين",
+      gladTiding11_ref: "سورة الصف، ١٢-١٣",
+
+      gladTiding12_text:
+        "من عمل صالحا من ذكر أو أنثى وهو مؤمن فلنحيينه حياة طيبة",
+      gladTiding12_ref: "سورة النحل، ٩٧",
+
+      gladTiding13_text: "لهم ما يشاءون عند ربهم ذلك هو الفضل الكبير",
+      gladTiding13_ref: "سورة الشورى، ٢٢",
       taken: "مأخوذ",
       completed: "مكتمل",
       target: "العدد المستهدف",
@@ -1213,6 +1409,8 @@ const translations: TranslationStructure = {
       tapToCount: "Appuyer pour compter",
       refresh: "Actualiser",
       juz: "Juz",
+      prayerMessage:
+        "Qu’Allah accepte. InchaAllah, puisses-tu obtenir la bonne nouvelle mentionnée dans ce verset :",
       catMain: "Le Saint Coran",
       catSurahs: "Sourates",
       catPrayers: "Prières",
@@ -1233,6 +1431,57 @@ const translations: TranslationStructure = {
       serverWakingUpPart2: "veuillez patienter sans fermer l’onglet.",
       yourNamePlaceholder: "Votre nom ?",
       defaultSessionName: "Cercle Spirituel",
+      gladTiding1_text:
+        "Ceux qui croient et font de bonnes œuvres auront pour résidence les Jardins du Paradis.",
+      gladTiding1_ref: "Sourate Al-Kahf, 107-108",
+
+      gladTiding2_text:
+        "En vérité, les bien-aimés d'Allah seront à l'abri de toute crainte, et ils ne seront point affligés... Il y a pour eux une bonne annonce dans la vie d'ici-bas tout comme dans la vie future.",
+      gladTiding2_ref: "Sourate Yunus, 62-64",
+
+      gladTiding3_text:
+        "Ceux qui disent : 'Notre Seigneur est Allah', et qui se tiennent dans le droit chemin, les Anges descendent sur eux : 'N'ayez pas peur et ne soyez pas affligés ; mais ayez la bonne nouvelle du Paradis qui vous était promis.'",
+      gladTiding3_ref: "Sourate Fussilat, 30",
+
+      gladTiding4_text:
+        "Leur Seigneur leur annonce de Sa part, miséricorde et agrément, et des Jardins où il y aura pour eux des délices permanents.",
+      gladTiding4_ref: "Sourate At-Tawbah, 21-22",
+
+      gladTiding5_text:
+        "La bonne nouvelle pour vous aujourd'hui, ce sont des Jardins sous lesquels coulent les ruisseaux.",
+      gladTiding5_ref: "Sourate Al-Hadid, 12",
+
+      gladTiding6_text:
+        "Dis : 'Que par la grâce d'Allah et par Sa miséricorde ils se réjouissent...'",
+      gladTiding6_ref: "Sourate Yunus, 58",
+
+      gladTiding7_text:
+        "Annonce la bonne nouvelle à ceux qui croient et font de bonnes œuvres qu'ils auront pour demeures des Jardins sous lesquels coulent les ruisseaux...",
+      gladTiding7_ref: "Sourate Al-Baqarah, 25",
+
+      gladTiding8_text:
+        "Ceux qui croient et font de bonnes œuvres auront les Jardins des délices, pour y demeurer éternellement.",
+      gladTiding8_ref: "Sourate Luqman, 8-9",
+
+      gladTiding9_text:
+        "Ceux qui croient et font de bonnes œuvres, ce sont les meilleurs de toute la création. Leur récompense auprès d'Allah sera les Jardins de séjour...",
+      gladTiding9_ref: "Sourate Al-Bayyinah, 7-8",
+
+      gladTiding10_text:
+        "A ceux qui s'écartent des fausses divinités pour ne pas les adorer, tandis qu'ils reviennent à Allah, à eux la bonne nouvelle !",
+      gladTiding10_ref: "Sourate Az-Zumar, 17-18",
+
+      gladTiding11_text:
+        "...Il vous pardonnera vos péchés... et Il vous accordera d'autres choses que vous aimez bien : un secours d'Allah et une victoire prochaine. Et annonce la bonne nouvelle aux croyants.",
+      gladTiding11_ref: "Sourate As-Saff, 12-13",
+
+      gladTiding12_text:
+        "Quiconque, mâle ou femelle, fait une bonne œuvre tout en étant croyant, Nous lui ferons vivre une bonne vie. Et Nous les récompenserons...",
+      gladTiding12_ref: "Sourate An-Nahl, 97",
+
+      gladTiding13_text:
+        "...Ils auront tout ce qu'ils voudront auprès de leur Seigneur. C'est là la grande grâce.",
+      gladTiding13_ref: "Sourate Ash-Shuraa, 22",
       homeVerseContent:
         "En vérité, c’est par l’évocation d’Allah que les cœurs se tranquillisent.",
       verseBaqarah152:
@@ -1525,22 +1774,82 @@ const translations: TranslationStructure = {
       scrollSpeed: "Scrollsnelheid",
       stopAutoScroll: "Stop",
       startAutoScroll: "Afspelen",
+      gladTiding1_text:
+        "Voorwaar, degenen die geloven en goede daden verrichten, voor hen zijn er de Tuinen van het Paradijs als verblijfplaats.",
+      gladTiding1_ref: "Soera Al-Kahf, 107-108",
+
+      gladTiding2_text:
+        "Weet, voorzeker, de vrienden van Allah zullen geen vrees kennen, noch zullen zij treuren... Voor hen is er de verheugende tijding in het wereldse leven en in het Hiernamaals.",
+      gladTiding2_ref: "Soera Yunus, 62-64",
+
+      gladTiding3_text:
+        "Voorwaar, degenen die zeggen: 'Onze Heer is Allah,' en vervolgens standvastig blijven: over hen zullen de engelen neerdalen (en zeggen): 'Vrees niet en wees niet treurig, en wees verheugd met het Paradijs dat jullie is beloofd.'",
+      gladTiding3_ref: "Soera Fussilat, 30",
+
+      gladTiding4_text:
+        "Hun Heer verkondigt hun de verheugende tijding van Barmhartigheid van Hem, en van Zijn Welbehagen en van Tuinen voor hen waarin een eeuwige genieting is.",
+      gladTiding4_ref: "Soera At-Tawbah, 21-22",
+
+      gladTiding5_text:
+        "De verheugende tijding voor jullie is vandaag: Tuinen waar de rivieren onder door stromen.",
+      gladTiding5_ref: "Soera Al-Hadid, 12",
+
+      gladTiding6_text:
+        "Zeg: 'Laten zij zich verheugen over de gunst van Allah en over Zijn Barmhartigheid...'",
+      gladTiding6_ref: "Soera Yunus, 58",
+
+      gladTiding7_text:
+        "En verkondig de verheugende tijding aan degenen die geloven en goede daden verrichten, dat er voor hen Tuinen zijn waar de rivieren onder door stromen...",
+      gladTiding7_ref: "Soera Al-Baqarah, 25",
+
+      gladTiding8_text:
+        "Voorwaar, degenen die geloven en goede daden verrichten; voor hen zijn er de Tuinen der Verrukking. Daarin zullen zij eeuwig verblijven.",
+      gladTiding8_ref: "Soera Luqman, 8-9",
+
+      gladTiding9_text:
+        "Voorwaar, degenen die geloven en goede daden verrichten: zij zijn de besten der scheppingen. Hun beloning bij hun Heer zijn de Tuinen van 'Adn...",
+      gladTiding9_ref: "Soera Al-Bayyinah, 7-8",
+
+      gladTiding10_text:
+        "En degenen die wegblijven van het aanbidden van afgoden en die zich berouwvol tot Allah wenden: voor hen is er de verheugende tijding...",
+      gladTiding10_ref: "Soera Az-Zumar, 17-18",
+
+      gladTiding11_text:
+        "...Zal Hij jullie je zonden vergeven... En een andere (gunst) waar jullie van houden: hulp van Allah en een nabije overwinning. En verkondig de verheugende tijding aan de gelovigen.",
+      gladTiding11_ref: "Soera As-Saff, 12-13",
+
+      gladTiding12_text:
+        "Wie goede daden verricht, man of vrouw, terwijl hij gelovig is: Wij zullen hem zeker een goed leven laten leiden en Wij zullen hen zeker belonen...",
+      gladTiding12_ref: "Soera An-Nahl, 97",
+
+      gladTiding13_text:
+        "...Voor hen is er wat zij wensen bij hun Heer. Dat is de grote gunst.",
+      gladTiding13_ref: "Soera Ash-Shuraa, 22",
       emptyCodeWarning: "Voer een sessiecode of link in.",
-      unauthorizedAccess: "Ongeautoriseerde toegang: Alleen de maker van deze distributie kan dit paneel bekijken.",
-      serverWakingUpPart1: "De server start op. Bij de eerste keer laden kan dit",
+      unauthorizedAccess:
+        "Ongeautoriseerde toegang: Alleen de maker van deze distributie kan dit paneel bekijken.",
+      serverWakingUpPart1:
+        "De server start op. Bij de eerste keer laden kan dit",
       seconds: "seconden",
       serverWakingUpPart2: "duren. Sluit het tabblad alstublieft niet.",
       yourNamePlaceholder: "Uw Naam?",
       defaultSessionName: "Spirituele Cirkel",
-      homeVerseContent: "Voorwaar, in het gedenken van Allah vinden de harten rust.",
-      verseBaqarah152: "Gedenk Mij daarom, dan zal Ik jullie gedenken. Wees Mij dankbaar en wees Mij niet ondankbaar.",
-      verseGafir60: "Jullie Heer heeft gezegd: Roep Mij aan, Ik zal jullie verhoren.",
+      homeVerseContent:
+        "Voorwaar, in het gedenken van Allah vinden de harten rust.",
+      verseBaqarah152:
+        "Gedenk Mij daarom, dan zal Ik jullie gedenken. Wees Mij dankbaar en wees Mij niet ondankbaar.",
+      verseGafir60:
+        "Jullie Heer heeft gezegd: Roep Mij aan, Ik zal jullie verhoren.",
       verseAhzab41: "O jullie die geloven! Gedenk Allah veelvuldig.",
-      verseBaqarah186: "En wanneer Mijn dienaren jou over Mij vragen: Voorwaar, Ik ben nabij. Ik verhoor de smeekbede van de smekende wanneer hij Mij aanroept.",
-      verseAliImran191: "Degenen die Allah staand, zittend en op hun zij liggend gedenken.",
+      verseBaqarah186:
+        "En wanneer Mijn dienaren jou over Mij vragen: Voorwaar, Ik ben nabij. Ik verhoor de smeekbede van de smekende wanneer hij Mij aanroept.",
+      verseAliImran191:
+        "Degenen die Allah staand, zittend en op hun zij liggend gedenken.",
       verseAraf55: "Roep jullie Heer in nederigheid en in het geheim aan.",
-      verseAraf205: "En gedenk jouw Heer in jezelf, nederig en met vrees, zonder luidruchtigheid van woorden, in de ochtend en de avond.",
-      verseTaha14: "Voorwaar, Ik ben Allah. Er is geen god dan Ik. Aanbid Mij daarom en onderhoud de gebeden om Mij te gedenken.",
+      verseAraf205:
+        "En gedenk jouw Heer in jezelf, nederig en met vrees, zonder luidruchtigheid van woorden, in de ochtend en de avond.",
+      verseTaha14:
+        "Voorwaar, Ik ben Allah. Er is geen god dan Ik. Aanbid Mij daarom en onderhoud de gebeden om Mij te gedenken.",
       status: "Status",
       undo: "Ongedaan maken",
       taken: "Genomen",
@@ -1605,7 +1914,8 @@ const translations: TranslationStructure = {
       featureFree: "Gratis te Gebruiken",
       featureNoLogin: "Deelnemen Zonder Inloggen",
       guestSubtitle: "Platform voor spirituele verbinding",
-      guestMessage: "Log in om deel te nemen aan cirkels of uw eigen distributie aan te maken.",
+      guestMessage:
+        "Log in om deel te nemen aan cirkels of uw eigen distributie aan te maken.",
       guestNote: "U kunt ook als gast deelnemen zonder registratie.",
       usernameLabel: "Gebruikersnaam",
       passwordLabel: "Wachtwoord",
@@ -1626,19 +1936,25 @@ const translations: TranslationStructure = {
     },
     landingSection: {
       landingHeroTitle: "Spiritueel Unie- en Bron Distributie Platform",
-      landingHeroSubtitle: "Organiseer eenvoudig Quran khatms, Cevshen cirkels en dhikr programma's. Bereik uw spirituele doelen met uw dierbaren.",
+      landingHeroSubtitle:
+        "Organiseer eenvoudig Quran khatms, Cevshen cirkels en dhikr programma's. Bereik uw spirituele doelen met uw dierbaren.",
       getStarted: "Aan de slag",
       featuresTitle1: "Quran & Cevshen Khatms",
-      featuresDesc1: "Verdeel juz of pagina's automatisch. Volg real-time wie waar is.",
+      featuresDesc1:
+        "Verdeel juz of pagina's automatisch. Volg real-time wie waar is.",
       featuresTitle2: "Gezamenlijke Dhikr Cirkels",
-      featuresDesc2: "Draag bij aan de gezamenlijke pool in dhikrs zoals Salawat en gebeden.",
+      featuresDesc2:
+        "Draag bij aan de gezamenlijke pool in dhikrs zoals Salawat en gebeden.",
       featuresTitle3: "Mobielvriendelijk Lezen",
       shareWhatsapp: "Delen via WhatsApp",
-      whatsappShareText: "U bent uitgenodigd voor de spirituele cirkel {name}!\n\nKlik om deel te nemen: {link}\n\nCode: {code}",
-      featuresDesc3: "Lees Quran pagina's of Cevshen secties zonder de app te verlaten.",
+      whatsappShareText:
+        "U bent uitgenodigd voor de spirituele cirkel {name}!\n\nKlik om deel te nemen: {link}\n\nCode: {code}",
+      featuresDesc3:
+        "Lees Quran pagina's of Cevshen secties zonder de app te verlaten.",
       howItWorksTitle: "Hoe Werkt Het?",
       step1Title: "Sessie Aanmaken",
-      step1Desc: "Selecteer de bron (Yasin, Khatm, enz.) en het aantal personen.",
+      step1Desc:
+        "Selecteer de bron (Yasin, Khatm, enz.) en het aantal personen.",
       step2Title: "Uitnodigen",
       step2Desc: "Deel de gegenereerde korte code of link.",
       step3Title: "Voltooien",
@@ -1670,7 +1986,8 @@ const translations: TranslationStructure = {
       resourceSelection: "Bron Selectie",
       codeCopied: "Code gekopieerd naar klembord!",
       copyLink: "Kopieer Link",
-      createDistDesc: "Maak een Quran, Yasin of Dhikr cirkel aan en deel de link.",
+      createDistDesc:
+        "Maak een Quran, Yasin of Dhikr cirkel aan en deel de link.",
       joinDistTitle: "Deelnemen aan een Cirkel",
       joinDistDesc: "Voer de gedeelde code in om deel te nemen.",
       createButton: "AANMAKEN",
@@ -1700,7 +2017,8 @@ const translations: TranslationStructure = {
       addResource: "Bron Toevoegen",
       addResourceToSession: "Bron Toevoegen aan Cirkel",
       selectResourcePrompt: "Selecteer Bron",
-      addResourceNote: "* De toegevoegde bron wordt gelijkmatig of als één geheel verdeeld onder alle deelnemers.",
+      addResourceNote:
+        "* De toegevoegde bron wordt gelijkmatig of als één geheel verdeeld onder alle deelnemers.",
     },
     readingSection: {
       readingTitle: "Lezen",
@@ -1738,7 +2056,8 @@ const translations: TranslationStructure = {
       successDelete: "Verwijderd!",
       errorOccurred: "Er is een fout opgetreden.",
       unexpectedError: "Er is een onverwachte fout opgetreden.",
-      homeVerseContent: "Voorwaar, in het gedenken van Allah vinden de harten rust.",
+      homeVerseContent:
+        "Voorwaar, in het gedenken van Allah vinden de harten rust.",
       connectionError: "Verbindingsfout.",
       original: "Origineel",
       errorFetchFailed: "Gegevens ophalen mislukt. Foutcode:",
@@ -1748,10 +2067,14 @@ const translations: TranslationStructure = {
       alertEnterName: "Voer alstublieft eerst uw naam hierboven in.",
       alertTakenSuccess: "Geweldig! U heeft dit deel succesvol genomen.",
       confirmDelete: "Weet u zeker dat u deze distributie wilt verwijderen?",
-      confirmDeleteSession: "Weet u zeker dat u deze sessie permanent wilt verwijderen? Alle gegevens gaan verloren.",
-      confirmLeaveSession: "U staat op het punt deze cirkel te verlaten. Al uw toewijzingen worden geannuleerd.",
-      confirmResetSession: "Weet u zeker dat u deze distributie wilt resetten? Alle deelnemers worden verwijderd en metingen gereset.",
-      confirmReset: "De database wordt teruggezet naar de standaardgegevens. Weet u het zeker?",
+      confirmDeleteSession:
+        "Weet u zeker dat u deze sessie permanent wilt verwijderen? Alle gegevens gaan verloren.",
+      confirmLeaveSession:
+        "U staat op het punt deze cirkel te verlaten. Al uw toewijzingen worden geannuleerd.",
+      confirmResetSession:
+        "Weet u zeker dat u deze distributie wilt resetten? Alle deelnemers worden verwijderd en metingen gereset.",
+      confirmReset:
+        "De database wordt teruggezet naar de standaardgegevens. Weet u het zeker?",
       confirmComplete: "Bevestigt u dat u dit deel heeft gelezen?",
       confirmCancel: "Wilt u het lezen van dit deel annuleren?",
       resetSuccess: "Sessie succesvol gereset! Wachten op nieuwe deelnemers.",
@@ -1768,7 +2091,6 @@ const translations: TranslationStructure = {
       fetchFailed: "Gegevens ophalen mislukt.",
     },
   },
-
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {

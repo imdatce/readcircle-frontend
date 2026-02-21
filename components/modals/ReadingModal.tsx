@@ -42,6 +42,7 @@ interface ReadingModalProps {
   localCounts: Record<number, number>;
   onDecrementCount: (id: number) => void;
   t: (key: string) => string;
+  onCompleteAssignment?: (id: number) => void; // <--- YENİ EKLENEN SATIR
 }
 
 const EDITION_MAPPING: Record<string, string> = {
@@ -484,6 +485,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   localCounts,
   onDecrementCount,
   t,
+  onCompleteAssignment,
 }) => {
   const { language } = useLanguage();
   const [fontLevel, setFontLevel] = useState(3);
@@ -799,7 +801,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
     const isSurahGroup =
       content.type === "SURAS" ||
-      ["YASIN", "FETIH", "FATIHA",  "WAQIA", "IHLAS", "FELAK", "NAS"].includes(codeKey);
+      ["YASIN", "FETIH", "FATIHA", "WAQIA", "IHLAS", "FELAK", "NAS"].includes(
+        codeKey,
+      );
 
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
@@ -895,7 +899,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Ekrana Tıklanma: Artık otomatik kaymayı durdurmaz, sadece tam ekranı açar/kapatır
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
 
@@ -907,6 +910,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           onDecrementCount(content.assignmentId);
           if (typeof navigator !== "undefined" && navigator.vibrate)
             navigator.vibrate(50);
+
+          // --- YENİ EKLENEN: SAYI 0 OLDUYSA BİTİR VE MODALI KAPAT ---
+          if (safeCount === 1 && onCompleteAssignment) {
+            onCompleteAssignment(content.assignmentId);
+            onClose();
+          }
+          // -----------------------------------------------------------
         }
       } else {
         clickTimeoutRef.current = setTimeout(() => {
@@ -1491,7 +1501,15 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-md border border-gray-100 dark:border-gray-800">
                   <Zikirmatik
                     currentCount={safeCount}
-                    onDecrement={() => onDecrementCount(content.assignmentId!)}
+                    onDecrement={() => {
+                      onDecrementCount(content.assignmentId!);
+                      // --- YENİ EKLENEN: SAYI 0 OLDUYSA BİTİR VE MODALI KAPAT ---
+                      if (safeCount === 1 && onCompleteAssignment) {
+                        onCompleteAssignment(content.assignmentId!);
+                        onClose();
+                      }
+                      // -----------------------------------------------------------
+                    }}
                     isModal={true}
                     t={t}
                     readOnly={!isOwner}

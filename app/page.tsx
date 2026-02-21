@@ -489,7 +489,7 @@ function HomeContent() {
                     <div className="h-[2px] w-12 md:w-20 bg-gradient-to-l from-transparent to-blue-500 rounded-full"></div>
 
                     <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-[0.2em] uppercase">
-                      {t("circles")}
+                      {t("myCirclesTitle")}
                     </h2>
 
                     <div className="h-[2px] w-12 md:w-20 bg-gradient-to-r from-transparent to-emerald-500 rounded-full"></div>
