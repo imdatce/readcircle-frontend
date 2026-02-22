@@ -14,22 +14,11 @@ export default function Header() {
   const [isCompact, setIsCompact] = useState(false);
 
   // Yeni eklenen Auth özellikleri
-  const { user, role, logout, deleteAccount, updateName, updatePassword } =
-    useAuth();
-
-  // Profil düzenleme modalları için stateler
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [newNameInput, setNewNameInput] = useState("");
-
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const { user, role, logout } = useAuth();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const headerInnerRef = useRef<HTMLDivElement>(null);
-  const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
-  const [nameUpdateSuccess, setNameUpdateSuccess] = useState(false);
   const checkOverflow = useCallback(() => {
     const container = headerInnerRef.current;
     if (!container) return;
@@ -81,43 +70,6 @@ export default function Header() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     setIsMenuOpen(false);
-  };
-
-  // İsim Güncelleme Aksiyonu
-  const handleUpdateName = async () => {
-    if (!newNameInput.trim()) return;
-    try {
-      await updateName(newNameInput);
-      setNameUpdateSuccess(true); // <--- Başarı ekranını aç
-
-      // 2.5 Saniye bekleyip çıkış yap
-      setTimeout(() => {
-        setIsNameModalOpen(false);
-        setNameUpdateSuccess(false);
-        logout();
-      }, 2500);
-    } catch (error: any) {
-      alert(error.message);
-    }
-  };
-
-  // Şifre Güncelleme Aksiyonu
-  const handleUpdatePassword = async () => {
-    if (!currentPassword || !newPassword) return;
-    try {
-      await updatePassword(currentPassword, newPassword);
-      setPasswordUpdateSuccess(true); // <--- Başarı ekranını aç
-
-      // 2.5 Saniye bekleyip modalı kapat
-      setTimeout(() => {
-        setIsPasswordModalOpen(false);
-        setPasswordUpdateSuccess(false);
-        setCurrentPassword("");
-        setNewPassword("");
-      }, 2500);
-    } catch (error: any) {
-      alert(error.message);
-    }
   };
 
   return (
@@ -197,38 +149,7 @@ export default function Header() {
                         />
                       </svg>
                     </Link>
-                    {/* SADECE ADMİNE GÖRÜNEN PANEL BUTONU (YENİ) */}
-                    {role === "ROLE_ADMIN" && (
-                      <>
-                        <div className="w-px h-5 bg-gray-300 dark:bg-gray-700 mx-0.5" />
-                        <Link
-                          href="/superadmin"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="p-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all shadow-inner border border-purple-200 dark:border-purple-800/30"
-                          title={t("adminPanel") || "Sistem Yönetimi"}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="2"
-                            stroke="currentColor"
-                            className="w-4 h-4"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
-                            />
-                          </svg>
-                        </Link>
-                      </>
-                    )}
+                  
                   </>
                 )}
 
@@ -331,6 +252,7 @@ export default function Header() {
                     </div>
                   )}
 
+                  {/* Login / Logout */}
                   <div className="flex flex-col w-full">
                     {user ? (
                       <>
@@ -338,90 +260,60 @@ export default function Header() {
                           {t("welcomeUser")?.replace("{name}", user ?? "")}
                         </div>
 
-                        {/* SADECE ADMİNE GÖRÜNEN HAMBURGER MENÜ BUTONU (YENİ) */}
+                        {/* YENİ EKLENEN "HESABIM" BUTONU */}
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 mt-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all text-sm font-medium border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30"
+                        >
+                          <svg
+                            className="w-4 h-4 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                            />
+                          </svg>
+                          {t("myAccount") || "Hesabım"}
+                        </Link>
+
+                        {/* SADECE ADMİNE GÖRÜNEN BUTON (Daha önce eklemiştik) */}
                         {role === "ROLE_ADMIN" && (
-                          <>
-                            <Link
-                              href="/superadmin"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 mt-2 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl transition-all text-sm font-black border border-purple-200 dark:border-purple-800/50 shadow-sm"
+                          <Link
+                            href="/superadmin"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 mt-1 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl transition-all text-sm font-black border border-purple-200 dark:border-purple-800/50 shadow-sm"
+                          >
+                            <svg
+                              className="w-4 h-4 shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
                             >
-                              <svg
-                                className="w-4 h-4 shrink-0"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
-                                />
-                              </svg>
-                              {t("adminPanel") || "Sistem Yönetimi"}
-                            </Link>
-                            <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-2"></div>
-                          </>
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+                              />
+                            </svg>
+                            {t("adminPanel") || "Sistem Yönetimi"}
+                          </Link>
                         )}
-                        {/* ----------------------------------------------------- */}
-
-                        {/* --- YENİ EKLENEN PROFİL DÜZENLEME BUTONLARI --- */}
-                        <button
-                          onClick={() => {
-                            setNewNameInput(user ?? "");
-                            setIsNameModalOpen(true);
-                            setIsMenuOpen(false);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 mt-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all text-sm font-medium border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30"
-                        >
-                          <svg
-                            className="w-4 h-4 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.14l-2.815.938.938-2.814a4.5 4.5 0 011.14-1.89l12.657-12.657z"
-                            />
-                          </svg>
-                          {t("changeName") || "Adı Değiştir"}
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setIsPasswordModalOpen(true);
-                            setIsMenuOpen(false);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 mt-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all text-sm font-medium border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30"
-                        >
-                          <svg
-                            className="w-4 h-4 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                            />
-                          </svg>
-                          {t("changePassword") || "Şifre Değiştir"}
-                        </button>
 
                         <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
-                        {/* ------------------------------------------- */}
 
+                        {/* SADECE ÇIKIŞ YAP KALDI */}
                         <button
                           onClick={() => {
                             logout();
@@ -443,45 +335,6 @@ export default function Header() {
                             />
                           </svg>
                           {t("logoutButton") || "Çıkış Yap"}
-                        </button>
-
-                        {/* Hesabı Sil */}
-                        <button
-                          onClick={async () => {
-                            const confirmDelete = window.confirm(
-                              t("deleteAccountConfirm") ||
-                                "Hesabınızı silmek istediğinize emin misiniz?",
-                            );
-                            if (confirmDelete) {
-                              try {
-                                await deleteAccount();
-                                setIsMenuOpen(false);
-                              } catch (e: any) {
-                                // İŞTE BURASI HATAYI EKRANA ÇIKARACAK
-                                alert(
-                                  e.message ||
-                                    "Hesabınız silinirken bir hata oluştu.",
-                                );
-                              }
-                            }
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 mt-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all text-sm font-medium border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="w-4 h-4 shrink-0"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                            />
-                          </svg>
-                          {t("deleteAccount") || "Hesabı Sil"}
                         </button>
                       </>
                     ) : (
@@ -535,136 +388,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
-      {/* --- MODALLAR (Header'ın altında, tüm ekranı kaplar) --- */}
-
-      {/* İSİM DEĞİŞTİRME MODALI */}
-      {isNameModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95">
-            {nameUpdateSuccess ? (
-              <div className="py-6 text-center animate-in zoom-in duration-300">
-                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-black mb-2 text-gray-900 dark:text-white">
-                  {t("success") || "Başarılı!"}
-                </h3>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {t("nameUpdated") ||
-                    "İsim değiştirme başarılı, yeniden login yapın."}
-                </p>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-xl font-black mb-6 text-gray-900 dark:text-white text-left">
-                  {t("changeName") || "Adı Değiştir"}
-                </h3>
-                <input
-                  type="text"
-                  value={newNameInput}
-                  onChange={(e) => setNewNameInput(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl mb-6 text-lg font-bold text-gray-900 dark:text-white outline-none focus:border-blue-500 transition-all"
-                  placeholder={t("enterNewName") || "Yeni Adınız"}
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setIsNameModalOpen(false)}
-                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    {t("cancel") || "İptal"}
-                  </button>
-                  <button
-                    onClick={handleUpdateName}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
-                  >
-                    {t("saveChanges") || "Kaydet"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ŞİFRE DEĞİŞTİRME MODALI */}
-      {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 w-full max-w-sm shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95">
-            {passwordUpdateSuccess ? (
-              <div className="py-6 text-center animate-in zoom-in duration-300">
-                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-black mb-2 text-gray-900 dark:text-white">
-                  {t("success") || "Başarılı!"}
-                </h3>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {t("passwordUpdated") || "Şifreniz başarıyla güncellendi!"}
-                </p>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-xl font-black mb-6 text-gray-900 dark:text-white text-left">
-                  {t("changePassword") || "Şifre Değiştir"}
-                </h3>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl mb-3 text-lg font-bold text-gray-900 dark:text-white outline-none focus:border-blue-500 transition-all"
-                  placeholder={t("currentPassword") || "Mevcut Şifre"}
-                />
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl mb-6 text-lg font-bold text-gray-900 dark:text-white outline-none focus:border-blue-500 transition-all"
-                  placeholder={t("newPassword") || "Yeni Şifre"}
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setIsPasswordModalOpen(false)}
-                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    {t("cancel") || "İptal"}
-                  </button>
-                  <button
-                    onClick={handleUpdatePassword}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
-                  >
-                    {t("saveChanges") || "Kaydet"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 }
