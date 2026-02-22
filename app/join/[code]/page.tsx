@@ -8,8 +8,6 @@ import { useLanguage } from "@/context/LanguageContext";
 import Zikirmatik from "@/components/common/Zikirmatik";
 import ReadingModal from "@/components/modals/ReadingModal";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
-import QRCode from "react-qr-code";
-
 // --- CATEGORY DEFINITIONS ---
 const CATEGORY_ORDER = [
   "MAIN",
@@ -605,7 +603,7 @@ export default function JoinPage({
                 "Allah kabul etsin. İnşallah bu ayetteki müjdeye mazhar olursun..."}
             </p>
 
-          <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-5 rounded-3xl mb-8 border border-emerald-100/50 dark:border-emerald-800/30">
+            <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-5 rounded-3xl mb-8 border border-emerald-100/50 dark:border-emerald-800/30">
               <p
                 className="font-serif text-2xl md:text-3xl text-gray-800 dark:text-gray-100 mb-4 leading-relaxed"
                 dir="rtl"

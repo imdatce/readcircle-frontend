@@ -70,4 +70,7 @@ export interface AuthContextType {
   token: string | null;
   login: (username: string, token: string) => void;
   logout: () => void;
+  deleteAccount: () => Promise<void>;
+  updateName: (newName: string) => Promise<void>;
+  updatePassword: (currentPass: string, newPass: string) => Promise<void>;
 }
