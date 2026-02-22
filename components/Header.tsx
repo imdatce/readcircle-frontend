@@ -14,7 +14,8 @@ export default function Header() {
   const [isCompact, setIsCompact] = useState(false);
 
   // Yeni eklenen Auth özellikleri
-  const { user, logout, deleteAccount, updateName, updatePassword } = useAuth();
+  const { user, role, logout, deleteAccount, updateName, updatePassword } =
+    useAuth();
 
   // Profil düzenleme modalları için stateler
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
@@ -196,6 +197,38 @@ export default function Header() {
                         />
                       </svg>
                     </Link>
+                    {/* SADECE ADMİNE GÖRÜNEN PANEL BUTONU (YENİ) */}
+                    {role === "ROLE_ADMIN" && (
+                      <>
+                        <div className="w-px h-5 bg-gray-300 dark:bg-gray-700 mx-0.5" />
+                        <Link
+                          href="/superadmin"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="p-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all shadow-inner border border-purple-200 dark:border-purple-800/30"
+                          title={t("adminPanel") || "Sistem Yönetimi"}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="2"
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+                            />
+                          </svg>
+                        </Link>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -304,6 +337,39 @@ export default function Header() {
                         <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800 mb-1">
                           {t("welcomeUser")?.replace("{name}", user ?? "")}
                         </div>
+
+                        {/* SADECE ADMİNE GÖRÜNEN HAMBURGER MENÜ BUTONU (YENİ) */}
+                        {role === "ROLE_ADMIN" && (
+                          <>
+                            <Link
+                              href="/superadmin"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-2 w-full px-3 py-2.5 mt-2 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl transition-all text-sm font-black border border-purple-200 dark:border-purple-800/50 shadow-sm"
+                            >
+                              <svg
+                                className="w-4 h-4 shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+                                />
+                              </svg>
+                              {t("adminPanel") || "Sistem Yönetimi"}
+                            </Link>
+                            <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-2"></div>
+                          </>
+                        )}
+                        {/* ----------------------------------------------------- */}
 
                         {/* --- YENİ EKLENEN PROFİL DÜZENLEME BUTONLARI --- */}
                         <button

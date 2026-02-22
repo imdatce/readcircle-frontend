@@ -65,10 +65,12 @@ export interface ZikirmatikProps {
   readOnly?: boolean;
 }
 
+
 export interface AuthContextType {
   user: string | null;
+  role: string | null; // <--- YENİ EKLENDİ
   token: string | null;
-  login: (username: string, token: string) => void;
+  login: (username: string, token: string, role?: string) => void; // role parametresi eklendi
   logout: () => void;
   deleteAccount: () => Promise<void>;
   updateName: (newName: string) => Promise<void>;
