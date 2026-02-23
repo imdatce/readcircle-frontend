@@ -13,7 +13,7 @@ import { CevsenBab, Resource } from "@/types";
 const DUALAR_LIST = [
   {
     id: "bedir",
-    title: "Eshab-ı Bedir",
+    title: "Ashab-ı Bedir",
     codeKey: "BEDIR",
     type: "LIST_BASED",
     desc: "Bedir ehlinin mübarek isimleri",
@@ -67,6 +67,22 @@ const DUALAR_LIST = [
     desc: "Kur'an'da geçen Peygamber duaları",
     color: "amber",
   },
+  {
+    id: "esmaulhusna",
+    title: "Esma-ül Hüsna",
+    codeKey: "ESMAULHUSNA",
+    type: "CUSTOM_PAGE",
+    desc: "Allah'ın 99 İsmi, faziletleri ve zikirleri",
+    color: "emerald",
+  },
+  {
+    id: "gunluk-dualar",
+    title: "Günlük Dualar",
+    codeKey: "GUNLUKDUALAR",
+    type: "CUSTOM_PAGE",
+    desc: "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
+    color: "indigo", 
+  },
 ];
 
 const colorStyles: Record<string, string> = {
@@ -115,6 +131,10 @@ export default function DualarPage() {
   }, []);
 
   const handleOpenDua = (duaConfig: (typeof DUALAR_LIST)[0]) => {
+    if (duaConfig.type === "CUSTOM_PAGE") {
+      router.push(`/resources/${duaConfig.id}`);
+      return;
+    }
     // 1. Tıklanan duayı çekilen resources listesinden bul
     const resource = resources.find((r) => r.codeKey === duaConfig.codeKey);
 
