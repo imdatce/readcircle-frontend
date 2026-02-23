@@ -93,14 +93,17 @@ export default function DualarPage() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-          /\/$/,
-          "",
-        );
-        const res = await fetch(`${apiUrl}/api/distribution/resources`);
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        // URL'yi güvenli bir şekilde oluşturmak için URL objesi kullanalım
+        const url = new URL("/api/distribution/resources", baseUrl);
+
+        const res = await fetch(url.toString());
         if (res.ok) {
           const data = await res.json();
           setResources(data);
+        } else {
+          console.error(`API Error: ${res.status} ${res.statusText}`);
         }
       } catch (error) {
         console.error("Kaynaklar çekilemedi:", error);
