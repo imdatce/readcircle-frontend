@@ -1,87 +1,36 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, Suspense, useMemo, useCallback } from "react";
-import { useLanguage } from "@/context/LanguageContext";
-import { DistributionSession, Assignment } from "@/types";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-
-// --- CATEGORY DEFINITIONS ---
-const CATEGORY_ORDER = [
-  "MAIN", // Quran
-  "SURAHS", // Surahs (Yasin, Fetih)
-  "PRAYERS", // Prayers (Cevşen, Tevhidname)
-  "SALAWATS", // Salawats
-  "NAMES", // Names (Bedir, Uhud)
-  "DHIKRS", // Dhikrs (Others)
-] as const;
-
-const CATEGORY_MAPPING: Record<string, (typeof CATEGORY_ORDER)[number]> = {
-  // Quran
-  QURAN: "MAIN",
-
-  // Surahs
-  FETIH: "SURAHS",
-  YASIN: "SURAHS",
-  WAQIA: "SURAHS",
-  FATIHA: "SURAHS",
-  IHLAS: "SURAHS",
-  FELAK: "SURAHS",
-  NAS: "SURAHS",
-
-  // Prayers
-  CEVSEN: "PRAYERS",
-  TEVHIDNAME: "PRAYERS",
-
-  // Salawats
-  OZELSALAVAT: "SALAWATS",
-  TEFRICIYE: "SALAWATS",
-  MUNCIYE: "SALAWATS",
-
-  // Names
-  BEDIR: "NAMES",
-  UHUD: "NAMES",
-
-  // Dhikrs
-  YALATIF: "DHIKRS",
-  YAHAFIZ: "DHIKRS",
-  YAFETTAH: "DHIKRS",
-  HASBUNALLAH: "DHIKRS",
-  LAHAVLE: "DHIKRS",
-};
-
-// Priority sorting of resources within their respective categories
-const RESOURCE_PRIORITY = [
-  "QURAN",
-  "FETIH",
-  "YASIN",
-  "WAQIA",
-  "FATIHA",
-  "IHLAS",
-  "FELAK",
-  "NAS",
-  "CEVSEN",
-  "TEVHIDNAME",
-  "OZELSALAVAT",
-  "TEFRICIYE",
-  "MUNCIYE",
-  "BEDIR",
-  "UHUD",
-];
+import { DistributionSession, Assignment } from "@/types";
+import { useSearchParams, useRouter } from "next/navigation";
+// Modüllerimiz
+import {
+  CATEGORY_ORDER,
+  CATEGORY_MAPPING,
+  RESOURCE_PRIORITY,
+} from "@/constants/adminConfig";
+import AdminLoading from "@/components/admin/AdminLoading";
+import MonitorStats from "@/components/admin/monitor/MonitorStats";
+import AddResourceModal from "@/components/admin/monitor/AddResourceModal";
+import ResourceAccordion from "@/components/admin/monitor/ResourceAccordion";
 
 function MonitorContent() {
   const { t, language } = useLanguage();
   const { token } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [targetCount, setTargetCount] = useState<string>("1");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [allResources, setAllResources] = useState<any[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string>("");
   const [addingResource, setAddingResource] = useState(false);
+
   const [code, setCode] = useState("");
   const [session, setSession] = useState<DistributionSession | null>(null);
   const [loading, setLoading] = useState(false);
@@ -89,6 +38,8 @@ function MonitorContent() {
   const [expandedResources, setExpandedResources] = useState<
     Record<string, boolean>
   >({});
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const getCategoryTitle = useCallback(
     (catKey: string) => {
@@ -104,12 +55,24 @@ function MonitorContent() {
         NAMES: { tr: "İsimler", en: "Names", ar: "الأسماء" },
         DHIKRS: { tr: "Zikirler", en: "Dhikrs", ar: "الأذكار" },
       };
-
       const langKey =
         language === "tr" || language === "en" || language === "ar"
           ? language
           : "en";
       return titles[catKey]?.[langKey] || titles[catKey]?.["en"] || catKey;
+    },
+    [language],
+  );
+
+  const getResourceName = useCallback(
+    (resource: any) => {
+      let trans = resource.translations?.find(
+        (tr: any) => tr.langCode === language,
+      );
+      if (!trans)
+        trans = resource.translations?.find((tr: any) => tr.langCode === "tr");
+      if (!trans) trans = resource.translations?.[0];
+      return trans?.name || resource.codeKey;
     },
     [language],
   );
@@ -124,7 +87,6 @@ function MonitorContent() {
         compPercent: 0,
       };
     }
-
     const total = session.assignments.length;
     const distributed = session.assignments.filter((a) => a.isTaken).length;
     const completed = session.assignments.filter((a) => a.isCompleted).length;
@@ -138,24 +100,6 @@ function MonitorContent() {
     };
   }, [session]);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const getResourceName = useCallback(
-    (resource: any) => {
-      let trans = resource.translations?.find(
-        (tr: any) => tr.langCode === language,
-      );
-      if (!trans) {
-        trans = resource.translations?.find((tr: any) => tr.langCode === "tr");
-      }
-      if (!trans) {
-        trans = resource.translations?.[0];
-      }
-      return trans?.name || resource.codeKey;
-    },
-    [language],
-  );
-
   const fetchData = async (codeToFetch: string) => {
     if (!codeToFetch) return;
     setLoading(true);
@@ -165,18 +109,15 @@ function MonitorContent() {
       const res = await fetch(
         `${apiUrl}/api/distribution/get/${codeToFetch}?t=${Date.now()}`,
       );
-
       if (!res.ok) {
         if (res.status === 404) throw new Error(t("errorInvalidCode"));
         throw new Error(t("errorOccurred"));
       }
 
       const data: DistributionSession = await res.json();
-
       const currentUser = localStorage.getItem("username");
       const creator = data.creatorName || (data as any).ownerName;
 
-      // Check authorization
       if (!currentUser || currentUser !== creator) {
         throw new Error(
           t("unauthorizedAccess") ||
@@ -184,7 +125,6 @@ function MonitorContent() {
         );
       }
 
-      setError("");
       setSession(data);
     } catch (err: any) {
       console.error("Fetch Error:", err);
@@ -201,7 +141,6 @@ function MonitorContent() {
       setCode(urlCode);
       fetchData(urlCode);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -223,7 +162,6 @@ function MonitorContent() {
         resourceId: selectedResourceId,
         totalUnits: targetCount,
       }).toString();
-
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/distribution/${code}/add-resource?${queryParams}`,
         {
@@ -238,8 +176,7 @@ function MonitorContent() {
         setTargetCount("1");
         fetchData(code);
       } else {
-        const msg = await res.text();
-        alert(t("errorPrefix") + " " + msg);
+        alert(t("errorPrefix") + " " + (await res.text()));
       }
     } catch (e) {
       console.error(e);
@@ -249,118 +186,58 @@ function MonitorContent() {
     }
   };
 
-  // --- GROUPING AND CATEGORIZATION ---
   const categorizedGroups = useMemo(() => {
     if (!session) return [];
 
-    type GroupData = {
-      assignments: Assignment[];
-      codeKey: string;
-      resourceName: string;
-    };
-
-    // 1. Group Resources
-    const rawGroups: Record<string, GroupData> = {};
-
+    const rawGroups: Record<string, any> = {};
     session.assignments.forEach((a) => {
       const name = getResourceName(a.resource);
       const codeKey = a.resource?.codeKey || "";
-
-      if (!rawGroups[name]) {
-        rawGroups[name] = {
-          assignments: [],
-          codeKey: codeKey,
-          resourceName: name,
-        };
-      }
+      if (!rawGroups[name])
+        rawGroups[name] = { assignments: [], codeKey, resourceName: name };
       rawGroups[name].assignments.push(a);
     });
 
-    // Sort assignments within each group
-    Object.values(rawGroups).forEach((group) => {
+    Object.values(rawGroups).forEach((group) =>
       group.assignments.sort(
-        (a, b) => a.participantNumber - b.participantNumber,
-      );
-    });
+        (a: any, b: any) => a.participantNumber - b.participantNumber,
+      ),
+    );
 
-    // 2. Distribute Resources to Categories
-    const categories: Record<string, GroupData[]> = {};
+    const categories: Record<string, any[]> = {};
     CATEGORY_ORDER.forEach((cat) => (categories[cat] = []));
 
     Object.values(rawGroups).forEach((group) => {
-      const upperCode = group.codeKey.toUpperCase();
-      const category = CATEGORY_MAPPING[upperCode] || "DHIKRS";
-      if (categories[category]) {
-        categories[category].push(group);
-      } else {
-        categories["DHIKRS"].push(group);
-      }
+      const category =
+        CATEGORY_MAPPING[group.codeKey.toUpperCase()] || "DHIKRS";
+      if (categories[category]) categories[category].push(group);
+      else categories["DHIKRS"].push(group);
     });
 
-    // 3. Sort Categories and their contents
     return CATEGORY_ORDER.map((catKey) => {
       const items = categories[catKey];
       if (items.length === 0) return null;
-
-      // Sorting within category
       items.sort((a, b) => {
         const indexA = RESOURCE_PRIORITY.indexOf(a.codeKey.toUpperCase());
         const indexB = RESOURCE_PRIORITY.indexOf(b.codeKey.toUpperCase());
-
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
         if (indexB !== -1) return 1;
         return a.resourceName.localeCompare(b.resourceName);
       });
-
-      return {
-        key: catKey,
-        title: getCategoryTitle(catKey),
-        items: items,
-      };
+      return { key: catKey, title: getCategoryTitle(catKey), items };
     }).filter(Boolean);
   }, [session, getCategoryTitle, getResourceName]);
 
-  const toggleResource = (name: string) => {
-    setExpandedResources((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
-  };
+  const toggleResource = (name: string) =>
+    setExpandedResources((prev) => ({ ...prev, [name]: !prev[name] }));
 
-  if (loading && !session) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-transparent">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium animate-pulse">
-            {t("loading")}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (loading && !session) return <AdminLoading />;
 
   if (error && !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-transparent p-4">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-red-100 dark:border-red-900/30">
-          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-red-900/20">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-8 h-8"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-              />
-            </svg>
-          </div>
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
             {t("errorOccurred")}
           </h2>
@@ -378,82 +255,47 @@ function MonitorContent() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-black/90 pb-20 font-sans">
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all">
-        <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-3 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-all group"
+      {/* 1. YEPYENİ MODERN VE İNCE ÜST MENÜ (HEADER) */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border-b border-gray-200/60 dark:border-gray-800/60 shadow-sm transition-all">
+        <div className="max-w-6xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-2 md:gap-4">
+          {/* Sol: Geri Dön Butonu */}
+         {/* Sol: Geri Dön Butonu (Önceki Sayfaya Döner) */}
+          <button 
+            onClick={() => router.back()} 
+            className="group flex items-center gap-2 p-1.5 md:px-3 md:py-2 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 shrink-0 outline-none"
           >
-            <div className="p-2.5 rounded-xl bg-gray-100 group-hover:bg-emerald-50 dark:bg-gray-800 dark:group-hover:bg-emerald-900/20 transition-colors">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
+            <div className="p-1.5 md:p-2 rounded-lg bg-gray-100 dark:bg-gray-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </div>
-            <span className="font-bold text-sm hidden sm:inline tracking-wide">
-              {t("backHome")}
-            </span>
-          </Link>
+            <span className="font-bold text-sm hidden sm:block tracking-wide">{t("back") || "Geri"}</span>
+          </button>
 
-          <div className="flex flex-col items-center justify-center">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h1 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
+          {/* Orta: Ufak Canlı İzleme Rozeti */}
+          <div className="flex-1 flex justify-center min-w-0">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200/50 dark:border-gray-800 shadow-inner truncate max-w-full">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[9px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300 truncate">
                 {t("monitorTitle")}
-              </h1>
-              {/* --- YENİ EKLENEN TARİH BÖLÜMÜ --- */}
-              {session?.createdAt && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3.5 w-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span>
-                    {new Date(session.createdAt).toLocaleDateString(
-                      language === "tr" ? "tr-TR" : "en-US",
-                      { year: "numeric", month: "long", day: "numeric" },
-                    )}
-                  </span>
-                </div>
-              )}
-              {/* -------------------------------- */}
+              </span>
             </div>
-            {session && (
-              <h1 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white text-center leading-none">
-                {session.description}
-              </h1>
-            )}
           </div>
 
-          <div className="flex items-center">
+          {/* Sağ: Aksiyon Butonları */}
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <button
               onClick={() => fetchData(code)}
               disabled={loading}
-              className="group flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-xs hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:border-emerald-900 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              title={t("refresh")}
+              className="group flex items-center justify-center w-10 h-10 md:w-auto md:h-10 md:px-4 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-xs hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:border-emerald-800 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors ${loading ? "animate-spin text-emerald-500" : ""}`}
+                className={`h-4 w-4 md:h-4 md:w-4 text-gray-400 group-hover:text-emerald-500 transition-all ${loading ? "animate-spin text-emerald-500" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -461,428 +303,22 @@ function MonitorContent() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              <span className="hidden sm:inline">{t("refresh")}</span>
+              <span className="hidden md:inline ml-2">{t("refresh")}</span>
             </button>
 
             {session && (
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                title={t("addResource")}
+                className="flex items-center justify-center w-10 h-10 md:w-auto md:h-10 md:px-4 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500 rounded-xl font-bold text-xs transition-all shadow-md shadow-blue-500/20 active:scale-95"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span>{t("addResource")}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 mt-8">
-        {session && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                {t("total")}
-              </p>
-              <p className="text-4xl font-black text-gray-800 dark:text-white tracking-tight">
-                {stats.total}
-              </p>
-            </div>
-
-            <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30 shadow-sm overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 text-blue-500 opacity-5 group-hover:opacity-10 transition-opacity">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">
-                    {t("distributed")}
-                  </p>
-                  <p className="text-4xl font-black text-blue-600 dark:text-blue-400 tracking-tight">
-                    {stats.distributed}
-                  </p>
-                </div>
-                <span className="text-lg font-bold text-blue-300 dark:text-blue-500/50 mb-1">
-                  %{stats.distPercent}
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full mt-4 overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full"
-                  style={{ width: `${stats.distPercent}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="relative bg-white dark:bg-gray-900 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 text-emerald-500 opacity-5 group-hover:opacity-10 transition-opacity">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">
-                    {t("completed")}
-                  </p>
-                  <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-                    {stats.completed}
-                  </p>
-                </div>
-                <span className="text-lg font-bold text-emerald-300 dark:text-emerald-500/50 mb-1">
-                  %{stats.compPercent}
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full mt-4 overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                  style={{ width: `${stats.compPercent}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Resources and Assignments */}
-        {session && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            {categorizedGroups.map((category: any) => (
-              <div key={category.key}>
-                {/* Category Separator */}
-                <div className="flex items-center gap-4 mb-4 px-1">
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
-                  <h2 className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-center whitespace-nowrap">
-                    {category.title}
-                  </h2>
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent flex-1 opacity-50"></div>
-                </div>
-
-                <div className="space-y-6">
-                  {category.items.map((group: any) => {
-                    const resourceName = group.resourceName;
-                    const assignments = group.assignments;
-                    const isOpen = expandedResources[resourceName];
-                    const totalCount = assignments.length;
-                    const takenCount = assignments.filter(
-                      (a: any) => a.isTaken,
-                    ).length;
-                    const completedCount = assignments.filter(
-                      (a: any) => a.isCompleted,
-                    ).length;
-
-                    const percentage = Math.round(
-                      (takenCount / totalCount) * 100,
-                    );
-                    const completedPercentage = Math.round(
-                      (completedCount / totalCount) * 100,
-                    );
-
-                    return (
-                      <div
-                        key={resourceName}
-                        className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg"
-                      >
-                        <button
-                          onClick={() => toggleResource(resourceName)}
-                          className="w-full bg-white dark:bg-gray-900 px-6 py-6 flex flex-col md:flex-row justify-between items-center hover:bg-gray-50/80 dark:hover:bg-gray-800/30 transition duration-200 cursor-pointer gap-6 group"
-                        >
-                          <div className="flex items-center gap-5 w-full md:w-auto">
-                            <div
-                              className={`transition-all duration-500 w-12 h-12 rounded-2xl shadow-inner flex items-center justify-center shrink-0 ${isOpen ? "bg-emerald-500 text-white shadow-emerald-500/30 rotate-90" : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"}`}
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2.5}
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                />
-                              </svg>
-                            </div>
-                            <div className="text-left">
-                              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                {resourceName}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="flex items-center gap-1 text-[10px] font-bold bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  {completedCount}
-                                </span>
-                                <span className="text-xs text-gray-400 font-medium">
-                                  / {totalCount} {t("part")}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end bg-gray-50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-800/50 md:bg-transparent md:border-0 md:p-0">
-                            <div className="flex flex-col items-end min-w-[200px] flex-1 md:flex-none relative">
-                              <div className="flex justify-between w-full mb-2 text-xs font-bold">
-                                <span className="text-blue-500">
-                                  {t("distributed")}: %{percentage}
-                                </span>
-                                <span className="text-emerald-600 dark:text-emerald-400">
-                                  {t("completed")}: %{completedPercentage}
-                                </span>
-                              </div>
-
-                              <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner relative">
-                                <div
-                                  className="absolute top-0 left-0 h-full bg-blue-300 dark:bg-blue-800 rounded-full transition-all duration-500 ease-out"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                                <div
-                                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_12px_rgba(16,185,129,0.6)]"
-                                  style={{ width: `${completedPercentage}%` }}
-                                >
-                                  <div className="absolute top-0 right-0 bottom-0 w-0.5 bg-white/30"></div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-
-                        {isOpen && (
-                          <div className="animate-in slide-in-from-top-2 fade-in duration-300 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20">
-                            <div className="overflow-x-auto p-2 md:p-6">
-                              <table className="w-full text-left border-collapse min-w-full md:min-w-0 table-auto">
-                                <thead>
-                                  <tr className="text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-gray-100 dark:border-gray-800">
-                                    <th className="px-2 md:px-4 py-3 text-center w-12">
-                                      #
-                                    </th>
-                                    <th className="px-2 md:px-4 py-3">
-                                      {t("resource")}
-                                    </th>
-                                    <th className="px-2 md:px-4 py-3">
-                                      {t("assignedTo")}
-                                    </th>
-                                    <th className="px-2 md:px-4 py-3 text-right">
-                                      {t("status")}
-                                    </th>
-                                  </tr>
-                                </thead>
-
-                                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                                  {assignments.map((item: any) => {
-                                    const totalTarget =
-                                      item.endUnit - item.startUnit + 1;
-                                    const currentCount =
-                                      item.currentCount ?? totalTarget;
-
-                                    const isCountable =
-                                      item.resource.type === "COUNTABLE" ||
-                                      item.resource.type === "JOINT";
-
-                                    return (
-                                      <tr
-                                        key={item.id}
-                                        className={`group transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-900/40 rounded-lg ${
-                                          item.isCompleted
-                                            ? "bg-emerald-50/30 dark:bg-emerald-900/10"
-                                            : ""
-                                        }`}
-                                      >
-                                        <td className="px-2 md:px-4 py-4 text-center">
-                                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono text-xs font-bold shadow-sm">
-                                            {item.participantNumber}
-                                          </span>
-                                        </td>
-
-                                        <td className="px-2 md:px-4 py-4">
-                                          <div className="flex flex-col">
-                                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                              {t("part")}{" "}
-                                              {item.participantNumber}
-                                            </span>
-
-                                            {isCountable && (
-                                              <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 mt-0.5">
-                                                {item.isCompleted ? (
-                                                  <span className="text-emerald-500">
-                                                    {t("completed")}
-                                                  </span>
-                                                ) : (
-                                                  <>
-                                                    {t("remaining")}:{" "}
-                                                    {currentCount} /{" "}
-                                                    {totalTarget}
-                                                  </>
-                                                )}
-                                              </span>
-                                            )}
-
-                                            {!isCountable &&
-                                              item.resource.type ===
-                                                "PAGED" && (
-                                                <span className="text-[10px] text-gray-400 mt-0.5">
-                                                  {t("page")}: {item.startUnit}-
-                                                  {item.endUnit}
-                                                </span>
-                                              )}
-                                          </div>
-                                        </td>
-
-                                        <td className="px-2 md:px-4 py-4">
-                                          {item.isTaken ? (
-                                            <div className="flex items-center gap-2">
-                                              <div
-                                                className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] text-white shadow-sm shrink-0 ${
-                                                  item.isCompleted
-                                                    ? "bg-emerald-500"
-                                                    : "bg-blue-500"
-                                                }`}
-                                              >
-                                                {item.assignedToName
-                                                  ?.substring(0, 2)
-                                                  .toUpperCase()}
-                                              </div>
-                                              <span
-                                                className={`text-xs font-bold truncate max-w-[80px] md:max-w-[150px] ${
-                                                  item.isCompleted
-                                                    ? "text-emerald-700 dark:text-emerald-400"
-                                                    : "text-gray-700 dark:text-gray-300"
-                                                }`}
-                                              >
-                                                {item.assignedToName}
-                                              </span>
-                                            </div>
-                                          ) : (
-                                            <span className="text-xs text-gray-400 italic opacity-60">
-                                              --
-                                            </span>
-                                          )}
-                                        </td>
-
-                                        <td className="px-2 md:px-4 py-4 text-right">
-                                          {item.isCompleted ? (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
-                                              <svg
-                                                className="w-3 h-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                              >
-                                                <path
-                                                  fillRule="evenodd"
-                                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                  clipRule="evenodd"
-                                                />
-                                              </svg>
-                                              <span className="hidden xs:inline">
-                                                {t("completed")}
-                                              </span>
-                                            </span>
-                                          ) : item.isTaken ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-                                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                              {t("reading")}
-                                            </span>
-                                          ) : (
-                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
-                                              {t("statusEmpty")}
-                                            </span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* --- ADD MODAL --- */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
-            {/* Title */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <svg
-                  className="w-6 h-6"
+                  className="h-4 w-4 md:h-4 md:w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -894,105 +330,80 @@ function MonitorContent() {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-              </div>
-              <h3 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
-                {t("addResourceToSession")}
-              </h3>
-            </div>
-
-            <div className="space-y-6">
-              {/* Resource Selection */}
-              <div>
-                <label
-                  htmlFor="resource-selector"
-                  className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1"
-                >
-                  {t("selectResourcePrompt")}
-                </label>
-
-                <div className="relative">
-                  <select
-                    id="resource-selector"
-                    title={t("selectResourcePrompt")}
-                    aria-label={t("selectResourcePrompt")}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
-                    value={selectedResourceId}
-                    onChange={(e) => setSelectedResourceId(e.target.value)}
-                  >
-                    <option value="">{t("selectPlaceholder")}</option>
-                    {allResources.map((res) => (
-                      <option key={res.id} value={res.id}>
-                        {getResourceName(res)}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Target Count / Quantity */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
-                  {t("target")}
-                </label>
-                <div className="relative group">
-                  <input
-                    type="number"
-                    min="1"
-                    value={targetCount}
-                    onChange={(e) => setTargetCount(e.target.value)}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl font-black text-xl text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500 transition-all"
-                    placeholder="100"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase tracking-tighter pointer-events-none bg-white dark:bg-gray-900 px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-800">
-                    {t("pieces")}
-                  </div>
-                </div>
-                <p className="mt-2 text-[10px] text-gray-400 font-medium ml-1">
-                  {t("addResourceNote")}
-                </p>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-95"
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  onClick={handleAddResource}
-                  disabled={
-                    !selectedResourceId || addingResource || !targetCount
-                  }
-                  className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {addingResource ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <span>{t("add")}</span>
-                  )}
-                </button>
-              </div>
-            </div>
+                <span className="hidden md:inline ml-1.5">
+                  {t("addResource")}
+                </span>
+              </button>
+            )}
           </div>
         </div>
-      )}
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 mt-6 md:mt-10">
+        {/* 2. ANA BAŞLIK BÖLÜMÜ (HERO SECTION) */}
+        {session && (
+          <div className="mb-8 md:mb-12 text-center flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Tarih Rozeti */}
+            {session.createdAt && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50 shadow-sm mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span className="text-[10px] md:text-xs font-bold text-gray-600 dark:text-gray-300">
+                  {new Date(session.createdAt).toLocaleDateString(
+                    language === "tr" ? "tr-TR" : "en-US",
+                    { year: "numeric", month: "long", day: "numeric" },
+                  )}
+                </span>
+              </div>
+            )}
+
+            {/* Büyük Renkli Halka Adı */}
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 dark:from-emerald-400 dark:via-teal-400 dark:to-blue-400 leading-tight drop-shadow-sm max-w-4xl px-4 py-1">
+              {session.description}
+            </h2>
+
+            {/* Zarif Alt Çizgi Detayı */}
+            <div className="w-16 h-1.5 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-5 opacity-80"></div>
+          </div>
+        )}
+
+        {/* İstatistik Kartları Buradan İtibaren Başlıyor */}
+        {session && <MonitorStats stats={stats} t={t} />}
+        {session && (
+          <ResourceAccordion
+            categorizedGroups={categorizedGroups}
+            expandedResources={expandedResources}
+            toggleResource={toggleResource}
+            t={t}
+          />
+        )}
+      </main>
+
+      <AddResourceModal
+        t={t}
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        allResources={allResources}
+        selectedResourceId={selectedResourceId}
+        setSelectedResourceId={setSelectedResourceId}
+        targetCount={targetCount}
+        setTargetCount={setTargetCount}
+        handleAddResource={handleAddResource}
+        addingResource={addingResource}
+        getResourceName={getResourceName}
+      />
     </div>
   );
 }
@@ -1001,51 +412,9 @@ export default function MonitorPage() {
   const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-transparent">
-      <Suspense
-        fallback={
-          <div className="flex h-screen items-center justify-center bg-transparent">
-            <div className="text-gray-500 font-bold animate-pulse">
-              {t("loading")}
-            </div>
-          </div>
-        }
-      >
+      <Suspense fallback={<AdminLoading />}>
         <MonitorContent />
       </Suspense>
-    </div>
-  );
-}
-
-function LoadingScreen({ t }: { t: any }) {
-  const [isSlowLoad, setIsSlowLoad] = useState(false);
-
-  useEffect(() => {
-    // Assume the server is in sleep mode after 4 seconds
-    const timer = setTimeout(() => setIsSlowLoad(true), 4000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className="flex h-screen items-center justify-center bg-transparent px-4 text-center">
-      <div className="flex flex-col items-center gap-5">
-        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin"></div>
-
-        <div className="flex flex-col gap-3 items-center">
-          <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-base md:text-lg">
-            {t("loading")}
-          </p>
-
-          {isSlowLoad && (
-            <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-              {t("serverWakingUpPart1")}
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                30-40 {t("seconds")}
-              </span>{" "}
-              {t("serverWakingUpPart2")}
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

@@ -988,35 +988,39 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
 
     return (
-      <div className="flex items-center justify-between w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="flex items-center justify-between gap-1 md:gap-3 w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-1.5 md:p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        {/* ÖNCEKİ BUTONU */}
         <button
           onClick={() => changePage(-1)}
           disabled={isFirstPage}
-          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+          className="shrink-0 px-2.5 md:px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 md:gap-2 transition-all"
         >
-          <span>←</span> {t("previous")}
+          <span>←</span>{" "}
+          <span className="hidden sm:inline-block">{t("previous")}</span>
         </button>
 
-        {/* BURASI GÜNCELLENDİ: Hem Cüz Hem Sayfa alt alta veya yan yana şık duracak şekilde ayarlandı */}
-        <span className="font-black text-xs text-gray-800 dark:text-white uppercase tracking-[0.2em] flex flex-col items-center leading-tight max-w-[150px] md:max-w-xs text-center">
+        {/* ORTA BİLGİ ALANI (Taşmaları önleyen esnek yapı) */}
+        <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
           {content.type === "QURAN" && (
-            <span className="text-[9px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
+            <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
               {t("juz").toUpperCase()} {currentJuz}{" "}
-              {currentSurahName && <span className="mx-1.5 opacity-50">•</span>}{" "}
+              {currentSurahName && <span className="mx-1 opacity-50">•</span>}{" "}
               {currentSurahName}
             </span>
           )}
-          <span>
+          <span className="truncate w-full">
             {t("page")} {displayCurrentPage}
           </span>
         </span>
 
+        {/* SONRAKİ BUTONU */}
         <button
           onClick={() => changePage(1)}
           disabled={isLastPage}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+          className="shrink-0 px-2.5 md:px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 transition-all"
         >
-          {t("next")} <span>→</span>
+          <span className="hidden sm:inline-block">{t("next")}</span>{" "}
+          <span>→</span>
         </button>
       </div>
     );
