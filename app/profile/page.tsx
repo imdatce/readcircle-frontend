@@ -407,7 +407,7 @@ export default function ProfilePage() {
                       Cevşen <span className="text-gray-400">→</span>
                     </Link>
                     <Link
-                      href="/resources/dua"
+                      href="/resources/dualar"
                       className="p-4 bg-white dark:bg-gray-800 rounded-xl font-bold text-gray-700 dark:text-gray-200 shadow-sm border border-gray-100 dark:border-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-400 transition-colors flex justify-between items-center"
                     >
                       Dualar <span className="text-gray-400">→</span>
