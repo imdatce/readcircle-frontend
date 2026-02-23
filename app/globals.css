@@ -40,3 +40,54 @@
 .sepia-theme [class*="border-[#fdf9f2]"] {
   border-color: #E2D4B7 !important;
 }
+
+/* Risale Özel Okuma Teması */
+.risale-reader-area {
+  --risale-bg-light: #fdfcf7; /* Hafif sarımtırak krem */
+  --risale-bg-dark: #061612;  /* Derin zümrüt siyahı */
+  --risale-text-light: #2d3436;
+  --risale-text-dark: #d1dace;  /* Yumuşak açık gri/yeşil */
+  --risale-accent: #10b981;    /* Emerald 500 */
+}
+
+/* Okuma alanındaki paragraflar ve başlıklar için özel font ayarları */
+.risale-content {
+  font-family: 'Georgia', serif;
+  line-height: 1.8;
+  letter-spacing: 0.015em;
+}
+
+.risale-content b, .risale-content strong {
+  color: var(--risale-accent);
+  font-weight: 800;
+}
+
+.dark .risale-content h1 {
+  color: #34d399 !important; /* Emerald 400 */
+  border-bottom: 1px dashed #064e3b;
+  padding-bottom: 1rem;
+}
+
+/* Font Seviyeleri */
+.font-level-0 { font-size: 0.9rem; }
+.font-level-1 { font-size: 1rem; }
+.font-level-2 { font-size: 1.15rem; }
+.font-level-3 { font-size: 1.3rem; }
+.font-level-4 { font-size: 1.5rem; }
+.font-level-5 { font-size: 1.7rem; }
+.font-level-6 { font-size: 2rem; }
+.font-level-7 { font-size: 2.3rem; }
+.font-level-8 { font-size: 2.6rem; }
+
+/* Sepya Modu Filtresi */
+.sepia-mode {
+  background-color: #f4ecd8 !important;
+  color: #432c0a !important;
+}
+.sepia-mode .risale-content {
+  color: #432c0a !important;
+}
+.dark .sepia-mode {
+  background-color: #2b2317 !important;
+  color: #e0d2bc !important;
+}
