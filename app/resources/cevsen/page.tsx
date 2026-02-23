@@ -44,10 +44,9 @@ const fontSizes = {
 const SUBHANEKE_RE =
   /(s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|noksan|münezzeh|sübhânsın|seni her türlü|seni bütün|seni tenzih|sen aczden)/i;
 
-// === 1. ARAPÇA PARSER ===
+// === 1. ARAPÇA PARSER (Satır boşluğu olmasa bile rakamdan böler) ===
 function parseArabic(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
-
   const match = text.match(SUBHANEKE_RE);
   let subhaneke = "";
   let mainText = text;
@@ -57,34 +56,20 @@ function parseArabic(raw: string) {
     mainText = text.slice(0, match.index).trim();
   }
 
-  const parts = mainText
-    .split(/(?:[\u0660-\u0669]+|\b\d+\b)[\.\-\)\s]*/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-
+  // Rakamları (1, 2, 3... veya ١, ٢, ٣...) bulup o noktalardan metni parçalara ayırır
+  const parts = mainText.split(/\s+([\u0660-\u0669]+|\d{1,2})[\.\-\)\s]+/).map(p => p.trim()).filter(p => p.length > 1);
+  
   let header = "";
-  const items = [...parts];
-
-  if (
-    items.length > 0 &&
-    (items[0].includes("بِسْمِ") || items[0].includes("اَللّٰهُمَّ"))
-  ) {
-    const lastYaIdx = items[0].lastIndexOf("يَا");
-    if (lastYaIdx > 5) {
-      header = items[0].slice(0, lastYaIdx).trim();
-      items[0] = items[0].slice(lastYaIdx).trim();
-    } else if (!items[0].includes("يَا")) {
-      header = items.shift()!;
-    }
+  if (parts.length > 0 && !parts[0].includes("يَا")) {
+    header = parts.shift() || "";
   }
 
-  return { header, items, subhaneke };
+  return { header, items: parts, subhaneke };
 }
 
-// === 2. LATİNCE PARSER ===
+// === 2. LATİNCE PARSER (Satır boşluğu olmasa bile rakamdan böler) ===
 function parseLatin(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
-
   const match = text.match(SUBHANEKE_RE);
   let subhaneke = "";
   let mainText = text;
@@ -94,44 +79,15 @@ function parseLatin(raw: string) {
     mainText = text.slice(0, match.index).trim();
   }
 
-  const tokens: { num: number; index: number; start: number }[] = [];
-  const re = /(?:^|(?<=\s))(\d{1,2})[\.\-\)\s]+(?=[^\d\s])/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = re.exec(mainText)) !== null) {
-    tokens.push({
-      num: parseInt(m[1]),
-      index: m.index,
-      start: m.index + m[0].length,
-    });
+  // " 1 ", " 2 ", " 1. " gibi ifadeleri yakalar ve metni o noktalardan keser
+  const parts = mainText.split(/\s+\d{1,2}[\.\-\)\s]+(?=[A-ZÂÎÛÜÖ])/).map(p => p.trim()).filter(p => p.length > 0);
+  
+  let header = "";
+  if (parts.length > 10) { // Eğer ilk parça başlıksa ayır
+    header = parts.shift() || "";
   }
 
-  if (tokens.length === 0) {
-    const lines = mainText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-    let header = "";
-    if (
-      lines.length > 0 &&
-      (lines[0].toLowerCase().includes("allah") ||
-        lines[0].toLowerCase().includes("bismill"))
-    ) {
-      header = lines.shift()!;
-    }
-    return { header, items: lines, subhaneke };
-  }
-
-  const header = mainText.slice(0, tokens[0].index).trim();
-  const items: string[] = tokens.map((tok, i) => {
-    const end = i + 1 < tokens.length ? tokens[i + 1].index : mainText.length;
-    return mainText
-      .slice(tok.start, end)
-      .replace(/^[\.\-\)\s]+/, "")
-      .trim();
-  });
-
-  return { header, items, subhaneke };
+  return { header, items: parts, subhaneke };
 }
 
 // === 3. TÜRKÇE & MEAL PARSER ===
