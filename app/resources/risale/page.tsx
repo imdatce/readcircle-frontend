@@ -45,6 +45,32 @@ export default function RisalePage() {
       document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const currentTheme = localStorage.getItem("theme"); // Uygulamanın tema tercihini buradan okuduğunu varsayıyoruz
+
+    if (isSepia) {
+      // Sepya açıldığında karanlık modu zorla kaldır
+      root.classList.remove("dark");
+    } else {
+      // Sepya kapandığında, eğer kullanıcı normalde "dark" kullanıyorsa geri yükle
+      if (currentTheme === "dark") {
+        root.classList.add("dark");
+      } else if (
+        !currentTheme &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        // Eğer localStorage boşsa ama sistem teması karanlıksa yine geri yükle
+        root.classList.add("dark");
+      }
+    }
+
+    // Sayfadan tamamen çıkınca (unmount) dark modu orijinal haline döndür
+    return () => {
+      if (currentTheme === "dark") root.classList.add("dark");
+    };
+  }, [isSepia]);
+
   // Otomatik Kaydırma Mantığı
   useEffect(() => {
     let scrollInterval: any;

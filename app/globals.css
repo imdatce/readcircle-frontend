@@ -43,11 +43,15 @@
 
 /* Risale Özel Okuma Teması */
 .risale-reader-area {
-  --risale-bg-light: #fdfcf7; /* Hafif sarımtırak krem */
-  --risale-bg-dark: #061612;  /* Derin zümrüt siyahı */
+  --risale-bg-light: #fdfcf7;
+  /* Hafif sarımtırak krem */
+  --risale-bg-dark: #061612;
+  /* Derin zümrüt siyahı */
   --risale-text-light: #2d3436;
-  --risale-text-dark: #d1dace;  /* Yumuşak açık gri/yeşil */
-  --risale-accent: #10b981;    /* Emerald 500 */
+  --risale-text-dark: #d1dace;
+  /* Yumuşak açık gri/yeşil */
+  --risale-accent: #10b981;
+  /* Emerald 500 */
 }
 
 /* Okuma alanındaki paragraflar ve başlıklar için özel font ayarları */
@@ -57,37 +61,75 @@
   letter-spacing: 0.015em;
 }
 
-.risale-content b, .risale-content strong {
+.risale-content b,
+.risale-content strong {
   color: var(--risale-accent);
   font-weight: 800;
 }
 
 .dark .risale-content h1 {
-  color: #34d399 !important; /* Emerald 400 */
+  color: #34d399 !important;
+  /* Emerald 400 */
   border-bottom: 1px dashed #064e3b;
   padding-bottom: 1rem;
 }
 
 /* Font Seviyeleri */
-.font-level-0 { font-size: 0.9rem; }
-.font-level-1 { font-size: 1rem; }
-.font-level-2 { font-size: 1.15rem; }
-.font-level-3 { font-size: 1.3rem; }
-.font-level-4 { font-size: 1.5rem; }
-.font-level-5 { font-size: 1.7rem; }
-.font-level-6 { font-size: 2rem; }
-.font-level-7 { font-size: 2.3rem; }
-.font-level-8 { font-size: 2.6rem; }
+.font-level-0 {
+  font-size: 0.9rem;
+}
+
+.font-level-1 {
+  font-size: 1rem;
+}
+
+.font-level-2 {
+  font-size: 1.15rem;
+}
+
+.font-level-3 {
+  font-size: 1.3rem;
+}
+
+.font-level-4 {
+  font-size: 1.5rem;
+}
+
+.font-level-5 {
+  font-size: 1.7rem;
+}
+
+.font-level-6 {
+  font-size: 2rem;
+}
+
+.font-level-7 {
+  font-size: 2.3rem;
+}
+
+.font-level-8 {
+  font-size: 2.6rem;
+}
 
 /* Sepya Modu Filtresi */
+/* Sepya Modu - Gece modunu ezecek şekilde güncellendi */
 .sepia-mode {
   background-color: #f4ecd8 !important;
+  /* Krem kağıt rengi */
   color: #432c0a !important;
+  /* Koyu kahve metin */
 }
+
+/* Sepya içindeyken dark mode stillerinin (bg-gray-900 vb.) etkisini sıfırla */
 .sepia-mode .risale-content {
   color: #432c0a !important;
+  background-color: transparent !important;
 }
-.dark .sepia-mode {
-  background-color: #2b2317 !important;
-  color: #e0d2bc !important;
+
+/* Sepya modunda linkler veya vurgulu yerler zümrüt yerine kahve tonuyla uyumlu olsun */
+.sepia-mode .risale-content b,
+.sepia-mode .risale-content strong {
+  color: #8b4513 !important;
+  /* SaddleBrown - Sepya ile çok daha şık durur */
 }
+
