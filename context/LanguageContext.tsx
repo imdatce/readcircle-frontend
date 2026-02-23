@@ -64,10 +64,23 @@ const translations: TranslationStructure = {
       errorOccurred: "Bir hata oluştu",
       updateFailed: "Güncellenemedi!",
       connectionError: "Bağlantı hatası!",
+      myResourcesDesc: "Manevi gelişiminizi destekleyecek kütüphaneniz.",
+      tesbihatlar: "Tesbihatlar",
+      tesbihatlarDesc:
+        "Vakit namazlarının ardından okunan tesbihat ve zikirler.",
+      dualar: "Dualar",
+      dualarDesc:
+        "Günlük hayatınızda okuyabileceğiniz önemli dualar ve virdler.",
+      quran: "Kur'an-ı Kerim",
+      quranDesc: "Kur'an-ı Kerim okuma ve takibi.",
+      cevsen: "Cevşen-i Kebir",
+      cevsenDesc: "Peygamber Efendimizin (SAV) zırh niteliğindeki büyük duası.",
+      readNow: "Hemen Gözat",
       noRecordsForMonth:
         "Bu ayda kayıt bulunmuyor. Namaz takibine daha ileri bir tarihte başladınız.",
       completed: "Kılındı",
       notCompleted: "Kılınmadı",
+      myResources: "Kaynaklarım",
       farzPrayers: "Farz",
       otherPrayers: "Diğerleri",
       farzCompletedText: "Farz",
