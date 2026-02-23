@@ -59,6 +59,14 @@ const DUALAR_LIST = [
     desc: "Peygamber Efendimiz'e (asm) salavatlar",
     color: "indigo",
   },
+  {
+    id: "kurandualari",
+    title: "Kur'an'dan Dualar",
+    codeKey: "KURANDUALARI",
+    type: "LIST_BASED",
+    desc: "Kur'an'da geçen Peygamber duaları",
+    color: "amber",
+  },
 ];
 
 const colorStyles: Record<string, string> = {
@@ -85,7 +93,10 @@ export default function DualarPage() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /\/$/,
+          "",
+        );
         const res = await fetch(`${apiUrl}/api/distribution/resources`);
         if (res.ok) {
           const data = await res.json();
