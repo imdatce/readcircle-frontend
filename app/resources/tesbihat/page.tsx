@@ -33,10 +33,105 @@ const SectionCard = ({
   </div>
 );
 
-const Badge = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center justify-center font-sans font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded ml-1.5 align-middle transform -translate-y-px text-[length:calc(9px+var(--font-offset-small))] transition-all">
-    {children}
-  </span>
+// Mini Zikirmatik Bileşeni
+const MiniZikirmatik = ({
+  target,
+  label,
+}: {
+  target: number;
+  label?: string;
+}) => {
+  const [count, setCount] = useState(target);
+  const isCompleted = count === 0;
+
+  return (
+    <div className="inline-flex items-center gap-2 align-middle">
+      {label && (
+        <span className="hidden sm:inline-block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-emerald-800/70 dark:text-emerald-200/60">
+          {label}
+        </span>
+      )}
+
+      <button
+        onClick={() => count > 0 && setCount(count - 1)}
+        disabled={isCompleted}
+        className={`group relative flex items-center gap-1.5 p-1 pr-1.5 rounded-full border transition-all duration-500 select-none ${
+          isCompleted
+            ? "bg-gradient-to-r from-emerald-100 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/30 border-emerald-200/80 dark:border-emerald-700/50 shadow-[0_0_12px_rgba(16,185,129,0.15)] cursor-default"
+            : "bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-900/20 dark:to-emerald-900/20 border-amber-200/60 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md cursor-pointer active:scale-95"
+        }`}
+        style={{ fontSize: "calc(12px + var(--font-offset-small))" }}
+      >
+        <div
+          className={`flex items-center justify-center min-w-[2.2rem] py-0.5 px-2 rounded-full font-bold shadow-[inset_0_1px_4px_rgba(0,0,0,0.08)] transition-colors duration-500 ${
+            isCompleted
+              ? "bg-white/60 dark:bg-black/20 text-emerald-700 dark:text-emerald-300"
+              : "bg-white/80 dark:bg-gray-950/50 text-emerald-800 dark:text-amber-100/90"
+          }`}
+        >
+          {count}
+        </div>
+
+        <div
+          className={`flex items-center justify-center w-6 h-6 rounded-full shadow-sm transition-all duration-300 ${
+            isCompleted
+              ? "bg-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+              : "bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-600 dark:to-emerald-800 text-white group-hover:from-emerald-500 group-hover:to-emerald-700 shadow-[0_2px_5px_rgba(16,185,129,0.25)] group-active:shadow-none"
+          }`}
+        >
+          {isCompleted ? (
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-3.5 h-3.5 opacity-90"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M20 12H4"
+              />
+            </svg>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+};
+
+// YENİ EKLENEN BİLEŞEN: Metni ve Zikirmatiği Aynı Kutuda Tutar
+const ZikirRow = ({
+  text,
+  target,
+  label,
+}: {
+  text: React.ReactNode;
+  target: number;
+  label?: string;
+}) => (
+  <div className="flex items-center justify-between gap-4 bg-emerald-50/40 dark:bg-emerald-900/10 p-3 sm:p-4 rounded-2xl border border-emerald-100/60 dark:border-emerald-800/30 my-3 shadow-sm transition-all hover:shadow-md hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20">
+    <span className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed font-serif text-[length:calc(15px+var(--font-offset))] transition-all">
+      {text}
+    </span>
+    <div className="shrink-0">
+      <MiniZikirmatik target={target} label={label} />
+    </div>
+  </div>
 );
 
 const Line = ({
@@ -87,15 +182,20 @@ const AyetulKursiVeTesbihler = () => (
       ve lâ ye’ûduhû hifzuhumâ ve huve’l-‘Aliyyu’l-‘Azîm.
     </Line>
     <InstructionText>Daha sonra Tesbihler çekilir:</InstructionText>
-    <Line>
-      Subhânellâhi bukraten ve esîlâ <Badge>33 defa Subhanallah</Badge>
-    </Line>
-    <Line>
-      Elhamdulillâhi hamden kesîrâ <Badge>33 defa Elhamdulillah</Badge>
-    </Line>
-    <Line>
-      Allâhu Ekberu kebîrâ <Badge>33 defa Allâhu Ekber</Badge>
-    </Line>
+
+    {/* ZikirRow ile her bir tesbihi kendi kutusuna aldık */}
+    <ZikirRow
+      text="Subhânellâhi bukraten ve esîlâ"
+      target={33}
+      label="Subhanallah"
+    />
+    <ZikirRow
+      text="Elhamdulillâhi hamden kesîrâ"
+      target={33}
+      label="Elhamdulillah"
+    />
+    <ZikirRow text="Allâhu Ekberu kebîrâ" target={33} label="Allâhu Ekber" />
+
     <InstructionText>
       Akabinde şu dua okunur ve Namaz Duası yapılır:
     </InstructionText>
@@ -111,18 +211,18 @@ const KelimeiTevhidVeSalavat = ({ baslangic }: { baslangic: string }) => (
     <InstructionText>
       Duâdan sonra 1 defa "{baslangic}" ve 33 defa Lâ ilâhe illallah denilir.
     </InstructionText>
-    <Line>
-      Lâ ilâhe illallah <Badge>33 defa</Badge>
-    </Line>
+
+    <ZikirRow text="Lâ ilâhe illallah" target={33} label="Kelime-i Tevhid" />
+
     <InstructionText>
       33'üncüsünde şu ilave edilir ve tesbihata devam edilir:
     </InstructionText>
     <Line>Muhammedu’r-Rasûlullahi sallâllâhu te’âlâ aleyhi ve sellem.</Line>
     {baslangic === "Fa’lem ennehû" && (
-      <Line>
-        Lâ ilâhe illallâhu’l-Meliku’l-Hakku’l-Mubîn, Muhammedu’r-Rasûlullahi
-        Sâdiku’l-va’di’l-emîn. <Badge>10 defa</Badge>
-      </Line>
+      <ZikirRow
+        text="Lâ ilâhe illallâhu’l-Meliku’l-Hakku’l-Mubîn, Muhammedu’r-Rasûlullahi Sâdiku’l-va’di’l-emîn."
+        target={10}
+      />
     )}
     <InstructionText>Salavatlar:</InstructionText>
     <Line>
@@ -130,11 +230,12 @@ const KelimeiTevhidVeSalavat = ({ baslangic }: { baslangic: string }) => (
       ‘ale’n-nebiyy, yâ eyyuhe’llezîne âmenû sallû aleyhi ve sellimû teslîmâ,
       lebbeyk.
     </Line>
-    <Line>
-      Allâhumme salli ‘alâ seyyidinâ Muhammedin ve ‘alâ âl-i seyyidinâ Muhammed,
-      bi ‘adedi kulli dâin ve devâin ve bârik ve sellim ‘aleyhi ve ‘aleyhim
-      kesîrân <Badge>3 defa</Badge> kesîrâ.
-    </Line>
+
+    <ZikirRow
+      text="Allâhumme salli ‘alâ seyyidinâ Muhammedin ve ‘alâ âl-i seyyidinâ Muhammed, bi ‘adedi kulli dâin ve devâin ve bârik ve sellim ‘aleyhi ve ‘aleyhim kesîrân kesîrâ."
+      target={3}
+    />
+
     <Line>
       Salli ve sellim Yâ Rabbi ‘alâ habîbike Muhammedin ve ‘alâ cemî’i’l-enbiyâi
       ve’l-murselîn, ve ‘alâ âl’-i kullin ve sahbi kullin ecme’în, âmîn
@@ -301,9 +402,9 @@ const TercumanIsmiAzam = () => {
 const EcirnaIstiazeleri = () => (
   <>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1.5 mb-4 text-[length:calc(14px+var(--font-offset))] transition-all">
-      <span className="col-span-full mb-1">
-        Allâhumme ecirnâ mine’n-nâr <Badge>7 defa</Badge>
-      </span>
+      <div className="col-span-full">
+        <ZikirRow text="Allâhumme ecirnâ mine’n-nâr" target={7} />
+      </div>
       <span>Allâhumme ecirnâ min kulli nâr</span>
       <span>Allâhumme ecirnâ mine’l-fitneti’d-dînîyyeti ve’d-dünyeviyyeh</span>
       <span>Allâhumme ecirnâ min fitneti âhiri’z-zamân</span>
@@ -346,9 +447,9 @@ const EcirnaIstiazeleri = () => (
       Bi ‘afvike Yâ Mucîr, bi fadlike Yâ Ğaffâr, bi rahmetike Yâ
       Erhame’r-Râhimîn.
     </Line>
-    <Line>
-      Allâhumme edhilne’l-cennete me’a’l-ebrâr <Badge>3 defa</Badge>
-    </Line>
+
+    <ZikirRow text="Allâhumme edhilne’l-cennete me’a’l-ebrâr" target={3} />
+
     <Line>
       Bi-şefâ’ati nebiyyike’l-muhtâr, ve âlihi’l-ethâr, ve eshâbihi’l-ehyâr, ve
       sellim mâ dâme’l-leylu ve’n-nehâr, Âmîn, ve’l-hamdu lillâhi
@@ -363,7 +464,6 @@ function TesbihatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // URL'deki vakit parametresini yakalıyoruz
   const vakitParam = searchParams.get("vakit") as
     | "sabah"
     | "ogle"
@@ -376,23 +476,18 @@ function TesbihatContent() {
     "sabah" | "ogle" | "ikindi" | "aksam" | "yatsi"
   >("sabah");
 
-  // Font büyütme/küçültme offset değeri (0, 2, 4, 6, 8, 10, 12)
   const [fontOffset, setFontOffset] = useState(0);
 
-  // URL'de parametre varsa aktif sekmeyi ona göre güncelle
   useEffect(() => {
     const validTabs = ["sabah", "ogle", "ikindi", "aksam", "yatsi"];
     if (vakitParam && validTabs.includes(vakitParam)) {
-      // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
       Promise.resolve().then(() => setActiveTab(vakitParam));
     }
   }, [vakitParam]);
 
-  // Tarayıcı belleğinden font büyüklüğünü yükle
   useEffect(() => {
     const saved = localStorage.getItem("tesbihat_font_offset");
     if (saved) {
-      // ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
       Promise.resolve().then(() => setFontOffset(Number(saved)));
     }
   }, []);
@@ -402,7 +497,6 @@ function TesbihatContent() {
     localStorage.setItem("tesbihat_font_offset", newOffset.toString());
   };
 
-  // Sekmeye tıklandığında hem aktif sekmeyi değiştir hem de URL'i güncelle (paylaşılabilirlik için)
   const handleTabClick = (
     tabId: "sabah" | "ogle" | "ikindi" | "aksam" | "yatsi",
   ) => {
@@ -421,7 +515,7 @@ function TesbihatContent() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-4 px-3 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-4">
-        {/* Üst Bar: Başlık, Geri Butonu ve Font Ayarı */}
+        {/* Üst Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
@@ -452,7 +546,6 @@ function TesbihatContent() {
             </div>
           </div>
 
-          {/* A- / A+ Font Kontrolleri */}
           <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-1.5 rounded-xl shadow-sm w-fit shrink-0">
             <button
               onClick={() => handleFontChange(Math.max(-8, fontOffset - 2))}
@@ -472,7 +565,7 @@ function TesbihatContent() {
           </div>
         </div>
 
-        {/* Sekmeler (Tabs) */}
+        {/* Sekmeler */}
         <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
           {TABS.map((tab) => (
             <button
@@ -489,7 +582,7 @@ function TesbihatContent() {
           ))}
         </div>
 
-        {/* İÇERİK ALANLARI (CSS Değişkeni İle Font Boyutu Kontrolü) */}
+        {/* İÇERİK ALANLARI */}
         <div
           className="pb-20"
           style={
@@ -506,9 +599,7 @@ function TesbihatContent() {
                 title="Farz Namazından Sonra"
                 instruction="Sabah namazının farzı kılınıp selâm verildikten sonra:"
               >
-                <Line>
-                  Estağfirullâh <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow text="Estağfirullâh" target={3} />
                 <Line>
                   Allâhumme ente’s-selâmu ve minke’s-selâm, tebârakte Yâ
                   Ze’l-Celâli ve’l İkrâm.
@@ -534,11 +625,12 @@ function TesbihatContent() {
                 <InstructionText>
                   Akabinde 9 defa şu cümle-i tevhid söylenir:
                 </InstructionText>
-                <Line>
-                  Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
-                  lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr.{" "}
-                  <Badge>9 defa</Badge>
-                </Line>
+
+                <ZikirRow
+                  text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
+                  target={9}
+                />
+
                 <InstructionText>Onuncusunda ise;</InstructionText>
                 <Line>
                   Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
@@ -569,10 +661,10 @@ function TesbihatContent() {
                 title="Aşr-ı Şerif"
                 instruction="Bundan sonra Haşr sûresinin son âyetleri okunur:"
               >
-                <Line>
-                  E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm{" "}
-                  <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow
+                  text="E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm"
+                  target={3}
+                />
                 <Line>Bismillâhirrahmânirrahîm</Line>
                 <Line>
                   Huve’llâhullezî lâ ilâhe illâhû, ‘Âlimu’l-ğaybi ve’ş-şehâdeti
@@ -600,9 +692,7 @@ function TesbihatContent() {
                 title="Farz Namazından Sonra"
                 instruction="Öğle namazının farzı kılınıp selâm verildikten sonra:"
               >
-                <Line>
-                  Estağfirullâh <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow text="Estağfirullâh" target={3} />
                 <Line>
                   Allâhumme ente’s-selâmu ve minke’s-selâm, tebârakte Yâ
                   Ze’l-Celâli ve’l İkrâm.
@@ -666,9 +756,7 @@ function TesbihatContent() {
                 title="Farz Namazından Sonra"
                 instruction="İkindi namazının farzı kılınıp selâm verildikten sonra:"
               >
-                <Line>
-                  Estağfirullâh <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow text="Estağfirullâh" target={3} />
                 <Line>
                   Allâhumme ente’s-selâmu ve minke’s-selâm, tebârakte Yâ
                   Ze’l-Celâli ve’l İkrâm.
@@ -723,9 +811,7 @@ function TesbihatContent() {
                 title="Farz Namazından Sonra"
                 instruction="Akşam namazının farzı kılınıp selâm verildikten sonra:"
               >
-                <Line>
-                  Estağfirullâh <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow text="Estağfirullâh" target={3} />
                 <Line>
                   Allâhumme ente’s-selâmu ve minke’s-selâm, tebârakte Yâ
                   Ze’l-Celâli ve’l İkrâm.
@@ -743,11 +829,11 @@ function TesbihatContent() {
                 title="Kelime-i Tevhid ve İstiâze"
                 instruction="Sünnetten sonra 1 defa 'Âmennâ biennehû' denilir. Akabinde 9 defa şu cümle-i tevhid söylenir:"
               >
-                <Line>
-                  Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
-                  lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr.{" "}
-                  <Badge>9 defa</Badge>
-                </Line>
+                <ZikirRow
+                  text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
+                  target={9}
+                />
+
                 <InstructionText>Onuncusunda ise;</InstructionText>
                 <Line>
                   Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
@@ -778,10 +864,10 @@ function TesbihatContent() {
                 title="Aşr-ı Şerif"
                 instruction="Bundan sonra Haşr sûresinin son âyetleri okunur:"
               >
-                <Line>
-                  E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm{" "}
-                  <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow
+                  text="E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm"
+                  target={3}
+                />
                 <Line>Bismillâhirrahmânirrahîm</Line>
                 <Line>
                   Huve’llâhullezî lâ ilâhe illâhû, ‘Âlimu’l-ğaybi ve’ş-şehâdeti
@@ -809,9 +895,7 @@ function TesbihatContent() {
                 title="Farz Namazından Sonra"
                 instruction="Yatsı namazının farzı kılınıp selâm verildikten sonra:"
               >
-                <Line>
-                  Estağfirullâh <Badge>3 defa</Badge>
-                </Line>
+                <ZikirRow text="Estağfirullâh" target={3} />
                 <Line>
                   Allâhumme ente’s-selâmu ve minke’s-selâm, tebârakte Yâ
                   Ze’l-Celâli ve’l İkrâm.
