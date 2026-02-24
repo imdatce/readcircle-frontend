@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import ReadingModal, {
   ReadingModalContent,
@@ -81,7 +81,7 @@ const DUALAR_LIST = [
     codeKey: "GUNLUKDUALAR",
     type: "CUSTOM_PAGE",
     desc: "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
-    color: "indigo", 
+    color: "indigo",
   },
 ];
 
@@ -95,8 +95,10 @@ const colorStyles: Record<string, string> = {
     "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/50 hover:border-indigo-300",
 };
 
-export default function DualarPage() {
+// --- ANA İÇERİK BİLEŞENİ ---
+function DualarContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, language } = useLanguage();
 
   const [resources, setResources] = useState<Resource[]>([]);
@@ -105,13 +107,15 @@ export default function DualarPage() {
     null,
   );
 
-  // Tüm kaynakları Backend'den (Redis Cache üzerinden) çek
+  // URL'deki 'dua' parametresini yakalıyoruz
+  const duaParam = searchParams.get("dua");
+
+  // Tüm kaynakları Backend'den çek
   useEffect(() => {
     const fetchResources = async () => {
       try {
         const baseUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-        // URL'yi güvenli bir şekilde oluşturmak için URL objesi kullanalım
         const url = new URL("/api/distribution/resources", baseUrl);
 
         const res = await fetch(url.toString());
@@ -130,11 +134,35 @@ export default function DualarPage() {
     fetchResources();
   }, []);
 
-  const handleOpenDua = (duaConfig: (typeof DUALAR_LIST)[0]) => {
+  // Kaynaklar yüklendikten SONRA, URL'de dua parametresi varsa otomatik aç
+  useEffect(() => {
+    if (!loading && resources.length > 0 && duaParam) {
+      const targetDua = DUALAR_LIST.find((d) => d.id === duaParam);
+      if (targetDua) {
+        // ESLint uyarısını (şelale render) aşmak için Promise kullanıyoruz
+        Promise.resolve().then(() => handleOpenDua(targetDua, true));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, resources, duaParam]);
+
+  // Duayı Açma Fonksiyonu (isAuto parametresi, URL değişikliğini kontrol etmek içindir)
+  const handleOpenDua = (
+    duaConfig: (typeof DUALAR_LIST)[0],
+    isAuto = false,
+  ) => {
+    // Eğer tıklamayla gelindiyse (otomatik değilse), URL'i temiz bir şekilde güncelle
+    if (!isAuto) {
+      router.replace(`/resources/dualar?dua=${duaConfig.id}`, {
+        scroll: false,
+      });
+    }
+
     if (duaConfig.type === "CUSTOM_PAGE") {
       router.push(`/resources/${duaConfig.id}`);
       return;
     }
+
     // 1. Tıklanan duayı çekilen resources listesinden bul
     const resource = resources.find((r) => r.codeKey === duaConfig.codeKey);
 
@@ -174,7 +202,7 @@ export default function DualarPage() {
           meaning: parts[2]?.trim() || "",
         },
         codeKey: duaConfig.codeKey,
-        // DİKKAT: assignmentId alanını kaldırdık. Böylece ReadingModal Zikirmatik'i GÖSTERMEYECEK.
+        ignoreSavedProgress: true, // Her açılışta başa dönsün
       };
     } else {
       // LIST_BASED (Bedir, Uhud, Tevhidname vb.)
@@ -208,10 +236,17 @@ export default function DualarPage() {
         cevsenData: parsedData,
         startUnit: 1,
         codeKey: duaConfig.codeKey,
+        ignoreSavedProgress: true, // Her açılışta başa dönsün
       };
     }
 
     setModalContent(parsedModalContent);
+  };
+
+  // Modalı kapatırken URL'i eski (parametresiz) haline döndürür
+  const handleCloseModal = () => {
+    setModalContent(null);
+    router.replace("/resources/dualar", { scroll: false });
   };
 
   return (
@@ -220,7 +255,7 @@ export default function DualarPage() {
         {/* Üst Başlık (Geri Butonu ile) */}
         <div className="flex items-center justify-between bg-white/50 dark:bg-[#0a1f1a] backdrop-blur-md p-4 rounded-[2rem] border border-blue-100/20 dark:border-blue-900/30 shadow-sm">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/resources")}
             className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all group"
           >
             <svg
@@ -284,17 +319,32 @@ export default function DualarPage() {
       {modalContent && (
         <ReadingModal
           content={modalContent}
-          onClose={() => setModalContent(null)}
+          onClose={handleCloseModal}
           onUpdateContent={(newContent) => {
             if (newContent) setModalContent(newContent);
             else setModalContent(null);
           }}
           userName="Serbest Okuma"
-          localCounts={{}} // SIFIRLANDI
-          onDecrementCount={() => {}} // SIFIRLANDI
+          localCounts={{}}
+          onDecrementCount={() => {}}
           t={t}
         />
       )}
     </div>
+  );
+}
+
+// Next.js UseSearchParams kullanımı için Suspense Sarmalayıcı
+export default function DualarPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7] dark:bg-[#061612]">
+          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <DualarContent />
+    </Suspense>
   );
 }

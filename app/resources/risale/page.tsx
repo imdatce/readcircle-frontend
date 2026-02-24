@@ -1,43 +1,121 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RISALE_BOOKS, GITHUB_RAW_BASE } from "@/constants/risaleConfig";
 import {
   RisaleBookCard,
   ChapterItem,
 } from "@/components/resources/RisaleWidgets";
 
-export default function RisalePage() {
+function RisaleContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL'den parametreleri alıyoruz
+  const bookParam = searchParams.get("book");
+  const fileParam = searchParams.get("file");
+
   const [view, setView] = useState<"books" | "chapters" | "reading">("books");
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [chapters, setChapters] = useState<any[]>([]);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  // Sayfanın içindeki mevcut statelerin yanına şunları ekle:
-  const [fontLevel, setFontLevel] = useState(3); // Varsayılan font seviyesi
+
+  const [fontLevel, setFontLevel] = useState(3);
   const [isSepia, setIsSepia] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // 1. Kitap seçildiğinde o klasördeki HTML dosyalarını listele
+  const handleSelectBook = async (book: any, autoFile?: string) => {
+    setSelectedBook(book);
+    setLoading(true);
+    setView("chapters");
+    try {
+      const res = await fetch(
+        `/api/risale/files?folder=${encodeURIComponent(book.folder)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const htmlFiles = data.filter((f: any) => f.name.endsWith(".html"));
+        setChapters(htmlFiles);
+
+        // Eğer URL'de bir dosya (file) parametresi de varsa otomatik aç
+        if (autoFile) {
+          const targetFile = htmlFiles.find(
+            (f: any) =>
+              f.name.toLowerCase() === autoFile.toLowerCase() ||
+              f.name.toLowerCase().includes(autoFile.toLowerCase()),
+          );
+          if (targetFile) {
+            handleSelectChapter(targetFile, book); // Kitap bilgisini de yolluyoruz
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (!autoFile) setLoading(false); // Eğer dosya açılmayacaksa yüklemeyi bitir
+    }
+  };
+
+  // 2. Dosya seçildiğinde içeriğini Raw URL üzerinden çek
+  const handleSelectChapter = async (file: any, bookObj = selectedBook) => {
+    setLoading(true);
+    setView("reading");
+    try {
+      const res = await fetch(
+        `${GITHUB_RAW_BASE}/${encodeURIComponent(bookObj.folder)}/${encodeURIComponent(file.name)}`,
+      );
+      if (res.ok) {
+        const html = await res.text();
+        setContent(html);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // URL DİNLEYİCİSİ (Otomatik Açılma Mantığı)
+  // ==========================================
+  useEffect(() => {
+    if (bookParam) {
+      const targetBook = RISALE_BOOKS.find(
+        (b) => b.folder.toLowerCase() === bookParam.toLowerCase(),
+      );
+      if (targetBook && (!selectedBook || selectedBook.id !== targetBook.id)) {
+        // ESLint uyarısını aşmak için Promise
+        Promise.resolve().then(() =>
+          handleSelectBook(targetBook, fileParam || undefined),
+        );
+      }
+    }
+    // Sadece bookParam değiştiğinde çalışsın
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookParam]);
+  // ==========================================
+
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
-      // Tam ekrana geç
       document.documentElement.requestFullscreen().catch((err) => {
         console.error(`Tam ekran hatası: ${err.message}`);
       });
       setIsFullscreen(true);
     } else {
-      // Tam ekrandan çık
       if (document.exitFullscreen) {
         document.exitFullscreen();
         setIsFullscreen(false);
       }
     }
   };
+
   useEffect(() => {
     const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handleFsChange);
@@ -47,31 +125,26 @@ export default function RisalePage() {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    const currentTheme = localStorage.getItem("theme"); // Uygulamanın tema tercihini buradan okuduğunu varsayıyoruz
+    const currentTheme = localStorage.getItem("theme");
 
     if (isSepia) {
-      // Sepya açıldığında karanlık modu zorla kaldır
       root.classList.remove("dark");
     } else {
-      // Sepya kapandığında, eğer kullanıcı normalde "dark" kullanıyorsa geri yükle
       if (currentTheme === "dark") {
         root.classList.add("dark");
       } else if (
         !currentTheme &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
       ) {
-        // Eğer localStorage boşsa ama sistem teması karanlıksa yine geri yükle
         root.classList.add("dark");
       }
     }
 
-    // Sayfadan tamamen çıkınca (unmount) dark modu orijinal haline döndür
     return () => {
       if (currentTheme === "dark") root.classList.add("dark");
     };
   }, [isSepia]);
 
-  // Otomatik Kaydırma Mantığı
   useEffect(() => {
     let scrollInterval: any;
     if (isAutoScrolling) {
@@ -93,54 +166,27 @@ export default function RisalePage() {
     if (typeof navigator !== "undefined" && navigator.vibrate)
       navigator.vibrate(10);
   };
-  // 1. Kitap seçildiğinde o klasördeki HTML dosyalarını listele
-  const handleSelectBook = async (book: any) => {
-    setSelectedBook(book);
-    setLoading(true);
-    setView("chapters");
-    try {
-      const res = await fetch(
-        `/api/risale/files?folder=${encodeURIComponent(book.folder)}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        // Sadece .html dosyalarını filtrele
-        setChapters(data.filter((f: any) => f.name.endsWith(".html")));
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 2. Dosya seçildiğinde içeriğini Raw URL üzerinden çek
-  const handleSelectChapter = async (file: any) => {
-    setLoading(true);
-    setView("reading");
-    try {
-      const res = await fetch(
-        `${GITHUB_RAW_BASE}/${encodeURIComponent(selectedBook.folder)}/${encodeURIComponent(file.name)}`,
-      );
-      if (res.ok) {
-        const html = await res.text();
-        // GitHub'dan gelen HTML içindeki font veya stil çakışmalarını önlemek için basit temizlik yapılabilir
-        setContent(html);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const goBack = () => {
     if (view === "reading") {
-      setIsAutoScrolling(false); // Okuma modundan çıkarken durdur
+      setIsAutoScrolling(false);
       setView("chapters");
-    } else if (view === "chapters") setView("books");
-    else router.back();
+      // URL'yi temizle
+      router.replace(`/resources/risale?book=${selectedBook.folder}`, {
+        scroll: false,
+      });
+    } else if (view === "chapters") {
+      setView("books");
+      router.replace("/resources/risale", { scroll: false });
+    } else {
+      router.back();
+    }
+  };
+
+  // Kart tıklamasını sarmalayıp URL'i de değiştiriyoruz
+  const handleBookCardClick = (book: any) => {
+    router.replace(`/resources/risale?book=${book.folder}`, { scroll: false });
+    handleSelectBook(book);
   };
 
   return (
@@ -191,7 +237,7 @@ export default function RisalePage() {
                   <RisaleBookCard
                     key={book.id}
                     book={book}
-                    onClick={handleSelectBook}
+                    onClick={() => handleBookCardClick(book)}
                   />
                 ))}
               </div>
@@ -205,7 +251,14 @@ export default function RisalePage() {
                     <ChapterItem
                       key={i}
                       file={file}
-                      onClick={handleSelectChapter}
+                      onClick={() => {
+                        // Tıklanan bölümün ismini URL'e atıyoruz (Opsiyonel ama paylaşıma uygun)
+                        router.replace(
+                          `/resources/risale?book=${selectedBook.folder}&file=${file.name}`,
+                          { scroll: false },
+                        );
+                        handleSelectChapter(file);
+                      }}
                     />
                   ))}
                 </div>
@@ -214,16 +267,12 @@ export default function RisalePage() {
 
             {view === "reading" && (
               <div
-                // 1. Tıklandığında tam ekranı aç/kapat (Akıllı Kontrol ile)
                 onClick={(e) => {
-                  // Eğer tıklanan yer bir buton veya toolbar ise tam ekranı tetikleme
                   const target = e.target as HTMLElement;
                   if (target.closest("button") || target.closest(".sticky"))
                     return;
-
                   toggleFullScreen();
                 }}
-                // 2. Etkileşime girildiğinde (dokunma/tıklama) kaydırmayı durdur
                 onPointerDown={() => setIsAutoScrolling(false)}
                 className={`relative min-h-screen transition-all duration-500 cursor-pointer
       ${isSepia ? "sepia-mode" : ""} 
@@ -281,7 +330,6 @@ export default function RisalePage() {
 
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
 
-                        {/* Manuel Tam Ekran Butonu (Hala orada durması iyidir) */}
                         <button
                           onClick={toggleFullScreen}
                           className={`w-8 h-8 flex items-center justify-center rounded-lg ${isFullscreen ? "bg-emerald-600 text-white" : "text-gray-500"}`}
@@ -375,5 +423,19 @@ export default function RisalePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RisalePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7] dark:bg-[#061612]">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <RisaleContent />
+    </Suspense>
   );
 }

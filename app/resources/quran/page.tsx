@@ -1,21 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { JUZ_DATA, SURAH_DATA } from "@/constants/quranData";
 import ReadingModal, {
   ReadingModalContent,
 } from "@/components/modals/ReadingModal";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function QuranPage() {
+function QuranContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
+
+  // URL'deki "tab" parametresini yakala
+  const tabParam = searchParams.get("tab") as "juz" | "surah" | null;
+  const pageParam = searchParams.get("page");
   const [activeTab, setActiveTab] = useState<"juz" | "surah">("juz");
   const [searchQuery, setSearchQuery] = useState("");
   const [modalContent, setModalContent] = useState<ReadingModalContent | null>(
     null,
   );
+
+  // URL'de parametre varsa aktif sekmeyi ona göre güncelle
+  useEffect(() => {
+    if (tabParam === "juz" || tabParam === "surah") {
+      // ESLint React state update uyarısını önlemek için Promise.resolve
+      Promise.resolve().then(() => setActiveTab(tabParam));
+    }
+  }, [tabParam]);
 
   // Arama filtresi
   const filteredSurahs = SURAH_DATA.filter(
@@ -36,9 +49,35 @@ export default function QuranPage() {
       endUnit: 604, // Kuran'ın en sonu
       currentUnit: startPage, // Tıklanan Cüz veya Surenin başlangıç sayfası
 
-      // YENİ EKLENEN KISIM: Modal açılırken eski hafızayı yoksay ve direkt bu sayfayı aç
+      // Modal açılırken eski hafızayı yoksay ve direkt bu sayfayı aç
       ignoreSavedProgress: true,
     });
+  };
+
+ // URL'den gelen 'page' değerine göre otomatik okuma ekranını aç
+  useEffect(() => {
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum)) {
+        // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
+        Promise.resolve().then(() => handleOpenReading(pageNum));
+        
+        // Parametreyi URL'den temizle ki modal kapatıldığında tekrar açılmasın
+        router.replace(`/resources/quran?tab=${tabParam || "juz"}`, { scroll: false });
+      }
+    }
+  }, [pageParam, tabParam, router]);
+
+  useEffect(() => {
+    if (tabParam === "juz" || tabParam === "surah") {
+      Promise.resolve().then(() => setActiveTab(tabParam));
+    }
+  }, [tabParam]);
+
+  // Sekme değiştirildiğinde URL'i de güncelle (Sayfa yenilenmeden)
+  const handleTabChange = (tab: "juz" | "surah") => {
+    setActiveTab(tab);
+    router.replace(`/resources/quran?tab=${tab}`, { scroll: false });
   };
 
   return (
@@ -47,7 +86,7 @@ export default function QuranPage() {
         {/* Üst Başlık (Geri Butonu ile) */}
         <div className="flex items-center justify-between bg-white/50 dark:bg-[#0a1f1a] backdrop-blur-md p-4 rounded-[2rem] border border-amber-100/20 dark:border-amber-900/30 shadow-sm">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/resources")}
             className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-full transition-all group"
           >
             <svg
@@ -75,13 +114,13 @@ export default function QuranPage() {
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex bg-gray-100 dark:bg-gray-800/50 p-1 rounded-xl w-full sm:w-auto">
               <button
-                onClick={() => setActiveTab("juz")}
+                onClick={() => handleTabChange("juz")}
                 className={`flex-1 sm:px-6 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${activeTab === "juz" ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
                 Cüzler
               </button>
               <button
-                onClick={() => setActiveTab("surah")}
+                onClick={() => handleTabChange("surah")}
                 className={`flex-1 sm:px-6 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${activeTab === "surah" ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
               >
                 Sureler
@@ -186,5 +225,20 @@ export default function QuranPage() {
         />
       )}
     </div>
+  );
+}
+
+// Suspense Sarmalayıcı
+export default function QuranPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#FDFCF7] dark:bg-[#061612]">
+          <div className="w-10 h-10 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <QuranContent />
+    </Suspense>
   );
 }

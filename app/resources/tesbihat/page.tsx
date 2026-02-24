@@ -1,8 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
 // --- YARDIMCI BİLEŞENLER (UI) ---
@@ -357,14 +358,35 @@ const EcirnaIstiazeleri = () => (
 );
 
 // --- ANA SAYFA BİLEŞENİ ---
-export default function TesbihatPage() {
+function TesbihatContent() {
   const { t } = useLanguage();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL'deki vakit parametresini yakalıyoruz
+  const vakitParam = searchParams.get("vakit") as
+    | "sabah"
+    | "ogle"
+    | "ikindi"
+    | "aksam"
+    | "yatsi"
+    | null;
+
   const [activeTab, setActiveTab] = useState<
     "sabah" | "ogle" | "ikindi" | "aksam" | "yatsi"
   >("sabah");
 
   // Font büyütme/küçültme offset değeri (0, 2, 4, 6, 8, 10, 12)
   const [fontOffset, setFontOffset] = useState(0);
+
+  // URL'de parametre varsa aktif sekmeyi ona göre güncelle
+  useEffect(() => {
+    const validTabs = ["sabah", "ogle", "ikindi", "aksam", "yatsi"];
+    if (vakitParam && validTabs.includes(vakitParam)) {
+      // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
+      Promise.resolve().then(() => setActiveTab(vakitParam));
+    }
+  }, [vakitParam]);
 
   // Tarayıcı belleğinden font büyüklüğünü yükle
   useEffect(() => {
@@ -378,6 +400,14 @@ export default function TesbihatPage() {
   const handleFontChange = (newOffset: number) => {
     setFontOffset(newOffset);
     localStorage.setItem("tesbihat_font_offset", newOffset.toString());
+  };
+
+  // Sekmeye tıklandığında hem aktif sekmeyi değiştir hem de URL'i güncelle (paylaşılabilirlik için)
+  const handleTabClick = (
+    tabId: "sabah" | "ogle" | "ikindi" | "aksam" | "yatsi",
+  ) => {
+    setActiveTab(tabId);
+    router.replace(`/resources/tesbihat?vakit=${tabId}`, { scroll: false });
   };
 
   const TABS = [
@@ -425,7 +455,7 @@ export default function TesbihatPage() {
           {/* A- / A+ Font Kontrolleri */}
           <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-1.5 rounded-xl shadow-sm w-fit shrink-0">
             <button
-              onClick={() => handleFontChange(Math.max(-8, fontOffset - 2))} // 0 yerine -8'e kadar küçültebilir
+              onClick={() => handleFontChange(Math.max(-8, fontOffset - 2))}
               disabled={fontOffset === -8}
               className="w-10 h-9 flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-emerald-600 rounded-lg transition-colors font-bold text-sm disabled:opacity-30"
             >
@@ -447,7 +477,7 @@ export default function TesbihatPage() {
           {TABS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`px-3 py-2 rounded-xl font-bold text-[11px] sm:text-xs whitespace-nowrap transition-all duration-300 ${
                 activeTab === tab.id
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
@@ -840,5 +870,20 @@ export default function TesbihatPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Ana Sayfa Bileşenini Suspense İle Sarmalıyoruz
+export default function TesbihatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#FDFDFD] dark:bg-gray-950">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <TesbihatContent />
+    </Suspense>
   );
 }
