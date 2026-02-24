@@ -804,7 +804,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
     const isSurahGroup =
       content.type === "SURAS" ||
-      ["YASIN", "FETIH", "FATIHA", "WAQIA", "IHLAS", "FELAK", "NAS"].includes(
+      ["FATIHA", "YASIN", "FETIH", "WAQIA","AYETELKURSU", "IHLAS", "FELAK", "NAS"].includes(
         codeKey,
       );
 

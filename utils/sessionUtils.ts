@@ -4,7 +4,7 @@ import { SessionSummary } from "@/types";
 
 export const ORDER_PRIORITY = [
   "QURAN", "CEVSEN", "TEVHIDNAME", "FETIH", "YASIN", 
-  "FATIHA", "IHLAS", "FELAK", "NAS", "WAQIA", 
+  "FATIHA","AYETELKURSU", "IHLAS", "FELAK", "NAS", "WAQIA", 
   "BEDIR", "UHUD", "OZELSALAVAT", "MUNCIYE", 
   "TEFRICIYE", "YALATIF", "YAHAFIZ", "YAFETTAH", 
   "HASBUNALLAH", "LAHAVLE",
