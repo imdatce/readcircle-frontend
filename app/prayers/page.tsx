@@ -223,9 +223,10 @@ export default function PrayersPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 bg-white dark:bg-gray-900 p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
-            <Link
-              href="/profile"
+            <button
+              onClick={() => router.push("/")}
               className="p-2.5 md:p-3 bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-teal-600 rounded-xl md:rounded-2xl transition-all shadow-inner shrink-0"
+              title={t("backHome") || "Ana Sayfa"}
             >
               <svg
                 className="w-5 h-5 md:w-6 md:h-6"
@@ -240,7 +241,7 @@ export default function PrayersPage() {
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-            </Link>
+            </button>
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 dark:text-white leading-tight truncate">
                 {t("myPrayerLog")}

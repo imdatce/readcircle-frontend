@@ -31,6 +31,7 @@ export interface ReadingModalContent {
   endUnit?: number;
   currentUnit?: number;
   assignmentId?: number;
+  ignoreSavedProgress?: boolean; // <--- YENİ EKLENEN BAYRAK
 }
 
 interface ReadingModalProps {
@@ -42,7 +43,7 @@ interface ReadingModalProps {
   localCounts: Record<number, number>;
   onDecrementCount: (id: number) => void;
   t: (key: string) => string;
-  onCompleteAssignment?: (id: number) => void; // <--- YENİ EKLENEN SATIR
+  onCompleteAssignment?: (id: number) => void;
 }
 
 const EDITION_MAPPING: Record<string, string> = {
@@ -560,7 +561,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     setIsRestoring(true);
     try {
       const savedProgress = localStorage.getItem(storageKey);
-      if (savedProgress) {
+
+      // EĞER ignoreSavedProgress TRUE İSE (Fihristten tıklandıysa) HAFIZAYI SİL / YOK SAY
+      if (savedProgress && !content.ignoreSavedProgress) {
         const { unit, scrollY } = JSON.parse(savedProgress);
 
         const validUnit = Math.max(
@@ -911,12 +914,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           if (typeof navigator !== "undefined" && navigator.vibrate)
             navigator.vibrate(50);
 
-          // --- YENİ EKLENEN: SAYI 0 OLDUYSA BİTİR VE MODALI KAPAT ---
           if (safeCount === 1 && onCompleteAssignment) {
             onCompleteAssignment(content.assignmentId);
             onClose();
           }
-          // -----------------------------------------------------------
         }
       } else {
         clickTimeoutRef.current = setTimeout(() => {
@@ -932,13 +933,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
-  // Ekrana Dokunma: Artık kaymayı hemen durdurmaz
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
 
-  // Ekranda Sürükleme: Kullanıcı parmağını belirgin şekilde hareket ettirirse (manuel müdahale) kaymayı durdurur
   const handleTouchMove = (e: React.TouchEvent) => {
     if (
       !isAutoScrolling ||
@@ -983,13 +982,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       content.type === "QURAN" && currentPage > 1
         ? currentPage - 1
         : currentPage;
-    // Cüz numarasını mevcut sayfaya göre hesapla
     const currentJuz =
       content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
 
     return (
       <div className="flex items-center justify-between gap-1 md:gap-3 w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-1.5 md:p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        {/* ÖNCEKİ BUTONU */}
         <button
           onClick={() => changePage(-1)}
           disabled={isFirstPage}
@@ -999,7 +996,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           <span className="hidden sm:inline-block">{t("previous")}</span>
         </button>
 
-        {/* ORTA BİLGİ ALANI (Taşmaları önleyen esnek yapı) */}
         <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
           {content.type === "QURAN" && (
             <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
@@ -1013,7 +1009,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           </span>
         </span>
 
-        {/* SONRAKİ BUTONU */}
         <button
           onClick={() => changePage(1)}
           disabled={isLastPage}
@@ -1025,6 +1020,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       </div>
     );
   };
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
@@ -1032,7 +1028,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       <div
         className={`relative w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
       >
-        {/* DONANIMSAL (GPU) İVMELİ İLERLEME ÇUBUĞU */}
         <div className="absolute top-0 left-0 w-full h-[3px] bg-black/5 dark:bg-white/5 z-[60]">
           <div
             ref={progressBarRef}
@@ -1041,7 +1036,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           />
         </div>
 
-        {/* HEADER */}
         {!isFullscreen && (
           <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
             <div className="flex justify-between items-center">
@@ -1104,7 +1098,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         </svg>
                       </button>
 
-                      {/* Hız Kontrol Butonu */}
                       <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                       <button
                         onClick={cycleSpeed}
@@ -1114,7 +1107,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         {autoScrollSpeed}x
                       </button>
 
-                      {/* Teleprompter Oynat/Duraklat Butonu */}
                       <button
                         onClick={() => {
                           setIsAutoScrolling(!isAutoScrolling);
@@ -1507,12 +1499,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     currentCount={safeCount}
                     onDecrement={() => {
                       onDecrementCount(content.assignmentId!);
-                      // --- YENİ EKLENEN: SAYI 0 OLDUYSA BİTİR VE MODALI KAPAT ---
                       if (safeCount === 1 && onCompleteAssignment) {
                         onCompleteAssignment(content.assignmentId!);
                         onClose();
                       }
-                      // -----------------------------------------------------------
                     }}
                     isModal={true}
                     t={t}

@@ -246,19 +246,19 @@ function HomeContent() {
                 </div>
 
                 {/* BELİRGİN KUTULU BUTON ALANI (Daha dolgun ve görünür hal) */}
-                <div className="bg-gray-100/50 dark:bg-black/40 p-2 md:p-3 rounded-[2.2rem] md:rounded-[2.8rem] border border-gray-200 dark:border-gray-800 shadow-inner flex flex-row gap-2 md:gap-3 relative max-w-2xl mx-auto backdrop-blur-sm">
+                <div className="bg-gray-100/50 dark:bg-black/40 p-2 md:p-3 rounded-[1.8rem] md:rounded-[2.4rem] border border-gray-200 dark:border-gray-800 shadow-inner flex flex-row gap-2 relative max-w-2xl mx-auto backdrop-blur-sm">
                   {/* Dağıttığım Halkalar (Mavi Tema) */}
                   <button
                     onClick={() => toggleTab("managed")}
-                    className={`flex-1 group/btn relative px-2 md:px-8 py-4 md:py-6 rounded-[1.8rem] md:rounded-[2.2rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
+                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
                       activeTab === "managed"
                         ? "bg-white dark:bg-gray-800 border-blue-500 shadow-xl shadow-blue-500/20 text-blue-700 dark:text-blue-400 scale-[1.02] z-10"
                         : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-blue-200 dark:hover:border-blue-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
                     }`}
                   >
-                    <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 md:gap-3">
+                    <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
                       <div
-                        className={`p-2.5 md:p-4 rounded-[1rem] md:rounded-[1.2rem] transition-all duration-300 ${
+                        className={`p-2 md:p-3 rounded-xl md:rounded-2xl transition-all duration-300 ${
                           activeTab === "managed"
                             ? "bg-blue-600 text-white rotate-6 shadow-lg shadow-blue-500/40"
                             : "bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/btn:bg-blue-100 dark:group-hover/btn:bg-blue-900/40 group-hover/btn:scale-110"
@@ -266,7 +266,7 @@ function HomeContent() {
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 md:h-8 md:w-8"
+                          className="h-6 w-6 md:h-8 md:w-8"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -281,14 +281,14 @@ function HomeContent() {
                       </div>
                       <div className="text-center min-w-0">
                         <span
-                          className={`block font-black text-[11px] md:text-lg tracking-tight transition-colors ${activeTab === "managed" ? "text-blue-700 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
+                          className={`block font-black text-sm md:text-xl tracking-tight transition-colors ${activeTab === "managed" ? "text-blue-700 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
                         >
                           {t("managedSessions")}
                         </span>
                         <span
-                          className={`text-[8px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "managed" ? "opacity-100 text-blue-500/70" : "opacity-40"}`}
+                          className={`text-[10px] md:text-sm font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "managed" ? "opacity-100 text-blue-500/70" : "opacity-50"}`}
                         >
-                          {mySessions.length} {t("circle")} {t("exist")}
+                          {createdSessions.length} {t("circle")}
                         </span>
                       </div>
                     </div>
@@ -297,15 +297,15 @@ function HomeContent() {
                   {/* Katıldığım Halkalar (Yeşil Tema) */}
                   <button
                     onClick={() => toggleTab("joined")}
-                    className={`flex-1 group/btn relative px-2 md:px-8 py-4 md:py-6 rounded-[1.8rem] md:rounded-[2.2rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
+                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
                       activeTab === "joined"
                         ? "bg-white dark:bg-gray-800 border-emerald-500 shadow-xl shadow-emerald-500/20 text-emerald-700 dark:text-emerald-400 scale-[1.02] z-10"
                         : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"
                     }`}
                   >
-                    <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 md:gap-3">
+                    <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
                       <div
-                        className={`p-2.5 md:p-4 rounded-[1rem] md:rounded-[1.2rem] transition-all duration-300 ${
+                        className={`p-2 md:p-3 rounded-xl md:rounded-2xl transition-all duration-300 ${
                           activeTab === "joined"
                             ? "bg-emerald-600 text-white -rotate-6 shadow-lg shadow-emerald-500/40"
                             : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 group-hover/btn:bg-emerald-100 dark:group-hover/btn:bg-emerald-900/40 group-hover/btn:scale-110"
@@ -313,7 +313,7 @@ function HomeContent() {
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 md:h-8 md:w-8"
+                          className="h-6 w-6 md:h-8 md:w-8"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -328,14 +328,14 @@ function HomeContent() {
                       </div>
                       <div className="text-center min-w-0">
                         <span
-                          className={`block font-black text-[11px] md:text-lg tracking-tight transition-colors ${activeTab === "joined" ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
+                          className={`block font-black text-sm md:text-xl tracking-tight transition-colors ${activeTab === "joined" ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
                         >
                           {t("joinedSessions")}
                         </span>
                         <span
-                          className={`text-[8px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "joined" ? "opacity-100 text-emerald-500/70" : "opacity-40"}`}
+                          className={`text-[10px] md:text-sm font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "joined" ? "opacity-100 text-emerald-500/70" : "opacity-50"}`}
                         >
-                          {mySessions.length} {t("circle")} {t("exist")}
+                          {mySessions.length} {t("circle")}
                         </span>
                       </div>
                     </div>

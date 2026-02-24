@@ -99,7 +99,6 @@ const RESOURCES = [
   },
 ];
 
-// Tailwind'in renk sınıflarını dinamik olarak derleyebilmesi için statik sözlük
 const colorStyles: any = {
   emerald: {
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
@@ -108,7 +107,6 @@ const colorStyles: any = {
     hoverBorder: "hover:border-emerald-300 dark:hover:border-emerald-700",
     iconBg:
       "bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800",
-    shadow: "hover:shadow-emerald-500/20",
   },
   blue: {
     bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -117,7 +115,6 @@ const colorStyles: any = {
     hoverBorder: "hover:border-blue-300 dark:hover:border-blue-700",
     iconBg:
       "bg-blue-100 dark:bg-blue-900/40 group-hover:bg-blue-200 dark:group-hover:bg-blue-800",
-    shadow: "hover:shadow-blue-500/20",
   },
   amber: {
     bg: "bg-amber-50 dark:bg-amber-900/20",
@@ -126,7 +123,6 @@ const colorStyles: any = {
     hoverBorder: "hover:border-amber-300 dark:hover:border-amber-700",
     iconBg:
       "bg-amber-100 dark:bg-amber-900/40 group-hover:bg-amber-200 dark:group-hover:bg-amber-800",
-    shadow: "hover:shadow-amber-500/20",
   },
   indigo: {
     bg: "bg-indigo-50 dark:bg-indigo-900/20",
@@ -135,7 +131,6 @@ const colorStyles: any = {
     hoverBorder: "hover:border-indigo-300 dark:hover:border-indigo-700",
     iconBg:
       "bg-indigo-100 dark:bg-indigo-900/40 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800",
-    shadow: "hover:shadow-indigo-500/20",
   },
 };
 
@@ -144,7 +139,6 @@ export default function ResourcesPage() {
   const { t } = useLanguage();
   const router = useRouter();
 
-  // Yalnızca giriş yapmış kullanıcılar görebilir
   useEffect(() => {
     if (!user) {
       router.push("/");
@@ -155,15 +149,15 @@ export default function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-6 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Arka Plan Dekorasyonları */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-amber-400/10 dark:bg-amber-600/10 rounded-full blur-3xl opacity-50 pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-400/5 dark:bg-blue-600/10 rounded-full blur-3xl opacity-50 pointer-events-none translate-x-1/3 translate-y-1/3"></div>
 
       <div className="max-w-5xl mx-auto space-y-6 relative z-10">
         {/* Üst Başlık Bölümü */}
         <div className="flex items-center gap-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
-          <Link
-            href="/profile"
+          {/* DEĞİŞEN KISIM: Link yerine onClick ile geriye (veya anasayfaya) dönen bir buton yapıldı */}
+          <button
+            onClick={() => router.push("/")}
             className="p-2.5 bg-white dark:bg-gray-800 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition-all active:scale-95 shrink-0"
           >
             <svg
@@ -179,10 +173,11 @@ export default function ResourcesPage() {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-          </Link>
+          </button>
+
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-              {t("myResources")}
+              {t("myResources") || "Kaynaklarım"}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 font-medium text-[11px] sm:text-xs mt-0.5">
               {t("myResourcesDesc") ||
@@ -202,25 +197,21 @@ export default function ResourcesPage() {
                 href={resource.href}
                 className={`group relative bg-white dark:bg-gray-900 p-3 sm:p-4 rounded-2xl border border-transparent ${style.hoverBorder} shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-center text-center overflow-hidden`}
               >
-                {/* İkon - Daha Küçük ve Ortalanmış */}
                 <div
                   className={`relative z-10 w-10 h-10 md:w-12 md:h-12 ${style.iconBg} ${style.text} rounded-xl flex items-center justify-center mb-2 transition-colors duration-300`}
                 >
                   {resource.icon}
                 </div>
 
-                {/* İçerik - Sadece Başlık Odaklı */}
                 <div className="relative z-10 flex flex-col items-center">
                   <h2 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-                    {t(resource.titleKey)}
+                    {t(resource.titleKey) || resource.titleKey}
                   </h2>
-                  {/* Açıklama metni sığmayacağı için çok küçük ekranlarda gizlenebilir veya çok kısa tutulabilir */}
                   <p className="hidden sm:block text-[9px] text-gray-500 dark:text-gray-400 mt-1 leading-tight line-clamp-1">
-                    {t(resource.descKey)}
+                    {t(resource.descKey) || resource.descKey}
                   </p>
                 </div>
 
-                {/* Alt Vurgu Çizgisi (Buton yerine daha kompakt) */}
                 <div
                   className={`mt-3 w-6 h-1 rounded-full ${style.text} bg-current opacity-30 group-hover:opacity-100 transition-opacity`}
                 ></div>

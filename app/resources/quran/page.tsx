@@ -35,6 +35,9 @@ export default function QuranPage() {
       startUnit: 1, // Kuran'ın en başı
       endUnit: 604, // Kuran'ın en sonu
       currentUnit: startPage, // Tıklanan Cüz veya Surenin başlangıç sayfası
+
+      // YENİ EKLENEN KISIM: Modal açılırken eski hafızayı yoksay ve direkt bu sayfayı aç
+      ignoreSavedProgress: true,
     });
   };
 
@@ -130,7 +133,7 @@ export default function QuranPage() {
                         Cüz
                       </p>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                        Sayfa {juz.startPage}
+                        Sayfa {juz.startPage > 1 ? juz.startPage - 1 : 1}
                       </p>
                     </div>
                   </button>
@@ -152,7 +155,7 @@ export default function QuranPage() {
                     </p>
                     <div className="w-full h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
                     <p className="text-[10px] font-medium text-amber-600 dark:text-amber-500">
-                      Sayfa {surah.startPage}
+                      Sayfa {surah.startPage > 1 ? surah.startPage - 1 : 1}
                     </p>
                   </button>
                 ))}
