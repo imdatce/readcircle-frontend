@@ -46,11 +46,12 @@ interface KazaDebts {
 }
 
 // --- KAZA NAMAZI BİLEŞENİ ---
-const KazaTracker = ({ t }: { t: any }) => {
+const KazaTracker = ({ t, token }: { t: any; token: string | null }) => {
   const [debts, setDebts] = useState<KazaDebts | null>(null);
   const [setupMode, setSetupMode] = useState(false);
   const [calcType, setCalcType] = useState<"time" | "manual">("time");
-
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const [loading, setLoading] = useState(true);
   // Zaman girdileri
   const [years, setYears] = useState<number | "">("");
   const [months, setMonths] = useState<number | "">("");
@@ -66,39 +67,45 @@ const KazaTracker = ({ t }: { t: any }) => {
     witr: 0,
   });
 
-  // Veriyi Yükleme
-  // Veriyi Yükleme
   useEffect(() => {
-    const checkSavedDebts = () => {
-      const saved = localStorage.getItem("readcircle_kaza_debts");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          // ÇÖZÜM: State güncellemelerini mikro-görev kuyruğuna alıyoruz
-          Promise.resolve().then(() => setDebts(parsed));
-        } catch (e) {
-          console.error("Kaza borç verisi ayrıştırılamadı", e);
-          Promise.resolve().then(() => setSetupMode(true));
+    const fetchStatus = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/api/kaza/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // ÇÖZÜM: ESLint hatasını önlemek için microtask kullanıyoruz
+          Promise.resolve().then(() => {
+            setDebts(data);
+            // Eğer borçlar boşsa kurulumu aç
+            const isNew = data.fajr === 0 && data.dhuhr === 0 && data.asr === 0;
+            if (isNew) setSetupMode(true);
+            setLoading(false);
+          });
         }
-      } else {
-        // ÇÖZÜM: Senkron render çakışmasını önlemek için
-        Promise.resolve().then(() => setSetupMode(true));
+      } catch (e) {
+        console.error("Kaza verisi çekilemedi", e);
+        setLoading(false);
       }
     };
-
-    checkSavedDebts();
-  }, []);
+    fetchStatus();
+  }, [API_URL, token]);
 
   // Hesapla ve Kaydet
-  const handleSaveDebts = () => {
+  // Borçları Kaydetme Fonksiyonu (POST)
+  const handleSaveDebts = async () => {
+    // 1. Önce değişkeni tanımlıyoruz
     let newDebts: KazaDebts;
 
+    // 2. Hesaplama mantığını kuruyoruz
     if (calcType === "time") {
       const y = Number(years) || 0;
       const m = Number(months) || 0;
       const d = Number(days) || 0;
-
       const totalDays = y * 365 + m * 30 + d;
+
       newDebts = {
         fajr: totalDays,
         dhuhr: totalDays,
@@ -118,21 +125,44 @@ const KazaTracker = ({ t }: { t: any }) => {
       };
     }
 
-    setDebts(newDebts);
-    localStorage.setItem("readcircle_kaza_debts", JSON.stringify(newDebts));
-    setSetupMode(false);
+    // 3. Şimdi backend'e gönderiyoruz
+    try {
+      const res = await fetch(`${API_URL}/api/kaza/initialize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newDebts), // Değişken burada artık tanımlı
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setDebts(data);
+        setSetupMode(false);
+      }
+    } catch (e) {
+      alert("Borçlar kaydedilemedi.");
+    }
   };
-
   // Kaza Kılındı (Sayısını 1 Azalt)
-  const handleDecrement = (prayerKey: keyof KazaDebts) => {
-    if (!debts || debts[prayerKey] <= 0) return;
-
-    const newDebts = { ...debts, [prayerKey]: debts[prayerKey] - 1 };
-    setDebts(newDebts);
-    localStorage.setItem("readcircle_kaza_debts", JSON.stringify(newDebts));
-
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(20);
+  const handleDecrement = async (prayerKey: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/kaza/decrement`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ prayer: prayerKey }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDebts(data);
+        if (navigator.vibrate) navigator.vibrate(20);
+      }
+    } catch (e) {
+      console.error("Güncellenemedi");
     }
   };
 
@@ -708,8 +738,7 @@ function PrayersContent() {
         </div>
 
         {/* KAZA SEKME İÇERİĞİ */}
-        {activeTab === "kaza" && <KazaTracker t={t} />}
-
+        {activeTab === "kaza" && <KazaTracker t={t} token={token} />}
         {/* GÜNLÜK SEKME İÇERİĞİ */}
         {activeTab === "gunluk" && (
           <>
