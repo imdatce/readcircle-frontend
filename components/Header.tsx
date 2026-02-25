@@ -75,7 +75,7 @@ export default function Header() {
     return () => ro.disconnect();
   }, [checkOverflow, user]);
 
- // Menü her açıldığında Kur'an için son kalınan sayfayı kontrol et
+  // Menü her açıldığında Kur'an için son kalınan sayfayı kontrol et
   useEffect(() => {
     if (isMenuOpen) {
       try {
@@ -925,12 +925,24 @@ export default function Header() {
                         </button>
                         {expandedAccordion === "agenda" && (
                           <div className="flex flex-col gap-1 px-2 py-2 mx-3 my-1 border-l-2 border-amber-100 dark:border-amber-800/50 animate-in fade-in slide-in-from-top-2">
+                            {/* Günlük Takip Linki */}
                             <Link
-                              href="/prayers"
+                              href="/prayers?tab=gunluk"
                               onClick={closeMenu}
-                              className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
                             >
-                              Namaz Takibi
+                              <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                              Günlük Namaz Takibi
+                            </Link>
+
+                            {/* Kaza Takibi Linki */}
+                            <Link
+                              href="/prayers?tab=kaza"
+                              onClick={closeMenu}
+                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                              Kaza Namazı Takibi
                             </Link>
                           </div>
                         )}
@@ -996,7 +1008,7 @@ export default function Header() {
                             </button>
                             <button
                               onClick={handleDeleteAccount}
-                              className="text-left px-3 py-2 text-sm font-medium text-red-50 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
                             >
                               {t("deleteAccountButton") || "Hesabı Sil"}
                             </button>

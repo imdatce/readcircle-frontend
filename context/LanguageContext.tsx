@@ -84,6 +84,7 @@ const translations: TranslationStructure = {
       myResources: "Kaynaklarım",
       farzPrayers: "Farz",
       otherPrayers: "Diğerleri",
+      deleteAccountButton: "Hesabı Sil",
       farzCompletedText: "Farz",
       otherCompletedText: "Diğer",
       myAccount: "Hesabım",
