@@ -628,7 +628,7 @@ function TesbihatContent() {
 
                 <ZikirRow
                   text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
-                  target={9}
+                  target={10}
                 />
 
                 <InstructionText>Onuncusunda ise;</InstructionText>
@@ -831,7 +831,7 @@ function TesbihatContent() {
               >
                 <ZikirRow
                   text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
-                  target={9}
+                  target={10}
                 />
 
                 <InstructionText>Onuncusunda ise;</InstructionText>
