@@ -182,19 +182,16 @@ const AyetulKursiVeTesbihler = () => (
       ve lâ ye’ûduhû hifzuhumâ ve huve’l-‘Aliyyu’l-‘Azîm.
     </Line>
     <InstructionText>Daha sonra Tesbihler çekilir:</InstructionText>
+    <Line>Subhânellâhi bukraten ve esîlâ</Line>
 
     {/* ZikirRow ile her bir tesbihi kendi kutusuna aldık */}
-    <ZikirRow
-      text="Subhânellâhi bukraten ve esîlâ"
-      target={33}
-      label="Subhanallah"
-    />
-    <ZikirRow
-      text="Elhamdulillâhi hamden kesîrâ"
-      target={33}
-      label="Elhamdulillah"
-    />
-    <ZikirRow text="Allâhu Ekberu kebîrâ" target={33} label="Allâhu Ekber" />
+    <ZikirRow text="Subhanallah" target={33} label="Subhanallah" />
+    <Line>Elhamdulillâhi hamden kesîrâ</Line>
+
+    <ZikirRow text="Elhamdulillah" target={33} label="Elhamdulillah" />
+    <Line>Allâhu Ekberu kebîrâ</Line>
+
+    <ZikirRow text="Allâhu Ekber" target={33} label="Allâhu Ekber" />
 
     <InstructionText>
       Akabinde şu dua okunur ve Namaz Duası yapılır:

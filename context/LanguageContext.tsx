@@ -28,11 +28,11 @@ type TranslationStructure = {
 const translations: TranslationStructure = {
   tr: {
     common: {
-      appTitle: "SURA: Manevi Halka",
-      subtitle: "Kaynak Dağıtım Platformu",
+      appTitle: "SURA: İslami Kaynak Okuma ve Paylaştırma Platformu",
+      subtitle: "İslami Kaynak Okuma ve Paylaşma Platformu",
       backHome: "Ana Sayfa",
       distributed: "Dağıtılan",
-      footerDesc: "Manevi birliktelik ve kaynak dağıtım platformu.",
+      footerDesc: "İslami Kaynak Okuma ve Paylaştırma Platformu",
       rightsReserved: "Tüm hakları saklıdır.",
       sessionCreated: "Oturum oluşturuldu",
       tapToCount: "Saymak için dokun",
@@ -260,7 +260,7 @@ const translations: TranslationStructure = {
       sessionNamePlaceholder: "Örn: Ramazan Hatmi, Aile Salavatı...",
       featureFree: "Ücretsiz Kullanım",
       featureNoLogin: "Girişsiz Katılım",
-      guestSubtitle: "Manevi birliktelik platformu",
+      guestSubtitle: "İslami Kaynak Okuma ve Paylaştırma Platformu",
       guestMessage:
         "Halkalara katılmak veya kendi dağıtımınızı oluşturmak için lütfen giriş yapın.",
       guestNote: "Kayıt olmadan misafir olarak da katılabilirsiniz.",
@@ -282,9 +282,26 @@ const translations: TranslationStructure = {
       loginRequiredMsg: "Bir cüz seçmek için giriş yapmalısınız.",
       loginOrRegister: "Giriş Yap veya Kayıt Ol",
       defaultSessionName: "Manevi Halka",
+      featuresTitle: "Platformda Neler Yapabilirsiniz?",
+      featuresSubtitle:
+        "İslami okumalarınızı düzenleyin, manevi ajandanızı oluşturun ve sevdiklerinizle ortak hatim halkalarında buluşun.",
+      featureLibraryTitle: "Zengin Kütüphane",
+      featureLibraryDesc:
+        "Kur'an-ı Kerim, Risale-i Nur, Cevşen ve Dualar ve zikirlere tek tıkla ulaşın. Akıllı hafıza ile her zaman tam kaldığınız satırdan okumaya devam edin.",
+      featureAgendaTitle: "Manevi Ajanda",
+      featureAgendaDesc:
+        "Günlük namaz ve ibadet çetelenizi tutun. Geçmiş kaza namazı borçlarınızı hesaplayıp veritabanı güvencesiyle eritmeye başlayın.",
+      featureCirclesTitle: "Okuma Halkaları",
+      featureCirclesDesc:
+        "Arkadaşlarınızla dijital hatim grupları kurun. Cüzleri, Cevşen, dua ve zikirleri kolayca paylaşıp takibini yapın.",
+      featureCustomTitle: "Tam Kişiselleştirme",
+      featureCustomDesc:
+        "Göz yormayan karanlık mod, çoklu dil desteği, font boyutu ayarları ve Arapça/Latince/Meal sekmeleriyle okuma deneyiminizi özelleştirin.",
     },
     landingSection: {
-      landingHeroTitle: "Manevi Birliktelik ve Kaynak Dağıtım Platformu",
+      landingHeroTitlePart1: "İslami Kaynak",
+      landingHeroTitlePart2: "Okuma ve Paylaştırma",
+      landingHeroTitlePart3: "Platformu",
       landingHeroSubtitle:
         "Kuran hatimleri, Cevşen halkaları ve zikir programlarını kolayca organize edin. Sevdiklerinizle manevi hedeflerinize ulaşın.",
       getStarted: "Başlayın",
@@ -302,7 +319,7 @@ const translations: TranslationStructure = {
 
       featuresDesc3:
         "Uygulamadan çıkmadan Kuran sayfalarını veya Cevşen bölümlerini okuyun.",
-      howItWorksTitle: "Nasıl Çalışır?",
+      howItWorksTitle: "Okuma Halkaları Nasıl Çalışır?",
       step1Title: "Oturum Oluştur",
       step1Desc: "Kaynağı (Yasin, Hatim vb.) ve kişi sayısını seçin.",
       step2Title: "Davet Et",

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -44,30 +43,35 @@ const fontSizes = {
 const SUBHANEKE_RE =
   /(s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|noksan|münezzeh|sübhânsın|seni her türlü|seni bütün|seni tenzih|sen aczden)/i;
 
-// === 1. ARAPÇA PARSER (Satır boşluğu olmasa bile rakamdan böler) ===
+// === 1. ARAPÇA PARSER (ReadingModal ile birebir aynı) ===
 function parseArabic(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
-  const match = text.match(SUBHANEKE_RE);
-  let subhaneke = "";
-  let mainText = text;
-
-  if (match && match.index !== undefined) {
-    subhaneke = text.slice(match.index).trim();
-    mainText = text.slice(0, match.index).trim();
-  }
-
-  // Rakamları (1, 2, 3... veya ١, ٢, ٣...) bulup o noktalardan metni parçalara ayırır
-  const parts = mainText.split(/\s+([\u0660-\u0669]+|\d{1,2})[\.\-\)\s]+/).map(p => p.trim()).filter(p => p.length > 1);
+  const parts = text
+    .split(/[\u0660-\u0669]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+    
+  if (parts.length < 2) return { header: "", items: [text], subhaneke: "" };
   
+  const subhaneke = SUBHANEKE_RE.test(parts[parts.length - 1])
+    ? parts.pop()!
+    : "";
+    
   let header = "";
-  if (parts.length > 0 && !parts[0].includes("يَا")) {
-    header = parts.shift() || "";
+  const items = [...parts];
+  
+  if (items[0]?.includes("بِسْمِ") || items[0]?.includes("اَللّٰهُمَّ")) {
+    const lastYaIdx = items[0].lastIndexOf("يَا");
+    if (lastYaIdx > 10) {
+      header = items[0].slice(0, lastYaIdx).trim();
+      items[0] = items[0].slice(lastYaIdx).trim();
+    }
   }
-
-  return { header, items: parts, subhaneke };
+  
+  return { header, items, subhaneke };
 }
 
-// === 2. LATİNCE PARSER (Satır boşluğu olmasa bile rakamdan böler) ===
+// === 2. LATİNCE PARSER ===
 function parseLatin(raw: string) {
   const text = raw.replace(/###\s*$/, "").trim();
   const match = text.match(SUBHANEKE_RE);
@@ -79,11 +83,13 @@ function parseLatin(raw: string) {
     mainText = text.slice(0, match.index).trim();
   }
 
-  // " 1 ", " 2 ", " 1. " gibi ifadeleri yakalar ve metni o noktalardan keser
-  const parts = mainText.split(/\s+\d{1,2}[\.\-\)\s]+(?=[A-ZÂÎÛÜÖ])/).map(p => p.trim()).filter(p => p.length > 0);
-  
+  const parts = mainText
+    .split(/\s+\d{1,2}[\.\-\)\s]+(?=[A-ZÂÎÛÜÖ])/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
   let header = "";
-  if (parts.length > 10) { // Eğer ilk parça başlıksa ayır
+  if (parts.length > 10) {
     header = parts.shift() || "";
   }
 
@@ -124,9 +130,9 @@ const toArabicNumeral = (num: number) => {
     .join("");
 };
 
-// === UI BİLEŞENLERİ ===
+// === UI BİLEŞENLERİ (ReadingModal'dan Uyarlandı) ===
 const Medal = ({ number, isArabic }: { number: number; isArabic: boolean }) => (
-  <span className="relative flex items-center justify-center shrink-0 w-7 h-7 md:w-8 md:h-8">
+  <span className="relative flex items-center justify-center shrink-0 w-9 h-9 md:w-11 md:h-11">
     <svg
       className="absolute inset-0 w-full h-full text-amber-700/80 dark:text-amber-500/80 drop-shadow"
       viewBox="0 0 100 100"
@@ -144,7 +150,7 @@ const Medal = ({ number, isArabic }: { number: number; isArabic: boolean }) => (
         strokeWidth="1.5"
       />
     </svg>
-    <span className="relative z-10 text-white font-bold text-[10px] md:text-xs drop-shadow font-sans leading-none mt-px">
+    <span className="relative z-10 text-white font-bold text-[11px] md:text-sm drop-shadow font-sans leading-none mt-px">
       {isArabic ? toArabicNumeral(number) : number}
     </span>
   </span>
@@ -156,26 +162,52 @@ const DecoStar = () => (
   </span>
 );
 
-// ✅ DEĞİŞİKLİK: padding azaltıldı (py-3 → py-1.5, px-3 → px-2), gap-4 → gap-3
-const ListRow = ({ text, number, fontClass, isRtl, mode }: any) => {
-  const cellClass = `flex items-start gap-3 py-1.5 sm:py-2 px-2 sm:px-3 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group ${isRtl ? "flex-row-reverse" : ""}`;
+const GridRow = ({
+  right,
+  left,
+  rightNum,
+  leftNum,
+  fontClass,
+  isRtl,
+  mode,
+}: {
+  right: string;
+  left: string | null;
+  rightNum: number;
+  leftNum: number;
+  fontClass: string;
+  isRtl: boolean;
+  mode: TabType;
+}) => {
+  const cellClass =
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
+    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
-    "flex-1 font-serif pt-0",
+    "flex-1 font-serif",
     mode === "ARABIC"
-      ? `leading-[2.2] text-gray-900 dark:text-gray-100 ${fontClass}`
+      ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
       : mode === "LATIN"
-        ? `leading-snug text-gray-800 dark:text-gray-200 ${fontClass}`
-        : `leading-snug text-gray-700 dark:text-gray-300 ${fontClass}`,
+        ? `leading-loose text-gray-800 dark:text-gray-200 ${fontClass}`
+        : `leading-relaxed text-gray-700 dark:text-gray-300 ${fontClass}`,
   ].join(" ");
 
   return (
-    <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
-      <div className="shrink-0 mt-0.5 md:mt-1">
-        <Medal number={number} isArabic={isRtl} />
+    <React.Fragment>
+      <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+        <Medal number={rightNum} isArabic={isRtl} />
+        <span className={textClass}>{right}</span>
+        <DecoStar />
       </div>
-      <span className={textClass}>{text}</span>
-      <DecoStar />
-    </div>
+      {left ? (
+        <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
+          <Medal number={leftNum} isArabic={isRtl} />
+          <span className={textClass}>{left}</span>
+          <DecoStar />
+        </div>
+      ) : (
+        <div />
+      )}
+    </React.Fragment>
   );
 };
 
@@ -277,6 +309,12 @@ export default function CevsenPage() {
           ? fontSizes.LATIN[fontLevel]
           : fontSizes.MEANING[fontLevel];
 
+    // Öğeleri Modal'daki gibi 2'li satırlar (Grid) haline getiriyoruz
+    const rows: Array<[string, string | null]> = [];
+    for (let i = 0; i < items.length; i += 2) {
+      rows.push([items[i], items[i + 1] ?? null]);
+    }
+
     return (
       <div
         key={babNumber}
@@ -294,11 +332,10 @@ export default function CevsenPage() {
 
         {/* Ana Okuma Kartı */}
         <div
-          className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-xl max-w-5xl mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500"
+          className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-2xl max-w-5xl mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500"
           dir={isRtl ? "rtl" : "ltr"}
         >
-          {/* ✅ DEĞİŞİKLİK: iç padding azaltıldı (p-4 md:p-8 → p-3 md:p-5) */}
-          <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-3 md:p-5 relative z-10">
+          <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8 relative z-10">
             <div
               className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
               style={{
@@ -309,9 +346,9 @@ export default function CevsenPage() {
             <div className="relative z-10">
               {/* Header */}
               {header && (
-                <div className="mb-4 text-center">
+                <div className="mb-6 text-center">
                   <p
-                    className={`font-serif font-bold text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
+                    className={`font-serif text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
                     dir={isRtl ? "rtl" : "ltr"}
                   >
                     {header}
@@ -320,14 +357,15 @@ export default function CevsenPage() {
                 </div>
               )}
 
-              {/* Liste */}
-              {/* ✅ DEĞİŞİKLİK: gap-1 → gap-0 */}
-              <div className="flex flex-col gap-0">
-                {items.map((item, i) => (
-                  <ListRow
+              {/* Liste (GridRow formatı - 2 Sütun) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                {rows.map((row, i) => (
+                  <GridRow
                     key={i}
-                    text={item}
-                    number={i + 1}
+                    right={row[0]}
+                    left={row[1]}
+                    rightNum={i * 2 + 1}
+                    leftNum={i * 2 + 2}
                     fontClass={fontClass}
                     isRtl={isRtl}
                     mode={activeTab}
@@ -337,12 +375,18 @@ export default function CevsenPage() {
 
               {/* Sübhâneke */}
               {subhaneke && (
-                <div className="mt-6 pt-5 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
+                <div className="mt-8 pt-6 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#fdf9f2] dark:bg-[#0f1117] px-3 text-red-700/30 dark:text-red-500/35 text-xl select-none">
                     ۞
                   </span>
                   <p
-                    className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${activeTab === "ARABIC" ? fontClass : activeTab === "LATIN" ? `italic ${fontSizes.LATIN[fontLevel]}` : fontSizes.MEANING[fontLevel]}`}
+                    className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
+                      activeTab === "ARABIC"
+                        ? fontClass
+                        : activeTab === "LATIN"
+                          ? `italic ${fontSizes.LATIN[fontLevel]}`
+                          : fontSizes.MEANING[fontLevel]
+                    }`}
                     dir={isRtl ? "rtl" : "ltr"}
                   >
                     {subhaneke}
