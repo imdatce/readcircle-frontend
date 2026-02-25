@@ -76,6 +76,7 @@ const translations: TranslationStructure = {
       cevsen: "Cevşen-i Kebir",
       cevsenDesc: "Peygamber Efendimizin (SAV) zırh niteliğindeki büyük duası.",
       readNow: "Hemen Gözat",
+      continueReading: "Kaldığım Yere Git",
       noRecordsForMonth:
         "Bu ayda kayıt bulunmuyor. Namaz takibine daha ileri bir tarihte başladınız.",
       completed: "Tamamlandı",

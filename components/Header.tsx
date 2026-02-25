@@ -45,6 +45,9 @@ export default function Header() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
 
+  // Kur'an Son Kaldığı Sayfa State'i
+  const [lastQuranPage, setLastQuranPage] = useState<number | null>(null);
+
   // Auth özellikleri
   const { user, role, logout, updateName, updatePassword, deleteAccount } =
     useAuth();
@@ -72,12 +75,30 @@ export default function Header() {
     return () => ro.disconnect();
   }, [checkOverflow, user]);
 
+ // Menü her açıldığında Kur'an için son kalınan sayfayı kontrol et
+  useEffect(() => {
+    if (isMenuOpen) {
+      try {
+        const saved = localStorage.getItem("readcircle_progress_type_QURAN");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.unit) {
+            // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev (microtask) içine alıyoruz
+            Promise.resolve().then(() => setLastQuranPage(parsed.unit));
+          }
+        }
+      } catch (error) {
+        console.error("Son okuma verisi alınamadı", error);
+      }
+    }
+  }, [isMenuOpen]);
+
   // Menüyü ve açık akordeonları sıfırlayan güvenli fonksiyon
   const closeMenu = useCallback(() => {
     setIsMenuOpen(false);
     setExpandedAccordion(null);
     setExpandedSubAccordion(null);
-    setExpandedDeepAccordion(null); // YENİ EKLENDİ
+    setExpandedDeepAccordion(null);
   }, []);
 
   const toggleMenu = () => {
@@ -92,17 +113,17 @@ export default function Header() {
     if (expandedAccordion === name) {
       setExpandedAccordion(null);
       setExpandedSubAccordion(null);
-      setExpandedDeepAccordion(null); // YENİ EKLENDİ
+      setExpandedDeepAccordion(null);
     } else {
       setExpandedAccordion(name);
       setExpandedSubAccordion(null);
-      setExpandedDeepAccordion(null); // YENİ EKLENDİ
+      setExpandedDeepAccordion(null);
     }
   };
 
   const toggleSubAccordion = (name: string) => {
     setExpandedSubAccordion((prev) => (prev === name ? null : name));
-    setExpandedDeepAccordion(null); // YENİ EKLENDİ
+    setExpandedDeepAccordion(null);
   };
 
   useEffect(() => {
@@ -445,6 +466,31 @@ export default function Header() {
                               </button>
                               {expandedSubAccordion === "quran" && (
                                 <div className="flex flex-col ml-4 pl-3 border-l border-amber-200 dark:border-amber-800/50 my-1 gap-0.5 animate-in fade-in slide-in-from-top-1">
+                                  {/* YENİ: KALDIĞIM YERDEN DEVAM ET BUTONU */}
+                                  {lastQuranPage && (
+                                    <Link
+                                      href={`/resources/quran?page=${lastQuranPage}`}
+                                      onClick={closeMenu}
+                                      className="flex items-center gap-2 text-[13px] py-1.5 px-2 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-md transition-colors font-bold mb-1 shadow-sm"
+                                    >
+                                      <svg
+                                        className="w-4 h-4 shrink-0"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                        />
+                                      </svg>
+                                      {t("continueReading") ||
+                                        "Kaldığım Yere Git"}
+                                    </Link>
+                                  )}
+
                                   <Link
                                     href="/resources/quran"
                                     onClick={closeMenu}
@@ -708,7 +754,6 @@ export default function Header() {
                                   </Link>
                                 </div>
                               )}
-
                             </div>
 
                             {/* ALT AKORDEON: Risale-i Nur */}
@@ -951,7 +996,7 @@ export default function Header() {
                             </button>
                             <button
                               onClick={handleDeleteAccount}
-                              className="text-left px-3 py-2 text-sm font-medium text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              className="text-left px-3 py-2 text-sm font-medium text-red-50 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                               {t("deleteAccountButton") || "Hesabı Sil"}
                             </button>

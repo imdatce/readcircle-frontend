@@ -22,6 +22,28 @@ function QuranContent() {
     null,
   );
 
+  // Kaldığı yeri tutacak state
+  const [lastReadPage, setLastReadPage] = useState<number | null>(null);
+
+  // Hafızadan son okunan sayfayı çek
+  useEffect(() => {
+    const checkLastRead = () => {
+      try {
+        const saved = localStorage.getItem("readcircle_progress_type_QURAN");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.unit) {
+            setLastReadPage(parsed.unit);
+          }
+        }
+      } catch (error) {
+        console.error("Son okuma verisi alınamadı", error);
+      }
+    };
+
+    checkLastRead();
+  }, [modalContent]); // Modal her kapandığında (içerik değiştiğinde) tekrar kontrol et
+
   // URL'de parametre varsa aktif sekmeyi ona göre güncelle
   useEffect(() => {
     if (tabParam === "juz" || tabParam === "surah") {
@@ -48,22 +70,37 @@ function QuranContent() {
       startUnit: 1, // Kuran'ın en başı
       endUnit: 604, // Kuran'ın en sonu
       currentUnit: startPage, // Tıklanan Cüz veya Surenin başlangıç sayfası
-
-      // Modal açılırken eski hafızayı yoksay ve direkt bu sayfayı aç
+      // Modal açılırken eski hafızayı yoksay ve direkt tıklanan bu sayfayı aç
       ignoreSavedProgress: true,
     });
   };
 
- // URL'den gelen 'page' değerine göre otomatik okuma ekranını aç
+  const handleContinueReading = () => {
+    if (lastReadPage) {
+      setModalContent({
+        type: "QURAN",
+        title: "Kur'an-ı Kerim",
+        startUnit: 1,
+        endUnit: 604,
+        currentUnit: lastReadPage,
+        // Eski hafızayı kullanması ve tam kaldığı satıra kaydırması için false yapıyoruz
+        ignoreSavedProgress: false,
+      });
+    }
+  };
+
+  // URL'den gelen 'page' değerine göre otomatik okuma ekranını aç
   useEffect(() => {
     if (pageParam) {
       const pageNum = parseInt(pageParam, 10);
       if (!isNaN(pageNum)) {
-        // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
+        // ESLint uyarısını aşmak için işlemi mikro-görev kuyruğuna (microtask) alıyoruz.
         Promise.resolve().then(() => handleOpenReading(pageNum));
-        
+
         // Parametreyi URL'den temizle ki modal kapatıldığında tekrar açılmasın
-        router.replace(`/resources/quran?tab=${tabParam || "juz"}`, { scroll: false });
+        router.replace(`/resources/quran?tab=${tabParam || "juz"}`, {
+          scroll: false,
+        });
       }
     }
   }, [pageParam, tabParam, router]);
@@ -109,10 +146,59 @@ function QuranContent() {
           <div className="w-10"></div>
         </div>
 
+        {/* Kaldığın Yerden Devam Et Butonu */}
+        {lastReadPage && (
+          <button
+            onClick={handleContinueReading}
+            className="w-full flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-700 dark:to-teal-800 hover:from-emerald-500 hover:to-teal-500 text-white rounded-[2rem] shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30 transition-all duration-300 group active:scale-[0.98] border border-emerald-400/30 dark:border-emerald-500/20"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform duration-300">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h3 className="font-black text-sm md:text-lg uppercase tracking-wider text-emerald-50">
+                  {t("continueReading") || "Kaldığım Yerden Devam Et"}
+                </h3>
+                <p className="text-emerald-100/80 text-xs md:text-sm font-medium mt-0.5">
+                  {t("page") || "Sayfa"} {lastReadPage}
+                </p>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+              <svg
+                className="w-5 h-5 opacity-90 group-hover:opacity-100 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </button>
+        )}
+
         {/* Sekmeler ve Arama Çubuğu */}
         <div className="bg-white/80 dark:bg-[#0a1f1a] rounded-[2.5rem] border border-amber-100/50 dark:border-amber-900/30 shadow-xl overflow-hidden p-4 md:p-6 space-y-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex bg-gray-100 dark:bg-gray-800/50 p-1 rounded-xl w-full sm:w-auto">
+            <div className="flex bg-gray-100 dark:bg-gray-800/50 p-1 rounded-xl w-full sm:w-auto shrink-0">
               <button
                 onClick={() => handleTabChange("juz")}
                 className={`flex-1 sm:px-6 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${activeTab === "juz" ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
@@ -137,7 +223,7 @@ function QuranContent() {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-shadow"
               />
               <svg
                 className="w-5 h-5 absolute right-3 top-2.5 text-gray-400"
