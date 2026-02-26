@@ -3,6 +3,7 @@ import React from "react";
 // Eğer dosya yolunuz farklıysa burayı kendinize göre güncelleyebilirsiniz.
 import PrayerTimesWidget from "@/components/resources/PrayerTimesWidget";
 import DailyInspirationWidget from "@/components/resources/DailyInspirationWidget";
+import NearbyMosquesWidget from "@/components/resources/NearbyMosquesWidget";
 
 export const metadata = {
   title: "Namaz Vakitleri | ReadCircle",
@@ -26,6 +27,8 @@ export default function PrayerTimesPage() {
         {/* Vakitler Widget'ı */}
         <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           <PrayerTimesWidget />
+          {/* YENİ: YAKINDAKİ CAMİLER KISMI */}
+          <NearbyMosquesWidget />
           <DailyInspirationWidget />
         </div>
 
