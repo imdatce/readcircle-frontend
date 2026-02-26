@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "@/context/ThemeContext";
+import SubNavigation from "@/components/SubNavigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({
             <ThemeProvider>
               <div className="flex flex-col min-h-screen relative z-10">
                 <Header />
+                <SubNavigation />
                 <main className="flex-grow w-full">{children}</main>
                 <Footer />
               </div>
