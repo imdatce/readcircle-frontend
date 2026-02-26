@@ -65,13 +65,33 @@ export default function SubNavigation() {
         </svg>
       ),
     },
+    // === YENİ: VAKİTLER BUTONU ===
+    {
+      name: "Vakitler",
+      href: "/prayer-times",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+    },
   ];
 
   return (
     <nav className="w-full bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
-      <div className="max-w-4xl mx-auto px-2 py-1.5">
-        {/* Grid yapısı sayesinde ekranı tam olarak 3'e bölüyoruz */}
-        <div className="grid grid-cols-3 gap-1">
+      <div className="max-w-4xl mx-auto px-1 py-1.5">
+        {/* Grid yapısını 4'e böldük (grid-cols-4) */}
+        <div className="grid grid-cols-4 gap-1">
           {navItems.map((item) => {
             // === MANTIKSAL GÜNCELLEME BURADA ===
             let isActive = false;
@@ -105,7 +125,7 @@ export default function SubNavigation() {
                 >
                   {item.icon}
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-tight">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">
                   {item.name}
                 </span>
               </Link>

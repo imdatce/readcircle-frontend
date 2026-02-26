@@ -18,6 +18,7 @@ import {
   DashboardSkeleton,
   Step,
 } from "@/components/home/HomeWidgets";
+import PrayerTimesWidget from "@/components/resources/PrayerTimesWidget";
 
 function HomeContent() {
   const { t, language } = useLanguage();
@@ -173,7 +174,6 @@ function HomeContent() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-400/10 dark:bg-blue-600/10 rounded-[100%] blur-3xl opacity-50" />
       </div>
-
       {/* ÜST BÖLÜM: Hero, Ayet, Butonlar ve Katılım */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-12 lg:pt-16 lg:pb-12">
         <div className="text-center max-w-4xl mx-auto mb-8 md:mb-12">
@@ -423,8 +423,8 @@ function HomeContent() {
           </div>
         )}
 
-       {/* Nasıl Çalışır Bölümü (Boşluklar Daha da Daraltıldı) */}
- {/* Nasıl Çalışır Bölümü (Boşluklar İyice Daraltıldı) */}
+        {/* Nasıl Çalışır Bölümü (Boşluklar Daha da Daraltıldı) */}
+        {/* Nasıl Çalışır Bölümü (Boşluklar İyice Daraltıldı) */}
         {/* mb-3 olan alt boşluk mb-1'e çekildi */}
         <div className="max-w-3xl mx-auto bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-5 shadow-sm border border-gray-200 dark:border-gray-800 mb-1">
           <h2 className="text-lg md:text-xl font-bold text-center mb-5 text-gray-800 dark:text-gray-100">
