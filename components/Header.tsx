@@ -490,6 +490,27 @@ export default function Header() {
                                         "Kaldığım Yere Git"}
                                     </Link>
                                   )}
+                                  {/* YENİ EKLENEN: Hatim Yolculuğum Butonu */}
+                                  <Link
+                                    href="/resources/quran"
+                                    onClick={closeMenu}
+                                    className="flex items-center gap-2 text-[13px] py-1.5 px-2 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-md transition-colors font-bold mb-1 shadow-sm"
+                                  >
+                                    <svg
+                                      className="w-4 h-4 shrink-0"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth={2}
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                      />
+                                    </svg>
+                                    Hatim Yolculuğum
+                                  </Link>
 
                                   <Link
                                     href="/resources/quran"
@@ -943,6 +964,16 @@ export default function Header() {
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
                               Kaza Namazı Takibi
+                            </Link>
+
+                            {/* YENİ EKLENEN: Hatim Takibi Linki */}
+                            <Link
+                              href="/resources/quran"
+                              onClick={closeMenu}
+                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                              Hatim Yolculuğum
                             </Link>
                           </div>
                         )}

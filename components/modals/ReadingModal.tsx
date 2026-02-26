@@ -896,7 +896,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
   }, [content]); // <-- SİLİNEN VE HATAYA SEBEP OLAN KISIM BURASIYDI
 
-  const changePage = (offset: number) => {
+  const changePage = async (offset: number) => {
     const current = content.currentUnit || content.startUnit || 1;
     const min = content.startUnit || 1;
     const max = content.endUnit || 604;
@@ -904,8 +904,56 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
     if (next !== current) {
       onUpdateContent({ ...content, currentUnit: next });
-      if (typeof navigator !== "undefined" && navigator.vibrate)
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(30);
+      }
+
+      // --- GÜNCELLENEN HATİM TAKİBİ ÇAĞRISI ---
+      if (offset > 0 && content.type === "QURAN") {
+        try {
+          // 1. Tarayıcı hafızasındaki GÜNLÜK sayacı artır (Frontend)
+          const todayStr = new Date().toISOString().split("T")[0];
+          const savedDataStr = localStorage.getItem("hatim_progress_today");
+          let currentCount = 0;
+
+          if (savedDataStr) {
+            const parsed = JSON.parse(savedDataStr);
+            if (parsed.date === todayStr) {
+              currentCount = parsed.count;
+            }
+          }
+
+          // Yeni okuma sayısını kaydet
+          localStorage.setItem(
+            "hatim_progress_today",
+            JSON.stringify({
+              date: todayStr,
+              count: currentCount + 1,
+            }),
+          );
+
+          // HatimTrackerWidget'ın anında güncellenmesi için bir sinyal (event) gönder
+          window.dispatchEvent(new Event("hatim_progress_updated"));
+
+          // 2. Backend'e isteği gönder (Eğer backend hazırsa)
+          const token = localStorage.getItem("token");
+          if (token) {
+            await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/quran-progress/read-page`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+          }
+        } catch (err) {
+          console.error("İlerleme kaydedilemedi:", err);
+        }
+      }
+      // -------------------------------------------------------------
     }
   };
 
@@ -1114,6 +1162,34 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       >
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                         <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+
+                    {/* Tam Ekran Butonu */}
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <button
+                      onClick={() => {
+                        setIsFullscreen(true);
+                        if (
+                          typeof navigator !== "undefined" &&
+                          navigator.vibrate
+                        )
+                          navigator.vibrate(20);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                      title={t("fullscreen") || "Tam Ekran"}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                       </svg>
                     </button>
 

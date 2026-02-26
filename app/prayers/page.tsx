@@ -673,13 +673,13 @@ function PrayersContent() {
               onClick={() => handleTabChange("gunluk")}
               className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-wider bg-white dark:bg-gray-700 text-teal-600 shadow-sm"
             >
-              Günlük Takip
+              Günlük Namaz Takibi
             </button>
             <button
               onClick={() => handleTabChange("kaza")}
               className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase tracking-wider text-gray-500 hover:text-gray-700 dark:text-gray-400"
             >
-              Kaza Takibi
+              Kaza Namazı Takibi
             </button>
           </div>
           <PrayersOnboarding t={t} onEnable={handleEnableTracking} />
@@ -721,7 +721,7 @@ function PrayersContent() {
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
               }`}
             >
-              Günlük Takip
+              Günlük Namaz Takibi
             </button>
             <button
               onClick={() => handleTabChange("kaza")}
@@ -731,7 +731,7 @@ function PrayersContent() {
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
               }`}
             >
-              Kaza Takibi
+              Kaza Namazı Takibi
             </button>
           </div>
           <div className="w-10"></div>
