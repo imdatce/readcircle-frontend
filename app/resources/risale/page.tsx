@@ -13,9 +13,8 @@ import {
 function RisaleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useLanguage(); // Çeviri için eklendi
+  const { t } = useLanguage();
 
-  // URL'den parametreleri alıyoruz
   const bookParam = searchParams.get("book");
   const fileParam = searchParams.get("file");
 
@@ -31,7 +30,22 @@ function RisaleContent() {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Wake Lock API (Ekranın kapanmasını önler)
+  // === SON OKUNAN TAKİBİ İÇİN STATE ===
+  const [lastRead, setLastRead] = useState<{ book: any; file: any } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const saved = localStorage.getItem("risale_last_read");
+    if (saved) {
+      try {
+        setLastRead(JSON.parse(saved));
+      } catch (e) {
+        console.error("Okuma geçmişi yüklenemedi", e);
+      }
+    }
+  }, [view]); // Görünüm her değiştiğinde geçmişi tazele
+
   const wakeLockRef = useRef<any>(null);
   useEffect(() => {
     const requestWakeLock = async () => {
@@ -60,7 +74,6 @@ function RisaleContent() {
     return () => releaseWakeLock();
   }, [view]);
 
-  // 1. Kitap seçildiğinde o klasördeki HTML dosyalarını listele
   const handleSelectBook = async (book: any, autoFile?: string) => {
     setSelectedBook(book);
     setLoading(true);
@@ -74,7 +87,6 @@ function RisaleContent() {
         const htmlFiles = data.filter((f: any) => f.name.endsWith(".html"));
         setChapters(htmlFiles);
 
-        // Eğer URL'de bir dosya (file) parametresi de varsa otomatik aç
         if (autoFile) {
           const targetFile = htmlFiles.find(
             (f: any) =>
@@ -82,21 +94,27 @@ function RisaleContent() {
               f.name.toLowerCase().includes(autoFile.toLowerCase()),
           );
           if (targetFile) {
-            handleSelectChapter(targetFile, book); // Kitap bilgisini de yolluyoruz
+            handleSelectChapter(targetFile, book);
           }
         }
       }
     } catch (e) {
       console.error(e);
     } finally {
-      if (!autoFile) setLoading(false); // Eğer dosya açılmayacaksa yüklemeyi bitir
+      if (!autoFile) setLoading(false);
     }
   };
 
-  // 2. Dosya seçildiğinde içeriğini Raw URL üzerinden çek
   const handleSelectChapter = async (file: any, bookObj = selectedBook) => {
     setLoading(true);
     setView("reading");
+
+    // === OKUMA GEÇMİŞİNİ KAYDET ===
+    localStorage.setItem(
+      "risale_last_read",
+      JSON.stringify({ book: bookObj, file }),
+    );
+
     try {
       const res = await fetch(
         `${GITHUB_RAW_BASE}/${encodeURIComponent(bookObj.folder)}/${encodeURIComponent(file.name)}`,
@@ -113,25 +131,19 @@ function RisaleContent() {
     }
   };
 
-  // ==========================================
-  // URL DİNLEYİCİSİ (Otomatik Açılma Mantığı)
-  // ==========================================
   useEffect(() => {
     if (bookParam) {
       const targetBook = RISALE_BOOKS.find(
         (b) => b.folder.toLowerCase() === bookParam.toLowerCase(),
       );
       if (targetBook && (!selectedBook || selectedBook.id !== targetBook.id)) {
-        // ESLint uyarısını aşmak için Promise
         Promise.resolve().then(() =>
           handleSelectBook(targetBook, fileParam || undefined),
         );
       }
     }
-    // Sadece bookParam değiştiğinde çalışsın
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookParam]);
-  // ==========================================
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -176,7 +188,6 @@ function RisaleContent() {
     };
   }, [isSepia]);
 
-  // === YENİ NESİL PÜRÜZSÜZ OTOMATİK KAYDIRMA ===
   useEffect(() => {
     if (!isAutoScrolling || view !== "reading") return;
 
@@ -217,7 +228,6 @@ function RisaleContent() {
     };
   }, [isAutoScrolling, autoScrollSpeed, view]);
 
-  // Manuel kaydırmada oto-kaydırmayı durdur
   useEffect(() => {
     const handleInteraction = (e: Event) => {
       if (isAutoScrolling && view === "reading") {
@@ -256,7 +266,6 @@ function RisaleContent() {
     if (view === "reading") {
       setIsAutoScrolling(false);
       setView("chapters");
-      // URL'yi temizle
       router.replace(`/resources/risale?book=${selectedBook.folder}`, {
         scroll: false,
       });
@@ -268,10 +277,20 @@ function RisaleContent() {
     }
   };
 
-  // Kart tıklamasını sarmalayıp URL'i de değiştiriyoruz
   const handleBookCardClick = (book: any) => {
     router.replace(`/resources/risale?book=${book.folder}`, { scroll: false });
     handleSelectBook(book);
+  };
+
+  // === KALDIĞIM YERE GİT FONKSİYONU ===
+  const handleContinueReading = () => {
+    if (lastRead) {
+      router.replace(
+        `/resources/risale?book=${lastRead.book.folder}&file=${lastRead.file.name}`,
+        { scroll: false },
+      );
+      handleSelectBook(lastRead.book, lastRead.file.name);
+    }
   };
 
   return (
@@ -281,7 +300,6 @@ function RisaleContent() {
       <div
         className={`max-w-4xl mx-auto space-y-6 ${isSepia && view === "reading" ? "py-8" : ""} px-4 sm:px-6`}
       >
-        {/* Modernize Edilmiş Header - Sadece Reading modunda gizleniyor (kendi araç çubuğu var) */}
         {view !== "reading" && (
           <div className="flex items-center justify-between bg-white/50 dark:bg-[#0a1f1a] backdrop-blur-md p-4 rounded-[2rem] border border-emerald-100/20 dark:border-emerald-900/30 shadow-sm">
             <button
@@ -321,6 +339,58 @@ function RisaleContent() {
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            {/* KALDIĞIM YERDEN DEVAM ET BUTONU */}
+            {view === "books" && lastRead && (
+              <div className="mb-8">
+                <button
+                  onClick={handleContinueReading}
+                  className="w-full flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-700 dark:to-teal-800 hover:from-emerald-500 hover:to-teal-500 text-white rounded-[2rem] shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30 transition-all duration-300 group active:scale-[0.98] border border-emerald-400/30 dark:border-emerald-500/20"
+                >
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform duration-300">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm md:text-lg uppercase tracking-wider text-emerald-50">
+                        Okumaya Devam Et
+                      </h3>
+                      <p className="text-emerald-100/80 text-xs md:text-sm font-medium mt-0.5 truncate max-w-[200px] md:max-w-md">
+                        {lastRead.book.name} /{" "}
+                        {lastRead.file.name.replace(".html", "")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                    <svg
+                      className="w-5 h-5 opacity-90 group-hover:opacity-100 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+              </div>
+            )}
+
             {/* KİTAPLAR GÖRÜNÜMÜ */}
             {view === "books" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -343,7 +413,6 @@ function RisaleContent() {
                       key={i}
                       file={file}
                       onClick={() => {
-                        // Tıklanan bölümün ismini URL'e atıyoruz
                         router.replace(
                           `/resources/risale?book=${selectedBook.folder}&file=${file.name}`,
                           { scroll: false },
@@ -367,7 +436,6 @@ function RisaleContent() {
                 }}
                 className={`relative min-h-screen transition-all duration-500 cursor-pointer ${isFullscreen ? "bg-transparent" : ""}`}
               >
-                {/* ÜST ARAÇ ÇUBUĞU - Cevşen/ReadingModal stili ile birebir uyumlu */}
                 <div
                   className={`sticky top-0 z-50 p-3 md:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm transition-all duration-500 ${
                     isFullscreen
@@ -381,7 +449,6 @@ function RisaleContent() {
                     </h3>
 
                     <div className="flex items-center gap-2">
-                      {/* Kontroller Kutusu */}
                       <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5 border border-gray-200 dark:border-gray-700">
                         <button
                           onClick={(e) => {
@@ -405,7 +472,6 @@ function RisaleContent() {
                           A+
                         </button>
 
-                        {/* Okuma (Sepya) Modu */}
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
@@ -439,7 +505,6 @@ function RisaleContent() {
                           </svg>
                         </button>
 
-                        {/* Kaydırma Hızı */}
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
@@ -452,7 +517,6 @@ function RisaleContent() {
                           {autoScrollSpeed}x
                         </button>
 
-                        {/* Oto Kaydırma Başlat/Durdur */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -495,7 +559,6 @@ function RisaleContent() {
                           )}
                         </button>
 
-                        {/* Tam Ekran Butonu */}
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
@@ -544,7 +607,6 @@ function RisaleContent() {
                         </button>
                       </div>
 
-                      {/* Geri Dön (Kapat) Butonu */}
                       <button
                         onClick={goBack}
                         className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
@@ -567,7 +629,6 @@ function RisaleContent() {
                   </div>
                 </div>
 
-                {/* OKUMA ALANI */}
                 <div
                   className={`mx-auto transition-all duration-700 select-none ${
                     isFullscreen
@@ -581,7 +642,6 @@ function RisaleContent() {
                   />
                 </div>
 
-                {/* Alt Navigasyon (Sadece normal ekranda) */}
                 {!isFullscreen && (
                   <div className="mt-16 pt-8 pb-32 border-t border-emerald-100 dark:border-emerald-900/30 text-center">
                     <button
