@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-// Vakit İsimleri (İngilizce -> Türkçe)
 const PRAYER_NAMES: Record<string, string> = {
   Fajr: "İmsak",
   Sunrise: "Güneş",
@@ -13,53 +12,89 @@ const PRAYER_NAMES: Record<string, string> = {
   Isha: "Yatsı",
 };
 
+const normalizeTR = (s: string) =>
+  s
+    .toUpperCase()
+    .replace(/İ/g, "I")
+    .replace(/İ/g, "i")
+    .replace(/Ğ/g, "G")
+    .replace(/Ş/g, "S")
+    .replace(/Ü/g, "U")
+    .replace(/Ö/g, "O")
+    .replace(/Ç/g, "C")
+
+    .replace(/ğ/g, "g")
+    .replace(/Ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/Ş/g, "s")
+    .replace(/ü/g, "u")
+    .replace(/Ü/g, "u")
+    .replace(/ö/g, "o")
+    .replace(/Ö/g, "o")
+    .replace(/Ç/g, "ç")
+    .replace(/Ç/g, "c")
+    .replace(/Ç/g, "C")
+
+    .replace(/ğ/g, "g")
+    .replace(/Ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/Ş/g, "s")
+    .replace(/ü/g, "u")
+    .replace(/Ü/g, "u")
+    .replace(/ö/g, "o")
+    .replace(/Ö/g, "o");
+
 export default function PrayerTimesWidget() {
   const [timings, setTimings] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // --- LOKASYON STATELERİ ---
   const [country, setCountry] = useState("Turkey");
   const [city, setCity] = useState("Istanbul");
+  const [district, setDistrict] = useState("");
 
-  // --- DÜZENLEME (AUTOCOMPLETE) STATELERİ ---
   const [isEditing, setIsEditing] = useState(false);
   const [editCountry, setEditCountry] = useState("");
   const [editCity, setEditCity] = useState("");
+  const [editDistrict, setEditDistrict] = useState("");
 
-  // API'den Gelen Listeler
   const [countryList, setCountryList] = useState<string[]>([]);
   const [cityList, setCityList] = useState<string[]>([]);
+  const [turkeyDistricts, setTurkeyDistricts] = useState<string[]>([]);
 
-  // Kullanıcının yazdığına göre filtrelenen (Ekranda görünen) listeler
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [filteredCities, setFilteredCities] = useState<string[]>([]);
+  const [filteredDistricts, setFilteredDistricts] = useState<string[]>([]);
+  const [showDistrictList, setShowDistrictList] = useState(false);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const districtTimeout = useRef<any>(null);
 
-  // 1. Sayfa yüklendiğinde hafızadaki lokasyonu al
+  // 1. Hafızadan Yükle
   useEffect(() => {
     const savedLoc = localStorage.getItem("prayer_location");
     if (savedLoc) {
-      const parsed = JSON.parse(savedLoc);
-      if (parsed.country && parsed.city) {
-        setCountry(parsed.country);
-        setCity(parsed.city);
+      try {
+        const parsed = JSON.parse(savedLoc);
+        if (parsed.country && parsed.city) {
+          setCountry(parsed.country);
+          setCity(parsed.city);
+          if (parsed.district) setDistrict(parsed.district);
+        }
+      } catch (e) {
+        console.error("Hafıza okuma hatası", e);
       }
     }
   }, []);
 
-  // 2. Şehir/Ülke değiştiğinde namaz vakitlerini Aladhan API'den çek
+  // 2. Vakitleri Çek
   useEffect(() => {
     async function fetchPrayerTimes() {
       setLoading(true);
       try {
+        const fullAddress = `${district ? district + ", " : ""}${city}, ${country}`;
         const res = await fetch(
-          `https://api.aladhan.com/v1/timingsByAddress?address=${encodeURIComponent(
-            `${city}, ${country}`,
-          )}&method=13`,
+          `https://api.aladhan.com/v1/timingsByAddress?address=${encodeURIComponent(fullAddress)}&method=13`,
         );
         const data = await res.json();
-
         if (data.code === 200) {
           setTimings(data.data.timings);
         } else {
@@ -72,17 +107,18 @@ export default function PrayerTimesWidget() {
         setLoading(false);
       }
     }
-
     fetchPrayerTimes();
-  }, [city, country]);
+  }, [city, country, district]);
 
-  // 3. Düzenleme Modu Açıldığında Ülke Listesini Çek
   const handleEditOpen = async () => {
     setIsEditing(true);
     setEditCountry(country);
     setEditCity(city);
+    setEditDistrict(district);
     setFilteredCountries([]);
     setFilteredCities([]);
+    setFilteredDistricts([]);
+    setShowDistrictList(false);
 
     if (countryList.length === 0) {
       try {
@@ -90,35 +126,67 @@ export default function PrayerTimesWidget() {
           "https://countriesnow.space/api/v0.1/countries/iso",
         );
         const data = await res.json();
-        if (!data.error) {
-          setCountryList(data.data.map((c: any) => c.name));
-        }
+        if (!data.error) setCountryList(data.data.map((c: any) => c.name));
       } catch (err) {
         console.error("Ülkeler yüklenemedi", err);
       }
     }
-  };
 
-  // 4. Ülke Yazarken Filtreleme
-  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setEditCountry(val);
-    if (val.length > 0) {
-      const matches = countryList.filter((c) =>
-        c.toLowerCase().startsWith(val.toLowerCase()),
-      );
-      setFilteredCountries(matches);
-    } else {
-      setFilteredCountries([]);
+    if (country.trim()) {
+      try {
+        const res = await fetch(
+          "https://countriesnow.space/api/v0.1/countries/cities",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country }),
+          },
+        );
+        const data = await res.json();
+        if (!data.error) setCityList(data.data);
+      } catch (err) {
+        console.error("Şehirler yüklenemedi", err);
+      }
+    }
+
+    if (country.toLowerCase() === "turkey" && city.trim()) {
+      try {
+        const res = await fetch("https://turkiyeapi.dev/api/v1/provinces");
+        const data = await res.json();
+        const province = data.data.find(
+          (p: any) => normalizeTR(p.name) === normalizeTR(city),
+        );
+        if (province) {
+          const dList = province.districts.map((d: any) => d.name);
+          setTurkeyDistricts(dList);
+        }
+      } catch (err) {
+        console.error("İlçeler yüklenemedi", err);
+      }
     }
   };
 
-  // 5. Ülke Seçildiğinde O Ülkenin Şehirlerini Çek
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEditCountry(val);
+    setCityList([]);
+    setEditCity("");
+    setEditDistrict("");
+    setTurkeyDistricts([]);
+    setFilteredCountries(
+      val.length > 0
+        ? countryList.filter((c) => normalizeTR(c).includes(normalizeTR(val)))
+        : [],
+    );
+  };
+
   const handleCountrySelect = async (selected: string) => {
     setEditCountry(selected);
     setFilteredCountries([]);
-    setEditCity(""); // Şehri sıfırla
+    setEditCity("");
+    setEditDistrict("");
     setCityList([]);
+    setTurkeyDistricts([]);
 
     try {
       const res = await fetch(
@@ -130,44 +198,122 @@ export default function PrayerTimesWidget() {
         },
       );
       const data = await res.json();
-      if (!data.error) {
-        setCityList(data.data);
-      }
+      if (!data.error) setCityList(data.data);
     } catch (err) {
       console.error("Şehirler yüklenemedi", err);
     }
   };
 
-  // 6. Şehir Yazarken Filtreleme
   const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEditCity(val);
-    if (val.length > 0) {
-      const matches = cityList.filter((c) =>
-        c.toLowerCase().startsWith(val.toLowerCase()),
-      );
-      setFilteredCities(matches);
+    setFilteredCities(
+      val.length > 0
+        ? cityList.filter((c) => normalizeTR(c).includes(normalizeTR(val)))
+        : [],
+    );
+  };
+
+  const handleCitySelect = async (selected: string) => {
+    setEditCity(selected);
+    setFilteredCities([]);
+    setEditDistrict("");
+    setFilteredDistricts([]);
+    setShowDistrictList(false);
+
+    if (
+      editCountry.toLowerCase() === "turkey" ||
+      editCountry.toLowerCase() === "türkiye"
+    ) {
+      try {
+        const res = await fetch("https://turkiyeapi.dev/api/v1/provinces");
+        const data = await res.json();
+        const province = data.data.find(
+          (p: any) => normalizeTR(p.name) === normalizeTR(selected),
+        );
+        if (province) {
+          const dList = province.districts.map((d: any) => d.name);
+          setTurkeyDistricts(dList);
+          setFilteredDistricts(dList);
+        } else {
+          setTurkeyDistricts([]);
+        }
+      } catch (err) {
+        console.error("Türkiye ilçeleri çekilemedi", err);
+      }
     } else {
-      setFilteredCities([]);
+      setTurkeyDistricts([]);
     }
   };
 
-  // 7. Şehir Seçimi
-  const handleCitySelect = (selected: string) => {
-    setEditCity(selected);
-    setFilteredCities([]);
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEditDistrict(val);
+    setShowDistrictList(true);
+
+    if (turkeyDistricts.length > 0) {
+      if (val.trim() === "") {
+        setFilteredDistricts(turkeyDistricts);
+      } else {
+        setFilteredDistricts(
+          turkeyDistricts.filter((d) =>
+            normalizeTR(d).includes(normalizeTR(val)),
+          ),
+        );
+      }
+    } else {
+      if (districtTimeout.current) clearTimeout(districtTimeout.current);
+      if (val.trim().length >= 2 && editCity && editCountry) {
+        districtTimeout.current = setTimeout(async () => {
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ", " + editCity + ", " + editCountry)}&format=json&limit=10`,
+            );
+            const data = await res.json();
+            const validClasses = ["place", "boundary"];
+            const filteredResults = data.filter((item: any) =>
+              validClasses.includes(item.class),
+            );
+            const uniqueNames = Array.from(
+              new Set(filteredResults.map((item: any) => item.name)),
+            ) as string[];
+            setFilteredDistricts(uniqueNames.slice(0, 5));
+          } catch (err) {}
+        }, 500);
+      } else {
+        setFilteredDistricts([]);
+      }
+    }
   };
 
-  // 8. Kaydet Butonu
+  const handleDistrictSelect = (selected: string) => {
+    setEditDistrict(selected);
+    setShowDistrictList(false);
+  };
+
+  const toggleDistrictDropdown = () => {
+    if (!showDistrictList) {
+      setShowDistrictList(true);
+      if (turkeyDistricts.length > 0 && !editDistrict) {
+        setFilteredDistricts(turkeyDistricts);
+      }
+    } else {
+      setShowDistrictList(false);
+    }
+  };
+
   const handleSaveLocation = () => {
     if (editCountry.trim() && editCity.trim()) {
       setCountry(editCountry.trim());
       setCity(editCity.trim());
+      setDistrict(editDistrict.trim());
+
       localStorage.setItem(
         "prayer_location",
         JSON.stringify({
           country: editCountry.trim(),
           city: editCity.trim(),
+          district: editDistrict.trim(),
         }),
       );
       setIsEditing(false);
@@ -175,37 +321,35 @@ export default function PrayerTimesWidget() {
   };
 
   return (
-    <div
-      ref={wrapperRef}
-      className="bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-5 md:p-6 shadow-sm border border-emerald-100 dark:border-emerald-900/30 relative"
-    >
-      {/* Dekoratif Arka Plan Işığı */}
+    <div className="bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-5 md:p-6 shadow-sm border border-emerald-100 dark:border-emerald-900/30 relative">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 relative z-10 gap-4">
+      <div className="flex flex-col mb-6 relative z-10">
         <div className="w-full">
+          <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
+            Namaz Vakitleri
+            <span className="text-emerald-500">🕌</span>
+          </h3>
 
-
-          {/* --- LOKASYON DÜZENLEME ARAYÜZÜ --- */}
           {isEditing ? (
-            <div className="flex flex-col gap-3 mt-4 w-full max-w-md animate-in fade-in">
-              <div className="flex gap-2">
-                {/* ÜLKE İNPUTU */}
-                <div className="relative flex-1">
+            <div className="flex flex-col gap-3 mt-4 w-full animate-in fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* ÜLKE KUTUSU */}
+                <div className="relative">
                   <input
                     type="text"
                     value={editCountry}
                     onChange={handleCountryChange}
-                    placeholder="Ülke (Örn: Belgium, Turkey)"
+                    placeholder="Ülke (Örn: Turkey)"
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
                   />
                   {filteredCountries.length > 0 && (
-                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto overflow-x-hidden hide-scrollbar text-sm">
+                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
                       {filteredCountries.map((c) => (
                         <li
                           key={c}
                           onClick={() => handleCountrySelect(c)}
-                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-gray-700 dark:text-gray-200"
+                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
                         >
                           {c}
                         </li>
@@ -214,33 +358,88 @@ export default function PrayerTimesWidget() {
                   )}
                 </div>
 
-                {/* ŞEHİR İNPUTU */}
-                <div className="relative flex-1">
+                {/* ŞEHİR KUTUSU */}
+                <div className="relative">
                   <input
                     type="text"
                     value={editCity}
                     onChange={handleCityChange}
-                    placeholder="Şehir (Örn: Brussels)"
+                    placeholder="Şehir (Örn: Istanbul)"
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm disabled:opacity-50"
                   />
                   {filteredCities.length > 0 && (
-                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto overflow-x-hidden hide-scrollbar text-sm">
+                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
                       {filteredCities.map((c) => (
                         <li
                           key={c}
                           onClick={() => handleCitySelect(c)}
-                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-gray-700 dark:text-gray-200"
+                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
                         >
                           {c}
                         </li>
                       ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* İLÇE KUTUSU */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={editDistrict}
+                    onChange={handleDistrictChange}
+                    onFocus={() => {
+                      setShowDistrictList(true);
+                      if (turkeyDistricts.length > 0 && !editDistrict)
+                        setFilteredDistricts(turkeyDistricts);
+                    }}
+                    placeholder="İlçe (Örn: Uskudar)"
+                    className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 pr-10 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
+                  />
+                  <button
+                    onClick={toggleDistrictDropdown}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 transition-colors"
+                  >
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  {showDistrictList && (
+                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
+                      {filteredDistricts.length > 0 ? (
+                        filteredDistricts.map((d, i) => (
+                          <li
+                            key={i}
+                            onClick={() => handleDistrictSelect(d)}
+                            className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-gray-700 dark:text-gray-200"
+                          >
+                            {d}
+                          </li>
+                        ))
+                      ) : turkeyDistricts.length === 0 ? (
+                        <li className="px-3 py-2 text-gray-400 italic">
+                          Aramak için harf girin...
+                        </li>
+                      ) : (
+                        <li className="px-3 py-2 text-gray-400 italic">
+                          Sonuç bulunamadı.
+                        </li>
+                      )}
                     </ul>
                   )}
                 </div>
               </div>
 
-              {/* BUTONLAR */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-1">
                 <button
                   onClick={handleSaveLocation}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-sm font-bold shadow-sm transition-colors"
@@ -249,7 +448,7 @@ export default function PrayerTimesWidget() {
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-4 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-300 transition-colors"
+                  className="px-6 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-300 transition-colors"
                 >
                   İptal
                 </button>
@@ -258,6 +457,7 @@ export default function PrayerTimesWidget() {
           ) : (
             <div className="flex items-center gap-2 mt-2">
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest capitalize">
+                {district ? `${district}, ` : ""}
                 {city}, {country}
               </p>
               <button
@@ -293,7 +493,6 @@ export default function PrayerTimesWidget() {
           {Object.keys(PRAYER_NAMES).map((key) => {
             const trName = PRAYER_NAMES[key];
             const time = timings[key];
-
             return (
               <div
                 key={key}
@@ -312,8 +511,7 @@ export default function PrayerTimesWidget() {
       ) : (
         <div className="text-center bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-100 dark:border-red-900/30 relative z-10">
           <p className="text-red-600 dark:text-red-400 font-bold text-sm">
-            Lokasyon bulunamadı. Lütfen uluslararası (İngilizce) isimleri
-            seçtiğinizden veya doğru yazdığınızdan emin olun.
+            Lokasyon bulunamadı. Lütfen geçerli bir şehir girin.
           </p>
         </div>
       )}
