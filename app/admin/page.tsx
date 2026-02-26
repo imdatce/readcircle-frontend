@@ -121,11 +121,21 @@ export default function AdminPage() {
 
   const categorizedResources = useMemo(() => {
     if (!resources.length) return [];
+    
+    // Dağıtım listesinde GÖSTERİLMEYECEK kaynakların kodları (Backend'den nasıl geliyorsa o şekilde yazılmalı)
+    const EXCLUDED_RESOURCE_KEYS = ["ESMAULHUSNA", "GUNLUKDUALAR", "KURANDUALARI", "DUALAR"]; 
+
     const categories: Record<string, Resource[]> = {};
     CATEGORY_ORDER.forEach((cat) => (categories[cat] = []));
 
     resources.forEach((resource) => {
       const upperCode = resource.codeKey?.toUpperCase() || "";
+      
+      // Eğer kaynak dışlanmış listedeyse, döngünün bu adımını atla (kategoriye ekleme)
+      if (EXCLUDED_RESOURCE_KEYS.includes(upperCode)) {
+        return; 
+      }
+
       const category = CATEGORY_MAPPING[upperCode] || "DHIKRS";
       if (categories[category]) categories[category].push(resource);
       else categories["DHIKRS"].push(resource);
@@ -435,6 +445,7 @@ export default function AdminPage() {
             createdCode={createdCode}
             createdLink={createdLink}
             onReset={() => setCreatedLink("")}
+            creatorName={user || "Bir kullanıcı"}
           />
         )}
       </div>

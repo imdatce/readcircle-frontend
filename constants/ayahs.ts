@@ -45,4 +45,39 @@ export const ayahs = [
     translationKey: "verseTaha14",
     reference: "Tâhâ, 14",
   },
+  {
+  arabic: "وَلَذِكْرُ اللّٰهِ أَكْبَرُ",
+  translationKey: "verseAnkabut45",
+  reference: "Ankebût, 45",
+},
+{
+  arabic: "وَاذْكُرُوا اللّٰهَ كَثِيرًا لَعَلَّكُمْ تُفْلِحُونَ",
+  translationKey: "verseJumuah10",
+  reference: "Cuma, 10",
+},
+{
+  arabic: "إِذَا ذُكِرَ اللّٰهُ وَجِلَتْ قُلُوبُهُمْ",
+  translationKey: "verseAnfal2",
+  reference: "Enfâl, 2",
+},
+{
+  arabic: "قُلِ ادْعُوا اللّٰهَ أَوِ ادْعُوا الرَّحْمٰنَ أَيًّا مَا تَدْعُوا فَلَهُ الْأَسْمَاءُ الْحُسْنَىٰ",
+  translationKey: "verseIsra110",
+  reference: "İsrâ, 110",
+},
+{
+  arabic: "قُلْ مَا يَعْبَأُ بِكُمْ رَبِّي لَوْلَا دُعَاؤُكُمْ",
+  translationKey: "verseFurqan77",
+  reference: "Furkân, 77",
+},
+{
+  arabic: "وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا",
+  translationKey: "verseMuzzammil8",
+  reference: "Müzzemmil, 8",
+},
+{
+  arabic: "قَدْ أَفْلَحَ مَنْ تَزَكَّىٰ وَذَكَرَ اسْمَ رَبِّهِ فَصَلَّىٰ",
+  translationKey: "verseAla14_15",
+  reference: "A‘lâ, 14-15",
+},
 ];

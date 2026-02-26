@@ -1,3 +1,4 @@
+// components/join/AssignmentCard.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React from "react";
@@ -25,7 +26,9 @@ export default function AssignmentCard({
   const isAssignedToUserName = currentName && assignedName === currentName;
   const isMyAssignment = isAssignedToMe || isAssignedToUserName;
   const canSeeDetails = isOwner || isMyAssignment;
-  const isCompleted = first.isCompleted;
+
+  // CHANGED: Only show as completed if the user is the owner OR it's their assignment
+  const isCompleted = first.isCompleted && (isOwner || isMyAssignment);
 
   const getTypeName = (resource: any) => {
     const rawType = resource.type;
@@ -55,10 +58,12 @@ export default function AssignmentCard({
         statusText = t("yourTask");
         displayName = "";
       } else {
-        statusText = t("taken");
+        // This block is for owners viewing someone else's taken task
+        statusText = first.isCompleted ? t("completed") : t("taken");
         displayName = first.assignedToName;
       }
     } else {
+      // For general users viewing a task taken by someone else
       statusText = t("taken");
       displayName = "";
     }
@@ -113,7 +118,8 @@ export default function AssignmentCard({
           </div>
         </div>
         <div className="shrink-0 ml-2">
-          {isCompleted ? (
+          {/* CHANGED: Use the actual 'first.isCompleted' here for the icon logic if it's the owner, otherwise stick to the restricted 'isCompleted' */}
+          {(first.isCompleted && isOwner) || isCompleted ? (
             <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-md transform scale-110">
               <svg
                 className="w-5 h-5 md:w-6 md:h-6"

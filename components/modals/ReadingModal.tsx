@@ -800,17 +800,27 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       !content.cevsenData
     )
       return null;
+
     const codeKey = (content.codeKey || "").toUpperCase();
     const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
     const isSurahGroup =
       content.type === "SURAS" ||
-      ["FATIHA", "YASIN", "FETIH", "WAQIA","AYETELKURSU", "IHLAS", "FELAK", "NAS"].includes(
-        codeKey,
-      );
+      [
+        "FATIHA",
+        "YASIN",
+        "FETIH",
+        "WAQIA",
+        "AYETELKURSU",
+        "IHLAS",
+        "FELAK",
+        "NAS",
+      ].includes(codeKey);
 
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
       const rawLatin = content.cevsenData.map((b) => b.transcript).join("\n");
+      const rawMeaning = content.cevsenData.map((b) => b.meaning).join("\n"); // MEAL EKLENDİ
+
       const splitRegex = /###|\r\n|\r|\n/g;
       const arabicLines = rawArabic
         .split(splitRegex)
@@ -820,16 +830,27 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         .split(splitRegex)
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
-      const totalLen = Math.max(arabicLines.length, latinLines.length);
+      const meaningLines = rawMeaning
+        .split(splitRegex)
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+
+      const totalLen = Math.max(
+        arabicLines.length,
+        latinLines.length,
+        meaningLines.length,
+      );
       const masterList: CevsenBab[] = [];
+
       for (let i = 0; i < totalLen; i++) {
         masterList.push({
           babNumber: i + 1,
           arabic: arabicLines[i] || "",
           transcript: latinLines[i] || "",
-          meaning: "",
+          meaning: meaningLines[i] || "", // MEAL EKLENDİ
         });
       }
+
       if (content.startUnit && content.endUnit) {
         const rangeCount = content.endUnit - content.startUnit + 1;
         const slicedData: CevsenBab[] = [];
@@ -873,7 +894,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
 
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
-  }, [content]);
+  }, [content]); // <-- SİLİNEN VE HATAYA SEBEP OLAN KISIM BURASIYDI
 
   const changePage = (offset: number) => {
     const current = content.currentUnit || content.startUnit || 1;
@@ -975,7 +996,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const isFirstPage = currentPage === (content.startUnit || 1);
   const isLastPage = currentPage === (content.endUnit || 604);
   const isSurahGroup = processedData?.isSurah || false;
-  const isBedirGroup = processedData?.mode === "LIST";
 
   const PaginationBar = () => {
     const displayCurrentPage =
@@ -1043,112 +1063,111 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 {getDisplayTitle()}
               </h3>
               <div className="flex items-center gap-2 md:gap-3">
-                {!(isSurahGroup && activeTab === "ARABIC") &&
-                  content.type !== "QURAN" && (
-                    <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() =>
-                          handleFontChange(Math.max(0, fontLevel - 1))
-                        }
-                        disabled={fontLevel === 0}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
-                      >
-                        A-
-                      </button>
-                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                      <button
-                        onClick={() =>
-                          handleFontChange(Math.min(8, fontLevel + 1))
-                        }
-                        disabled={fontLevel === 8}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
-                      >
-                        A+
-                      </button>
+                {!(isSurahGroup && activeTab === "ARABIC") && (
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() =>
+                        handleFontChange(Math.max(0, fontLevel - 1))
+                      }
+                      disabled={fontLevel === 0}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
+                    >
+                      A-
+                    </button>
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <button
+                      onClick={() =>
+                        handleFontChange(Math.min(8, fontLevel + 1))
+                      }
+                      disabled={fontLevel === 8}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
+                    >
+                      A+
+                    </button>
 
-                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                      <button
-                        onClick={() => {
-                          setIsSepia(!isSepia);
-                          if (
-                            typeof navigator !== "undefined" &&
-                            navigator.vibrate
-                          )
-                            navigator.vibrate(20);
-                        }}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                          isSepia
-                            ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
-                            : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                        }`}
-                        title={t("eyeProtection") || "Okuma Modu (Sepya)"}
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <button
+                      onClick={() => {
+                        setIsSepia(!isSepia);
+                        if (
+                          typeof navigator !== "undefined" &&
+                          navigator.vibrate
+                        )
+                          navigator.vibrate(20);
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
+                        isSepia
+                          ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
+                          : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
+                      }`}
+                      title={t("eyeProtection") || "Okuma Modu (Sepya)"}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <button
+                      onClick={cycleSpeed}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      title={t("scrollSpeed") || "Kaydırma Hızı"}
+                    >
+                      {autoScrollSpeed}x
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsAutoScrolling(!isAutoScrolling);
+                        if (
+                          typeof navigator !== "undefined" &&
+                          navigator.vibrate
+                        )
+                          navigator.vibrate(20);
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
+                        isAutoScrolling
+                          ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
+                          : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
+                      }`}
+                      title={
+                        isAutoScrolling
+                          ? t("stopAutoScroll") || "Durdur"
+                          : t("startAutoScroll") || "Oynat"
+                      }
+                    >
+                      {isAutoScrolling ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="w-4 h-4"
                           viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          fill="currentColor"
                         >
-                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                          <circle cx="12" cy="12" r="3" />
+                          <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
                         </svg>
-                      </button>
-
-                      <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                      <button
-                        onClick={cycleSpeed}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        title={t("scrollSpeed") || "Kaydırma Hızı"}
-                      >
-                        {autoScrollSpeed}x
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setIsAutoScrolling(!isAutoScrolling);
-                          if (
-                            typeof navigator !== "undefined" &&
-                            navigator.vibrate
-                          )
-                            navigator.vibrate(20);
-                        }}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                          isAutoScrolling
-                            ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                            : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
-                        }`}
-                        title={
-                          isAutoScrolling
-                            ? t("stopAutoScroll") || "Durdur"
-                            : t("startAutoScroll") || "Oynat"
-                        }
-                      >
-                        {isAutoScrolling ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
-                          </svg>
-                        ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  )}
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={onClose}
                   className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
@@ -1190,7 +1209,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             {content.type !== "SIMPLE" && content.type !== "QURAN" && (
               <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                 {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
-                  if (tab === "MEANING" && isBedirGroup) return null;
+                  // BEDİR ve UHUD'da Meal gizlensin, TEVHİDNAME'de Okunuş gizlensin
+                  if (
+                    tab === "MEANING" &&
+                    (content.codeKey === "BEDIR" || content.codeKey === "UHUD")
+                  )
+                    return null;
+                  if (tab === "LATIN" && content.codeKey === "TEVHIDNAME")
+                    return null;
                   if (content.codeKey === "OZELSALAVAT" && tab === "LATIN")
                     return null;
                   return (
@@ -1247,13 +1273,15 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           {content.type === "QURAN" && (
             <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
               {!isFullscreen && <PaginationBar />}
-              <div className="flex-1 w-full bg-white dark:bg-gray-900 rounded-[2rem] p-2 md:p-4 border border-gray-200 dark:border-gray-800 shadow-sm min-h-[50vh] relative">
+              <div
+                className={`flex-1 w-full rounded-[2rem] p-2 md:p-4 border shadow-sm min-h-[50vh] relative transition-colors ${isSepia ? "bg-[#F4ECD8] border-[#E6D5B8]" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"}`}
+              >
                 {activeQuranTab === "ORIGINAL" ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <img
                       src={`https://quran.islam-db.com/data/pages/quranpages_1024/images/page${String(currentPage).padStart(3, "0")}.png`}
                       alt={`Page ${currentPage}`}
-                      className="max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90"
+                      className={`max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90 transition-all ${isSepia ? "mix-blend-multiply contrast-125" : ""}`}
                       loading="lazy"
                     />
                   </div>
@@ -1271,7 +1299,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                               <span className="shrink-0 flex items-center justify-center w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-full shadow-sm mt-1">
                                 {ayah.numberInSurah}
                               </span>
-                              <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed font-serif">
+                              <p
+                                className={`text-gray-700 dark:text-gray-300 leading-relaxed font-serif transition-all ${fontSizes.MEANING[fontLevel] || "text-base"}`}
+                              >
                                 {ayah.text}
                               </p>
                             </div>
@@ -1421,21 +1451,30 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                             </div>
                           )}
 
-                          {activeTab === "MEANING" &&
-                            mode !== "LIST" &&
-                            (content.type === "CEVSEN" ? (
-                              <CevsenGridDisplay
-                                text={bab.meaning}
-                                fontLevel={fontLevel}
-                                mode="MEANING"
-                              />
-                            ) : (
-                              <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
-                                <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
-                                  {formatMeaningText(bab.meaning, fontLevel)}
+                          {activeTab === "MEANING" && (
+                            <div className="w-full">
+                              {isCard ? (
+                                renderUhudList(
+                                  bab.meaning,
+                                  "MEANING",
+                                  fontLevel,
+                                  displayLabel,
+                                )
+                              ) : content.type === "CEVSEN" ? (
+                                <CevsenGridDisplay
+                                  text={bab.meaning}
+                                  fontLevel={fontLevel}
+                                  mode="MEANING"
+                                />
+                              ) : (
+                                <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
+                                  <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
+                                    {formatMeaningText(bab.meaning, fontLevel)}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

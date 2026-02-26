@@ -231,7 +231,7 @@ const translations: TranslationStructure = {
     },
     authSection: {
       loginTitle: "Giriş Yap",
-      welcomeBack: "Tekrar Hoşgeldiniz!",
+      welcomeBack: "Hoşgeldin!",
       sessionExpired: "Oturum süreniz doldu. Lütfen tekrar giriş yapın.",
       loginRequired: "Halka oluşturmak için giriş yapmalısınız.",
       changeName: "Adı Değiştir",
@@ -315,7 +315,7 @@ const translations: TranslationStructure = {
 
       shareWhatsapp: "WhatsApp ile Paylaş",
       whatsappShareText:
-        "{name} manevi halkasına davetlisiniz!\n\nKatılmak için tıklayın: {link}\n\nKod: {code}",
+        "{creator}, sizi {name} adlı halkaya davet etti!\n\nKatılmak için tıklayın: {link}\n\nKod: {code}",
 
       featuresDesc3:
         "Uygulamadan çıkmadan Kuran sayfalarını veya Cevşen bölümlerini okuyun.",
@@ -329,7 +329,7 @@ const translations: TranslationStructure = {
     },
     dashboardSection: {
       dashboard: "Panel",
-      welcome: "Hoşgeldiniz",
+      welcome: "Hoşgeldin",
       dashboardIntro: "Bugün manevi yolculuğunuzda ne yapmak istersiniz?",
       myCirclesTitle: "Halkalarım",
       prayerMessage:
@@ -443,6 +443,23 @@ const translations: TranslationStructure = {
         "Kendi kendine, yalvararak ve ürpererek, yüksek olmayan bir sesle sabah akşam Rabbini an.",
       verseTaha14:
         "Şüphe yok ki ben Allah'ım. Benden başka hiçbir ilâh yoktur. O hâlde bana ibadet et ve beni anmak için namaz kıl.",
+      verseAnkabut45: "Allah’ı anmak elbette en büyüktür.",
+
+      verseJumuah10:
+        "Namaz kılındıktan sonra yeryüzüne dağılın, Allah’ın lütfundan isteyin ve Allah’ı çokça anın ki kurtuluşa eresiniz.",
+
+      verseAnfal2:
+        "Müminler ancak o kimselerdir ki Allah anıldığı zaman kalpleri ürperir; O’nun ayetleri kendilerine okunduğunda imanları artar ve yalnız Rablerine tevekkül ederler.",
+
+      verseIsra110:
+        "De ki: İster Allah deyin ister Rahman deyin; hangisiyle dua ederseniz edin, en güzel isimler O’nundur.",
+
+      verseFurqan77: "De ki: Duanız olmasa Rabbim size ne diye değer versin?",
+
+      verseMuzzammil8: "Rabbinin adını an ve bütün varlığınla O’na yönel.",
+
+      verseAla14_15:
+        "Arınan kurtuluşa ermiştir. Rabbinin adını anıp namaz kılan kimse de kurtulmuştur.",
 
       connectionError: "Bağlantı hatası.",
       original: "Orijinal",

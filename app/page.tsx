@@ -423,8 +423,10 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Nasıl Çalışır Bölümü (Boşluklar Daraltıldı) */}
-        <div className="max-w-3xl mx-auto bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-5 shadow-sm border border-gray-200 dark:border-gray-800 mb-10">
+       {/* Nasıl Çalışır Bölümü (Boşluklar Daha da Daraltıldı) */}
+ {/* Nasıl Çalışır Bölümü (Boşluklar İyice Daraltıldı) */}
+        {/* mb-3 olan alt boşluk mb-1'e çekildi */}
+        <div className="max-w-3xl mx-auto bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-5 shadow-sm border border-gray-200 dark:border-gray-800 mb-1">
           <h2 className="text-lg md:text-xl font-bold text-center mb-5 text-gray-800 dark:text-gray-100">
             {t("howItWorksTitle")}
           </h2>
@@ -438,7 +440,8 @@ function HomeContent() {
       {/* max-w-7xl Kapandı, böylece alttaki bölüm sayfayı tam kaplar */}
 
       {/* --- PLATFORMDA NELER YAPABİLİRSİNİZ BÖLÜMÜ --- */}
-      <section className="py-12 md:py-16 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
+      {/* pt-4 md:pt-6 olan üst dolgular pt-2 md:pt-3'e düşürüldü */}
+      <section className="pt-2 pb-12 md:pt-3 md:pb-16 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-1/2 bg-teal-500/5 dark:bg-teal-500/10 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
