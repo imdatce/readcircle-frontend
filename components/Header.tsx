@@ -975,6 +975,14 @@ export default function Header() {
                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                               Hatim Yolculuğum
                             </Link>
+                            <Link
+                              href="/agenda/dhikr"
+                              onClick={closeMenu}
+                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                              Günlük Zikir Takibi
+                            </Link>
                           </div>
                         )}
 
