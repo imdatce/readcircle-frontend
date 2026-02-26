@@ -28,10 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
-  
-  // Açılışta token varsa backend'den güncel profil (ve rol) bilgisini çekiyoruz
+// Açılışta token varsa backend'den güncel profil (ve rol) bilgisini çekiyoruz
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+    const storedUsername = localStorage.getItem("username");
+
+    // 1. OPTİMİSTİK YÜKLEME: Sayfa açılır açılmaz LocalStorage'dan bilgileri alıp anında state'e yazıyoruz.
+    // Bu sayede backend'den cevap gelene kadar kullanıcı "giriş yapmamış" gibi görünmez ve sayfadan atılmaz.
+    if (storedToken && storedUsername) {
+      setUser(storedUsername);
+      setToken(storedToken);
+    }
 
     const fetchProfile = async (currentToken: string) => {
       try {
@@ -46,18 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.username);
           setRole(data.role);
           setToken(currentToken);
-        } else {
+          localStorage.setItem("username", data.username); // İsim backend'den güncel geldiyse tazele
+        } else if (res.status === 401 || res.status === 403) {
+          // 2. Sadece tokenin SÜRESİ DOLMUŞSA veya GEÇERSİZSE çıkış yap.
           logout();
         }
       } catch (error) {
-        console.error("Profil çekilemedi", error);
+        console.error("Profil çekilemedi, ağ hatası olabilir", error);
+        // 3. AĞ HATASI (Sunucu kapalı, internet yok vs.) durumunda KESİNLİKLE ÇIKIŞ YAPTIRMA!
+        // LocalStorage'dan aldığımız optimist verilerle kullanıcı gezinmeye devam etsin.
       }
     };
 
     if (storedToken) {
       fetchProfile(storedToken);
     }
-  }, [logout]); // <--- ARTIK HATA VERMEYECEK
+  }, [logout]);
 
   const login = (
     username: string,
@@ -72,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Rolü localstorage'a atmaya gerek yok, güvenlik için her açılışta /me'den çekeceğiz.
   };
 
-  
   // --- HESAP SİLME ---
   const deleteAccount = async () => {
     try {
