@@ -20,7 +20,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 export default function NearbyMosquesWidget() {
-   const [mosques, setMosques] = useState<any[]>([]);
+  const [mosques, setMosques] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -30,7 +30,6 @@ export default function NearbyMosquesWidget() {
     setLoading(true);
     setHasSearched(true);
 
-    // 1. Kullanıcının Konumunu Al
     if (!navigator.geolocation) {
       setError("Tarayıcınız konum özelliğini desteklemiyor.");
       setLoading(false);
@@ -43,24 +42,53 @@ export default function NearbyMosquesWidget() {
         const userLon = position.coords.longitude;
 
         try {
-          // 2. Overpass API ile 5 km (5000 metre) çapındaki camileri bul
-          // "amenity"="place_of_worship" ve "religion"="muslim" filtreleri ile
+          // Sorguya [timeout:25] ekledik ki sunucu bizi banlamasın.
+          // Çapı şu an 15000 (15 km) olarak ayarladım. Çok yüksek rakamlar (35km+) ücretsiz API'yi tıkar.
+          const radius = 15000;
           const query = `
-            [out:json];
+            [out:json][timeout:25];
             (
-              node["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${userLat},${userLon});
-              way["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${userLat},${userLon});
+              node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
+              way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
             );
             out center;
           `;
 
-          const res = await fetch(
-            `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-          );
-          const data = await res.json();
+          const encodedQuery = encodeURIComponent(query);
 
-          // 3. Gelen verileri işle ve mesafeyi hesapla
-           const processedMosques = data.elements.map((el: any) => {
+          // YEDEK SUNUCU MANTĞI (Biri hata verirse diğerini dener)
+          const endpoints = [
+            "https://overpass-api.de/api/interpreter",
+            "https://lz4.overpass-api.de/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter",
+          ];
+
+          let data = null;
+          let fetchSuccess = false;
+
+          for (const endpoint of endpoints) {
+            try {
+              const res = await fetch(`${endpoint}?data=${encodedQuery}`);
+
+              if (res.ok) {
+                data = await res.json();
+                fetchSuccess = true;
+                break; // Başarılı olursa döngüden çık, diğerlerini deneme
+              } else if (res.status === 429) {
+                console.warn(`${endpoint} meşgul (429), diğerine geçiliyor...`);
+              }
+            } catch (e) {
+              console.warn(`${endpoint} yanıt vermedi, diğerine geçiliyor...`);
+            }
+          }
+
+          if (!fetchSuccess || !data) {
+            throw new Error("Tüm sunucular meşgul (429).");
+          }
+
+          // Gelen verileri işle ve mesafeyi hesapla
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const processedMosques = data.elements.map((el: any) => {
             const mLat = el.lat || el.center?.lat;
             const mLon = el.lon || el.center?.lon;
             const name = el.tags?.name || "İsimsiz Cami / Mescit";
@@ -69,19 +97,29 @@ export default function NearbyMosquesWidget() {
             return { id: el.id, name, lat: mLat, lon: mLon, distance };
           });
 
-          // 4. Mesafeye göre yakından uzağa sırala ve en yakın 5 tanesini al
+          // Mesafeye göre sırala ve en yakın 5'ini al
           const sorted = processedMosques
             .sort((a: any, b: any) => a.distance - b.distance)
             .slice(0, 5);
 
           if (sorted.length === 0) {
-            setError("Çevrenizde (5 km) kayıtlı cami bulunamadı.");
+            setError(
+              `Çevrenizde (${radius / 1000} km) kayıtlı cami bulunamadı.`,
+            );
           } else {
             setMosques(sorted);
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error(err);
-          setError("Camiler aranırken bir hata oluştu.");
+          if (err.message.includes("429") || err.message.includes("meşgul")) {
+            setError(
+              "Harita sunucuları şu an çok yoğun. Lütfen 1-2 dakika bekleyip tekrar deneyin.",
+            );
+          } else {
+            setError(
+              "Camiler aranırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+            );
+          }
         } finally {
           setLoading(false);
         }
