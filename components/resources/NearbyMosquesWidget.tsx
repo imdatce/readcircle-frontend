@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
 
-// Mesafe Hesaplama Fonksiyonu (Kuş Uçuşu Metre/Kilometre)
+// Mesafe Hesaplama Fonksiyonu (Kuş Uçuşu Metre)
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371e3; // Dünya yarıçapı (metre)
   const φ1 = (lat1 * Math.PI) / 180;
@@ -16,7 +17,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c; // Metre cinsinden mesafe
+  return R * c;
 }
 
 export default function NearbyMosquesWidget() {
@@ -42,9 +43,8 @@ export default function NearbyMosquesWidget() {
         const userLon = position.coords.longitude;
 
         try {
-          // Sorguya [timeout:25] ekledik ki sunucu bizi banlamasın.
-          // Çapı şu an 15000 (15 km) olarak ayarladım. Çok yüksek rakamlar (35km+) ücretsiz API'yi tıkar.
-          const radius = 15000;
+          // Çapı tam 10 km (10000 metre) yaptık.
+          const radius = 10000;
           const query = `
             [out:json][timeout:25];
             (
@@ -56,7 +56,7 @@ export default function NearbyMosquesWidget() {
 
           const encodedQuery = encodeURIComponent(query);
 
-          // YEDEK SUNUCU MANTĞI (Biri hata verirse diğerini dener)
+          // YEDEK SUNUCULAR
           const endpoints = [
             "https://overpass-api.de/api/interpreter",
             "https://lz4.overpass-api.de/api/interpreter",
@@ -73,9 +73,12 @@ export default function NearbyMosquesWidget() {
               if (res.ok) {
                 data = await res.json();
                 fetchSuccess = true;
-                break; // Başarılı olursa döngüden çık, diğerlerini deneme
-              } else if (res.status === 429) {
-                console.warn(`${endpoint} meşgul (429), diğerine geçiliyor...`);
+                break; // Başarılı olursa döngüden çık
+              } else {
+                // 429, 504 vb. HERHANGİ BİR hatada diğer sunucuya geç
+                console.warn(
+                  `${endpoint} başarısız (Hata Kodu: ${res.status}), diğerine geçiliyor...`,
+                );
               }
             } catch (e) {
               console.warn(`${endpoint} yanıt vermedi, diğerine geçiliyor...`);
@@ -83,11 +86,10 @@ export default function NearbyMosquesWidget() {
           }
 
           if (!fetchSuccess || !data) {
-            throw new Error("Tüm sunucular meşgul (429).");
+            throw new Error("Tüm sunucular meşgul veya zaman aşımına uğradı.");
           }
 
           // Gelen verileri işle ve mesafeyi hesapla
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const processedMosques = data.elements.map((el: any) => {
             const mLat = el.lat || el.center?.lat;
             const mLon = el.lon || el.center?.lon;
@@ -111,15 +113,9 @@ export default function NearbyMosquesWidget() {
           }
         } catch (err: any) {
           console.error(err);
-          if (err.message.includes("429") || err.message.includes("meşgul")) {
-            setError(
-              "Harita sunucuları şu an çok yoğun. Lütfen 1-2 dakika bekleyip tekrar deneyin.",
-            );
-          } else {
-            setError(
-              "Camiler aranırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
-            );
-          }
+          setError(
+            "Harita sunucuları şu an çok yoğun. Lütfen 1-2 dakika bekleyip tekrar deneyin.",
+          );
         } finally {
           setLoading(false);
         }
@@ -186,14 +182,12 @@ export default function NearbyMosquesWidget() {
           </button>
         </div>
 
-        {/* Hata Mesajı */}
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-2xl text-sm font-bold border border-red-100 dark:border-red-900/30">
             {error}
           </div>
         )}
 
-        {/* Cami Listesi */}
         {!loading && !error && hasSearched && mosques.length > 0 && (
           <div className="grid grid-cols-1 gap-3 mt-4 animate-in fade-in slide-in-from-bottom-4">
             {mosques.map((mosque, index) => (
@@ -202,7 +196,7 @@ export default function NearbyMosquesWidget() {
                 className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-black">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-black shrink-0">
                     {index + 1}
                   </div>
                   <div>
@@ -217,14 +211,15 @@ export default function NearbyMosquesWidget() {
                   </div>
                 </div>
 
-                {/* Google Maps Yol Tarifi Butonu */}
+                {/* DOĞRU GOOGLE MAPS LİNKİ VE DÜZELTİLMİŞ SVG ETİKETİ */}
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2.5 bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  className="flex items-center gap-1.5 p-2.5 bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shrink-0"
                   title="Yol Tarifi Al"
                 >
+                  <span className="text-xs font-bold hidden sm:block">GİT</span>
                   <svg
                     className="w-5 h-5"
                     fill="none"

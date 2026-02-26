@@ -65,9 +65,9 @@ export default function SubNavigation() {
         </svg>
       ),
     },
-    // === YENİ: VAKİTLER BUTONU ===
+    // === YENİ: VAKİTLER BUTONU (Minimal Cami İkonu) ===
     {
-      name: "Vakitler",
+      name: "NAMAZ",
       href: "/prayer-times",
       icon: (
         <svg
@@ -77,11 +77,28 @@ export default function SubNavigation() {
           stroke="currentColor"
           strokeWidth={2}
         >
+          {/* Ana Kubbe */}
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M8 12C8 7.5 12 3 12 3C12 3 16 7.5 16 12V21H8V12Z"
           />
+          {/* Kubbe üstü alem */}
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3V1" />
+          {/* Sol Minare */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4 21V8C4 8 5 6 6 6C7 6 8 8 8 8"
+          />
+          {/* Sağ Minare */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M20 21V8C20 8 19 6 18 6C17 6 16 8 16 8"
+          />
+          {/* Zemin Çizgisi */}
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2 21H22" />
         </svg>
       ),
     },
@@ -90,26 +107,22 @@ export default function SubNavigation() {
   return (
     <nav className="w-full bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
       <div className="max-w-4xl mx-auto px-1 py-1.5">
-        {/* Grid yapısını 4'e böldük (grid-cols-4) */}
         <div className="grid grid-cols-4 gap-1">
           {navItems.map((item) => {
-            // === MANTIKSAL GÜNCELLEME BURADA ===
             let isActive = false;
 
             if (item.href === "/agenda") {
-              // Kur'an sayfası da Ajanda'nın bir parçası sayılsın
               isActive =
                 pathname?.startsWith("/agenda") ||
                 pathname?.startsWith("/resources/quran");
             } else if (item.href === "/resources") {
-              // Kur'an sayfası hariç diğer kaynaklarda "Kaynaklar" aktif olsun
               isActive =
                 pathname?.startsWith("/resources") &&
                 !pathname?.startsWith("/resources/quran");
             } else {
               isActive = pathname?.startsWith(item.href);
             }
-            // ==================================
+
             return (
               <Link
                 key={item.name}

@@ -1,44 +1,43 @@
 import React from "react";
-// Bir önceki adımda oluşturduğumuz widget'ı içe aktarıyoruz.
-// Eğer dosya yolunuz farklıysa burayı kendinize göre güncelleyebilirsiniz.
 import PrayerTimesWidget from "@/components/resources/PrayerTimesWidget";
 import DailyInspirationWidget from "@/components/resources/DailyInspirationWidget";
 import NearbyMosquesWidget from "@/components/resources/NearbyMosquesWidget";
-
+import QiblaWidget from "@/components/resources/QiblaWidget";
 export const metadata = {
   title: "Namaz Vakitleri | ReadCircle",
-  description: "Günlük namaz vakitlerinizi takip edin.",
+  description:
+    "Günlük namaz vakitlerinizi takip edin ve çevrenizdeki camileri bulun.",
 };
 
 export default function PrayerTimesPage() {
   return (
-    <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Sayfa Başlığı */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-            Namaz Vakitleri
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">
-            Vakitleri takip et, ibadetlerini zamanında eda et.
-          </p>
-        </div>
+    <div className="relative min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-10 sm:py-16 px-4 sm:px-6 overflow-hidden transition-colors duration-700">
+      {/* --- MODERN ARKA PLAN IŞIKLARI (AMBİANS) --- */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-teal-500/10 dark:bg-teal-500/5 rounded-full blur-[100px] pointer-events-none" />
+      {/* ------------------------------------------- */}
 
-        {/* Vakitler Widget'ı */}
-        <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <PrayerTimesWidget />
-          {/* YENİ: YAKINDAKİ CAMİLER KISMI */}
-          <NearbyMosquesWidget />
-          <DailyInspirationWidget />
-        </div>
+      <div className="relative max-w-4xl mx-auto space-y-12 sm:space-y-16 z-10">
+        {/* --- WIDGET ALANLARI (KADEMELİ ANİMASYON) --- */}
+        <div className="space-y-8 sm:space-y-10">
+          {/* 1. Vakitler Widget'ı */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-150">
+            <PrayerTimesWidget />
+          </div>
 
-        {/* Alt Bilgi / Motivasyon */}
-        <div className="pt-8 text-center animate-in fade-in duration-1000 delay-300">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-100 dark:border-gray-800 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-              Namaz dinin direğidir
-            </span>
+          {/* 2. Yakındaki Camiler */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
+            <NearbyMosquesWidget />
+          </div>
+
+          {/* YENİ: KIBLE PUSULASI */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
+            <QiblaWidget />
+          </div>
+
+          {/* 3. Günün İçerikleri */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-500">
+            <DailyInspirationWidget />
           </div>
         </div>
       </div>

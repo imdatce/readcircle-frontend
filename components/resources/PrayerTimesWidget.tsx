@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -328,7 +329,7 @@ export default function PrayerTimesWidget() {
         <div className="w-full">
           <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
             Namaz Vakitleri
-            <span className="text-emerald-500">🕌</span>
+            <span className="text-emerald-500">🌙</span>
           </h3>
 
           {isEditing ? (
