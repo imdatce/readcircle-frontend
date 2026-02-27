@@ -56,7 +56,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.username);
           setRole(data.role);
           setToken(currentToken);
-          localStorage.setItem("username", data.username); // İsim backend'den güncel geldiyse tazele
+          localStorage.setItem("username", data.username);
+
+          // --- YENİ EKLENEN KISIM: Backend'den gelen lokasyonu tarayıcıya kaydet ---
+          if (data.country && data.city) {
+            localStorage.setItem(
+              "prayer_location",
+              JSON.stringify({
+                country: data.country,
+                city: data.city,
+                district: data.district || "",
+              }),
+            );
+            // Namaz Vakitleri widget'ının anında haberdar olması için bir sinyal gönderiyoruz
+            window.dispatchEvent(new Event("locationUpdated"));
+          }
+          // -----------------------------------------------------------------------
         } else if (res.status === 401 || res.status === 403) {
           // 2. Sadece tokenin SÜRESİ DOLMUŞSA veya GEÇERSİZSE çıkış yap.
           logout();
@@ -210,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Bildirim kaydı sırasında hata:", error);
     }
   };
+
   // AuthProvider içinde:
   useEffect(() => {
     // messaging değişkeninin var olduğundan ve tarayıcıda olduğumuzdan emin olalım
@@ -221,6 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => unsubscribe();
     }
   }, []);
+
   return (
     <AuthContext.Provider
       value={{

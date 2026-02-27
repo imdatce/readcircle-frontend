@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -20,7 +20,7 @@ export default function PrayerTimesWidget() {
 
   // --- AYLIK VAKİTLER (İMSAKİYE) STATELERİ ---
   const [showMonthly, setShowMonthly] = useState(false);
-   const [monthlyTimings, setMonthlyTimings] = useState<any[]>([]);
+  const [monthlyTimings, setMonthlyTimings] = useState<any[]>([]);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
 
   // --- LOKASYON STATELERİ ---
@@ -45,23 +45,31 @@ export default function PrayerTimesWidget() {
   const [filteredDistricts, setFilteredDistricts] = useState<string[]>([]);
   const [showDistrictList, setShowDistrictList] = useState(false);
 
-   const districtTimeout = useRef<any>(null);
+  const districtTimeout = useRef<any>(null);
 
-  // 1. Hafızadan Yükle
+  // 1. Hafızadan Yükle ve AuthContext'ten gelen değişiklikleri dinle
   useEffect(() => {
-    const savedLoc = localStorage.getItem("prayer_location");
-    if (savedLoc) {
-      try {
-        const parsed = JSON.parse(savedLoc);
-        if (parsed.country && parsed.city) {
-          setCountry(parsed.country);
-          setCity(parsed.city);
-          if (parsed.district) setDistrict(parsed.district);
+    const loadLocation = () => {
+      const savedLoc = localStorage.getItem("prayer_location");
+      if (savedLoc) {
+        try {
+          const parsed = JSON.parse(savedLoc);
+          if (parsed.country && parsed.city) {
+            setCountry(parsed.country);
+            setCity(parsed.city);
+            if (parsed.district) setDistrict(parsed.district);
+          }
+        } catch (e) {
+          console.error("Hafıza okuma hatası", e);
         }
-      } catch (e) {
-        console.error("Hafıza okuma hatası", e);
       }
-    }
+    };
+
+    loadLocation(); // Sayfa açıldığında çalıştır
+
+    // AuthContext profil çekip lokasyonu güncellediğinde anında haberdar ol
+    window.addEventListener("locationUpdated", loadLocation);
+    return () => window.removeEventListener("locationUpdated", loadLocation);
   }, []);
 
   // 2. GÜNLÜK Vakitleri Çek
@@ -289,31 +297,48 @@ export default function PrayerTimesWidget() {
   };
 
   const handleSaveLocation = async () => {
-  if (editCountry.trim() && editCity.trim()) {
-    // ... mevcut localStorage kodları ...
+    if (editCountry.trim() && editCity.trim()) {
+      // --- YENİ: Backend'e ilçe dahil gönder ---
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/update-location`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                city: editCity.trim(),
+                country: editCountry.trim(),
+                district: editDistrict.trim(), // İlçe eklendi
+              }),
+            },
+          );
+        } catch (error) {
+          console.error("Lokasyon sunucuya kaydedilemedi:", error);
+        }
+      }
+      // ----------------------------
 
-    // --- YENİ: Backend'e gönder ---
-    const token = localStorage.getItem("token");
-    if (token) {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/update-location`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      setCountry(editCountry.trim());
+      setCity(editCity.trim());
+      setDistrict(editDistrict.trim());
+
+      localStorage.setItem(
+        "prayer_location",
+        JSON.stringify({
+          country: editCountry.trim(),
           city: editCity.trim(),
-          country: editCountry.trim()
+          district: editDistrict.trim(),
         }),
-      });
-    }
-    // ----------------------------
+      );
 
-    setCountry(editCountry.trim());
-    setCity(editCity.trim());
-    setIsEditing(false);
-  }
-};
+      setIsEditing(false);
+    }
+  };
 
   // Aladhan API saatleri "05:30 (EET)" formatında gönderiyor. Sadece saati (05:30) almak için yardımcı fonksiyon
   const cleanTime = (timeString: string) => timeString.split(" ")[0];
