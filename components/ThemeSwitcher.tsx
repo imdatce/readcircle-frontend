@@ -2,13 +2,18 @@
 "use client";
 import { useTheme } from "@/context/ThemeContext";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ThemeSwitcher() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   // progress: 0 = tam gece (ay), 1 = tam gündüz (güneş)
   const [progress, setProgress] = useState<number>(theme === "dark" ? 0 : 1);
+  // muted: gündüze geçince 2sn sonra true olur → renkler matlaşır
+  const [muted, setMuted] = useState<boolean>(theme === "light");
+  const mutedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDragging = useRef(false);
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -21,6 +26,14 @@ export default function ThemeSwitcher() {
   useEffect(() => {
     if (!isDragging.current) {
       setProgress(theme === "dark" ? 0 : 1);
+    }
+    if (theme === "light") {
+      setMuted(false);
+      if (mutedTimer.current) clearTimeout(mutedTimer.current);
+      mutedTimer.current = setTimeout(() => setMuted(true), 2000);
+    } else {
+      if (mutedTimer.current) clearTimeout(mutedTimer.current);
+      setMuted(false);
     }
   }, [theme]);
 
@@ -84,15 +97,20 @@ export default function ThemeSwitcher() {
 
   if (!mounted) return <div style={{ width: TRACK_W, height: 36 }} />;
 
-  const skyTop = lerpColor("#0a0e2e", "#4fc3f7", progress);
-  const skyBottom = lerpColor("#1a1a6e", "#f9a825", progress);
+  // Gündüz renkleri: canlı → mat geçişi (muted state ile)
+  const dayTop = muted ? "#9bb8c9" : "#4fc3f7";
+  const dayBottom = muted ? "#b8a88a" : "#f9a825";
+  const dayThumbBg = muted ? "#e8e0d0" : "#fffde7";
+  const dayThumbGlow = muted ? "rgba(180,160,120,0.5)" : "rgba(251,191,36,0.8)";
+
+  const skyTop = lerpColor("#0a0e2e", dayTop, progress);
+  const skyBottom = lerpColor("#1a1a6e", dayBottom, progress);
   const thumbLeft = PADDING + progress * (TRACK_W - THUMB_D - PADDING * 2);
-  const thumbBg = lerpColor("#1e1b4b", "#fffde7", progress);
-  const thumbGlow = lerpColor(
-    "rgba(99,102,241,0.6)",
-    "rgba(251,191,36,0.8)",
-    progress,
-  );
+  const thumbBg = lerpColor("#1e1b4b", dayThumbBg, progress);
+  const thumbGlow = lerpColor("rgba(99,102,241,0.6)", dayThumbGlow, progress);
+  const horizonColor = muted
+    ? "rgba(180,155,110,0.2)"
+    : "rgba(255,200,80,0.35)";
 
   return (
     <>
@@ -159,7 +177,7 @@ export default function ThemeSwitcher() {
             position: "absolute",
             inset: 0,
             background: `linear-gradient(to bottom, ${skyTop}, ${skyBottom})`,
-            transition: "none",
+            transition: muted ? "background 1.5s ease" : "none",
           }}
         />
 
@@ -223,11 +241,8 @@ export default function ThemeSwitcher() {
             left: 0,
             right: 0,
             height: 10,
-            background: lerpColor(
-              "rgba(30,27,96,0)",
-              "rgba(255,200,80,0.35)",
-              progress,
-            ),
+            background: lerpColor("rgba(30,27,96,0)", horizonColor, progress),
+            transition: muted ? "background 1.5s ease" : "none",
             pointerEvents: "none",
           }}
         />
@@ -249,6 +264,9 @@ export default function ThemeSwitcher() {
             justifyContent: "center",
             pointerEvents: "none",
             willChange: "left",
+            transition: muted
+              ? "background 1.5s ease, box-shadow 1.5s ease"
+              : "none",
           }}
         >
           {/* Sun rays (visible as progress→1) */}
@@ -259,10 +277,11 @@ export default function ThemeSwitcher() {
               width: 24,
               height: 24,
               animation: progress > 0.5 ? "ts-spin 8s linear infinite" : "none",
+              transition: "stroke 1.5s ease",
             }}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#f59e0b"
+            stroke={muted ? "#b8a070" : "#f59e0b"}
             strokeWidth={2}
             strokeLinecap="round"
           >
@@ -276,9 +295,14 @@ export default function ThemeSwitcher() {
               width: 12 + progress * 4,
               height: 12 + progress * 4,
               borderRadius: "50%",
-              background: `radial-gradient(circle, #fff7ed, #fbbf24)`,
+              background: muted
+                ? `radial-gradient(circle, #f0e8d8, #d4a96a)`
+                : `radial-gradient(circle, #fff7ed, #fbbf24)`,
               opacity: progress,
-              boxShadow: `0 0 ${progress * 6}px #fbbf24`,
+              boxShadow: muted
+                ? `0 0 ${progress * 3}px #c8a060`
+                : `0 0 ${progress * 6}px #fbbf24`,
+              transition: "background 1.5s ease, box-shadow 1.5s ease",
             }}
           />
 

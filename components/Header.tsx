@@ -8,7 +8,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { JUZ_DATA, SURAH_DATA } from "@/constants/quranData";
-// Profil işlem modalları
+
 import {
   NameUpdateModal,
   PasswordUpdateModal,
@@ -142,6 +142,8 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen, closeMenu]);
 
+  const { registerNotification } = useAuth();
+
   const scrollToTop = (e: React.MouseEvent) => {
     if (window.location.pathname === "/") {
       e.preventDefault();
@@ -256,6 +258,13 @@ export default function Header() {
                 <div className="relative z-[60]">
                   <LanguageSwitcher />
                 </div>
+                {/* 3. Uygun bir yere (örneğin sağ üst köşeye) bu butonu ekleyin: */}
+                <button
+                  onClick={registerNotification}
+                  className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm"
+                >
+                  🔔 Bildirimleri Aç
+                </button>
               </div>
             )}
 
