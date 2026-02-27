@@ -288,23 +288,32 @@ export default function PrayerTimesWidget() {
     }
   };
 
-  const handleSaveLocation = () => {
-    if (editCountry.trim() && editCity.trim()) {
-      setCountry(editCountry.trim());
-      setCity(editCity.trim());
-      setDistrict(editDistrict.trim());
+  const handleSaveLocation = async () => {
+  if (editCountry.trim() && editCity.trim()) {
+    // ... mevcut localStorage kodları ...
 
-      localStorage.setItem(
-        "prayer_location",
-        JSON.stringify({
-          country: editCountry.trim(),
+    // --- YENİ: Backend'e gönder ---
+    const token = localStorage.getItem("token");
+    if (token) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/update-location`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
           city: editCity.trim(),
-          district: editDistrict.trim(),
+          country: editCountry.trim()
         }),
-      );
-      setIsEditing(false);
+      });
     }
-  };
+    // ----------------------------
+
+    setCountry(editCountry.trim());
+    setCity(editCity.trim());
+    setIsEditing(false);
+  }
+};
 
   // Aladhan API saatleri "05:30 (EET)" formatında gönderiyor. Sadece saati (05:30) almak için yardımcı fonksiyon
   const cleanTime = (timeString: string) => timeString.split(" ")[0];
