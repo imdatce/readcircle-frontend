@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -115,8 +116,8 @@ export default function QiblaWidget() {
   const shortestDiff =
     normalizedRotation > 180 ? 360 - normalizedRotation : normalizedRotation;
 
-  // Eğer sapma 5 dereceden az ise tam kıblededir!
-  const isAligned = shortestDiff <= 5;
+  // Eğer henüz hesaplanmadıysa "isAligned" false kalır, hesaplandıysa ve sapma 5 dereceden az ise tam kıblededir!
+  const isAligned = qiblaAngle !== null && shortestDiff <= 5;
 
   // Titreşim (Haptic Feedback) - Tam kıbleye gelince titrer
   useEffect(() => {
@@ -137,60 +138,69 @@ export default function QiblaWidget() {
 
   return (
     <div
-      className={`bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-6 md:p-8 shadow-sm border transition-colors duration-500 relative overflow-hidden mt-6 flex flex-col items-center ${isAligned ? "border-emerald-500/50 shadow-emerald-500/20" : "border-red-500/20 dark:border-red-900/30"}`}
+      className={`bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-5 md:p-6 shadow-sm border transition-colors duration-500 relative overflow-hidden mt-6 flex flex-col ${isAligned ? "border-emerald-500/50 shadow-emerald-500/20" : "border-emerald-100 dark:border-emerald-900/30"}`}
     >
-      {/* Arka Plan Parlaması (Yeşil veya Kırmızı) */}
+      {/* Arka Plan Parlaması (Yeşil veya Standart) */}
       <div
-        className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-colors duration-500 ${isAligned ? "bg-emerald-400/20" : "bg-red-400/10"}`}
+        className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-colors duration-500 ${isAligned ? "bg-emerald-400/20" : "bg-emerald-400/10"}`}
       ></div>
 
-      <div className="relative z-10 w-full text-center">
-        <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center justify-center gap-2 mb-2">
-          Kıble Pusulası
-          <span className="text-emerald-500">🕋</span>
-        </h3>
-        <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-6">
-          Seccadeyi Kâbe ikonuyla hizalayın.
-        </p>
+      <div className="relative z-10 w-full">
+        {/* BAŞLIK VE BUTON (Diğer Widget'larla Aynı Hizalama) */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
+              Kıble Pusulası
+              <span className="text-emerald-500 text-2xl leading-none">🕋</span>
+            </h3>
+            <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-1">
+              Seccadeyi Kâbe ikonuyla hizalayın.
+            </p>
+          </div>
+
+          {/* Sadece qiblaAngle hesaplanmadıysa (başlangıçta) butonu sağda göster */}
+          {qiblaAngle === null && (
+            <button
+              onClick={findLocation}
+              disabled={loading}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              )}
+              Hesapla
+            </button>
+          )}
+        </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-bold mb-4 border border-red-100 dark:border-red-900/30">
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-bold mb-4 border border-red-100 dark:border-red-900/30 text-center">
             {error}
           </div>
         )}
 
-        {qiblaAngle === null ? (
-          <button
-            onClick={findLocation}
-            disabled={loading}
-            className="w-full sm:w-auto mx-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            )}
-            Kıbleyi Hesapla
-          </button>
-        ) : (
-          <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700">
+        {/* PUSULA ALANI (Bu Kısım Ortalanmış Kalır) */}
+        {qiblaAngle !== null && (
+          <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700 w-full mt-2">
             {/* Yönlendirme Metni */}
             <div
               className={`mb-4 px-4 py-1.5 rounded-full text-sm font-black transition-colors duration-500 ${isAligned ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"}`}
@@ -198,7 +208,7 @@ export default function QiblaWidget() {
               {getDirectionText()}
             </div>
 
-            {/* PUSULA ALANI */}
+            {/* PUSULA DAİRESİ */}
             <div className="relative w-64 h-64 md:w-72 md:h-72 rounded-full border-4 border-gray-100 dark:border-gray-800 shadow-inner bg-gray-50/50 dark:bg-gray-800/20 flex items-center justify-center my-4">
               {/* SABİT SECCADE (Kullanıcının Telefonu) */}
               <div
@@ -236,7 +246,7 @@ export default function QiblaWidget() {
               >
                 {/* Çemberin Üstündeki Kâbe İşaretçisi */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center shadow-lg border-2 border-gray-100 dark:border-gray-800 z-30">
-                  <span className="text-xl">🕋</span>
+                  <span className="text-xl leading-none">🕋</span>
                 </div>
               </div>
             </div>
@@ -265,7 +275,7 @@ export default function QiblaWidget() {
             )}
 
             {isCompassActive && (
-              <p className="mt-6 text-xs text-gray-500 font-medium max-w-xs">
+              <p className="mt-6 text-xs text-gray-500 font-medium max-w-xs text-center">
                 Telefonunuzu yere paralel tutun ve 8 (sekiz) çizecek şekilde
                 hareket ettirerek kalibre edin.
               </p>

@@ -3,6 +3,8 @@ import PrayerTimesWidget from "@/components/resources/PrayerTimesWidget";
 import DailyInspirationWidget from "@/components/resources/DailyInspirationWidget";
 import NearbyMosquesWidget from "@/components/resources/NearbyMosquesWidget";
 import QiblaWidget from "@/components/resources/QiblaWidget";
+import ReligiousDaysWidget from "@/components/resources/ReligiousDaysWidget"; 
+
 export const metadata = {
   title: "Namaz Vakitleri | ReadCircle",
   description:
@@ -33,6 +35,10 @@ export default function PrayerTimesPage() {
           {/* YENİ: KIBLE PUSULASI */}
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
             <QiblaWidget />
+          </div>
+          {/* YENİ: DİNİ GÜNLER BİLEŞENİ */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-600">
+            <ReligiousDaysWidget />
           </div>
 
           {/* 3. Günün İçerikleri */}

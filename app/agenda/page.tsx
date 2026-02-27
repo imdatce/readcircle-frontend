@@ -1,14 +1,42 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
+// SENİN KENDİ AUTH SİSTEMİNİ İÇE AKTARIYORUZ
+import { useAuth } from "@/context/AuthContext";
 
 export default function AgendaPage() {
   const { t } = useLanguage();
   const router = useRouter();
+
+  // AuthContext'ten kullanıcı bilgisini alıyoruz
+  const { user } = useAuth();
+
+  // Modal ve Yüklenme State'leri
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Hydration hatasını önlemek için
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
+
+  // Kartlara tıklandığında çalışacak fonksiyon
+  const handleCardClick = (href: string) => {
+    if (!isMounted) return;
+
+    // Eğer user yoksa (null ise) giriş yapmamıştır, modalı aç
+    if (!user) {
+      setIsModalOpen(true);
+    } else {
+      // Giriş yapmışsa sayfaya yönlendir
+      router.push(href);
+    }
+  };
 
   const menuItems = [
     {
@@ -106,8 +134,8 @@ export default function AgendaPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500 relative">
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         {/* Başlık Bölümü */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
@@ -121,13 +149,12 @@ export default function AgendaPage() {
         {/* Menü Kartları Grid Yapısı */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {menuItems.map((item, index) => (
-            <Link
+            <div
               key={index}
-              href={item.href}
-              className={`group relative overflow-hidden p-6 rounded-[2.5rem] border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none hover:-translate-y-1 ${item.lightColor}`}
+              onClick={() => handleCardClick(item.href)}
+              className={`cursor-pointer group relative overflow-hidden p-6 rounded-[2.5rem] border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none hover:-translate-y-1 ${item.lightColor}`}
             >
               <div className="flex items-start gap-5">
-                {/* İkon Kutusu */}
                 <div
                   className={`w-14 h-14 rounded-2xl ${item.color} text-white flex items-center justify-center shadow-lg shadow-current/20 group-hover:scale-110 transition-transform duration-500 shrink-0`}
                 >
@@ -144,7 +171,6 @@ export default function AgendaPage() {
                 </div>
               </div>
 
-              {/* Sağ Alt Dekoratif Ok */}
               <div className="absolute bottom-4 right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300">
                 <svg
                   className={`w-6 h-6 ${item.textColor}`}
@@ -160,20 +186,20 @@ export default function AgendaPage() {
                   />
                 </svg>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
-
-        {/* Alt Bilgi veya Motivasyon Sözü */}
-        <div className="pt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-full border border-gray-100 dark:border-gray-800 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-              İstikrar Başarının Anahtarıdır
-            </span>
-          </div>
-        </div>
       </div>
+
+      {/* GİRİŞ MODALI */}
+      {isMounted && (
+        <LoginRequiredModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Giriş Yapmanız Gerekiyor"
+          message="Ajandanıza erişmek ve ibadetlerinizi takip etmek için lütfen hesabınıza giriş yapın."
+        />
+      )}
     </div>
   );
 }

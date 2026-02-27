@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
 
@@ -31,7 +30,6 @@ const RESOURCES = [
       </svg>
     ),
   },
-
   {
     id: "cevsen",
     titleKey: "cevsen",
@@ -174,17 +172,8 @@ const colorStyles: any = {
 };
 
 export default function ResourcesPage() {
-  const { user } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/");
-    }
-  }, [user, router]);
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-6 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -194,7 +183,6 @@ export default function ResourcesPage() {
       <div className="max-w-5xl mx-auto space-y-6 relative z-10">
         {/* Üst Başlık Bölümü */}
         <div className="flex items-center gap-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
-          {/* DEĞİŞEN KISIM: Link yerine onClick ile geriye (veya anasayfaya) dönen bir buton yapıldı */}
           <button
             onClick={() => router.push("/")}
             className="p-2.5 bg-white dark:bg-gray-800 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition-all active:scale-95 shrink-0"
