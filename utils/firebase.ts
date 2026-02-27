@@ -12,6 +12,10 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
+// DİKKAT: Burası çok önemli!
+// Sunucu tarafında (SSR) hata almamak için sadece tarayıcıda çalışmasını sağlıyoruz.
+const messaging = typeof window !== "undefined" ? getMessaging(app) : null;
+
 export const fetchMessaging = async () => {
     if (typeof window !== "undefined" && await isSupported()) {
         return getMessaging(app);
@@ -19,4 +23,5 @@ export const fetchMessaging = async () => {
     return null;
 };
 
-export { app, getMessaging };
+// messaging değişkenini dışa aktarıyoruz
+export { app, messaging };

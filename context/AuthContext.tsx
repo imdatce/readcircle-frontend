@@ -10,8 +10,8 @@ import {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
-import { fetchMessaging } from "@/utils/firebase";
-import { getToken } from "firebase/messaging";
+import { getToken, onMessage } from "firebase/messaging";
+import { fetchMessaging, messaging } from "@/utils/firebase";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -69,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (storedToken) {
       fetchProfile(storedToken);
-      registerNotification();
     }
   }, [logout]);
 
@@ -211,6 +210,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // AuthProvider içinde:
+  useEffect(() => {
+    // messaging değişkeninin var olduğundan ve tarayıcıda olduğumuzdan emin olalım
+    if (typeof window !== "undefined" && messaging) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log("Mesaj geldi:", payload);
+        alert(`${payload.notification?.title}: ${payload.notification?.body}`);
+      });
+      return () => unsubscribe();
+    }
+  }, []);
   return (
     <AuthContext.Provider
       value={{

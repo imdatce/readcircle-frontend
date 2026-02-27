@@ -14,11 +14,13 @@ const messaging = firebase.messaging();
 
 // Arka planda bildirim geldiğinde yapılacak işlem
 messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Arka plan mesajı alındı: ', payload);
+    console.log('Arka planda mesaj alındı: ', payload);
+
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        icon: '/icon-192x192.png' // Kendi ikon yolunuzu buraya yazın
+        icon: '/logo/sura-lgo.png', // Sizin logonuza giden yol
+        badge: '/logo/sura-lgo.png',
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
