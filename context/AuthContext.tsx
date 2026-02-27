@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { AuthContextType } from "@/types";
@@ -170,46 +171,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerNotification = async () => {
-    try {
-      const messaging = await fetchMessaging();
-      if (!messaging) return;
-
-      // 1. Kullanıcıdan bildirim izni iste
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        console.log("Bildirim izni reddedildi.");
-        return;
-      }
-
-      // 2. Firebase'den benzersiz cihaz token'ını al
-      // VAPID_KEY: Firebase Console -> Project Settings -> Cloud Messaging -> Web Push certificates içindeki "Key pair"
-      const currentToken = await getToken(messaging, {
-        vapidKey:
-          "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
-      });
-
-      if (currentToken) {
-        // 3. Backend'e gönder
-        const authToken = localStorage.getItem("token");
-        await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({ token: currentToken }),
-          },
-        );
-        console.log("Bildirim kaydı başarılı!");
-      }
-    } catch (error) {
-      console.error("Bildirim kaydı sırasında hata:", error);
+const registerNotification = async () => {
+  try {
+    alert("1. Bildirim servisi başlatılıyor..."); // Test için eklendi
+    
+    const messagingInstance = await fetchMessaging();
+    if (!messagingInstance) {
+      alert("HATA: Tarayıcınız bildirimleri desteklemiyor veya güvenli olmayan (HTTP) bir bağlantıdasınız!");
+      return;
     }
-  };
 
+    alert("2. Kullanıcıdan izin isteniyor..."); // Test için eklendi
+    const permission = await Notification.requestPermission();
+    
+    if (permission !== "granted") {
+      alert("HATA: Bildirim izni reddedildi. (Durum: " + permission + ")");
+      return;
+    }
+
+    alert("3. İzin alındı, Firebase'den Token bekleniyor..."); // Test için eklendi
+    
+    const currentToken = await getToken(messagingInstance, {
+      vapidKey: "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
+    });
+
+    if (currentToken) {
+      alert("4. Token başarıyla alındı! Sunucuya gönderiliyor..."); // Test için eklendi
+      
+      const authToken = localStorage.getItem("token");
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ token: currentToken }),
+        },
+      );
+      alert("✅ BAŞARILI: Bildirimler tamamen aktif!");
+    } else {
+      alert("HATA: Token alınamadı!");
+    }
+  } catch (error: any) {
+    alert("BEKLENMEYEN HATA: " + error.message);
+    console.error("Bildirim kaydı sırasında hata:", error);
+  }
+};
   // AuthProvider içinde:
   useEffect(() => {
     // messaging değişkeninin var olduğundan ve tarayıcıda olduğumuzdan emin olalım
