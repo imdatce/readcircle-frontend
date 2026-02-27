@@ -171,54 +171,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-const registerNotification = async () => {
-  try {
-    alert("1. Bildirim servisi başlatılıyor..."); // Test için eklendi
-    
-    const messagingInstance = await fetchMessaging();
-    if (!messagingInstance) {
-      alert("HATA: Tarayıcınız bildirimleri desteklemiyor veya güvenli olmayan (HTTP) bir bağlantıdasınız!");
-      return;
-    }
+  const registerNotification = async () => {
+    try {
+      const messagingInstance = await fetchMessaging();
+      if (!messagingInstance) {
+        return;
+      }
 
-    alert("2. Kullanıcıdan izin isteniyor..."); // Test için eklendi
-    const permission = await Notification.requestPermission();
-    
-    if (permission !== "granted") {
-      alert("HATA: Bildirim izni reddedildi. (Durum: " + permission + ")");
-      return;
-    }
+      const permission = await Notification.requestPermission();
 
-    alert("3. İzin alındı, Firebase'den Token bekleniyor..."); // Test için eklendi
-    
-    const currentToken = await getToken(messagingInstance, {
-      vapidKey: "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
-    });
+      if (permission !== "granted") {
+        return;
+      }
 
-    if (currentToken) {
-      alert("4. Token başarıyla alındı! Sunucuya gönderiliyor..."); // Test için eklendi
-      
-      const authToken = localStorage.getItem("token");
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
+      const currentToken = await getToken(messagingInstance, {
+        vapidKey:
+          "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
+      });
+
+      if (currentToken) {
+        const authToken = localStorage.getItem("token");
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ token: currentToken }),
           },
-          body: JSON.stringify({ token: currentToken }),
-        },
-      );
-      alert("✅ BAŞARILI: Bildirimler tamamen aktif!");
-    } else {
-      alert("HATA: Token alınamadı!");
+        );
+      } else {
+        alert("HATA: Token alınamadı!");
+      }
+    } catch (error: any) {
+      alert("BEKLENMEYEN HATA: " + error.message);
+      console.error("Bildirim kaydı sırasında hata:", error);
     }
-  } catch (error: any) {
-    alert("BEKLENMEYEN HATA: " + error.message);
-    console.error("Bildirim kaydı sırasında hata:", error);
-  }
-};
+  };
   // AuthProvider içinde:
   useEffect(() => {
     // messaging değişkeninin var olduğundan ve tarayıcıda olduğumuzdan emin olalım
