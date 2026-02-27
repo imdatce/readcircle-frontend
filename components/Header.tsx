@@ -258,13 +258,6 @@ export default function Header() {
                 <div className="relative z-[60]">
                   <LanguageSwitcher />
                 </div>
-                {/* 3. Uygun bir yere (örneğin sağ üst köşeye) bu butonu ekleyin: */}
-                <button
-                  onClick={registerNotification}
-                  className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm"
-                >
-                  🔔 Bildirimleri Aç
-                </button>
               </div>
             )}
 
