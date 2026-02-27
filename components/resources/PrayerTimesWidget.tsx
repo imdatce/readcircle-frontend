@@ -81,8 +81,18 @@ export default function PrayerTimesWidget() {
 
       try {
         const fullAddress = `${district ? district + ", " : ""}${city}, ${country}`;
+
+        // 1. ADIM: Tam bugünün tarihini GG-AA-YYYY formatında alıyoruz
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, "0");
+        const mm = String(today.getMonth() + 1).padStart(2, "0"); // Aylar 0'dan başlar
+        const yyyy = today.getFullYear();
+        const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+        // 2. ADIM: Tarihi doğrudan API'ye URL parametresi olarak veriyoruz ve cache'i engelliyoruz
         const res = await fetch(
-          `https://api.aladhan.com/v1/timingsByAddress?address=${encodeURIComponent(fullAddress)}&method=13`,
+          `https://api.aladhan.com/v1/timingsByAddress/${formattedDate}?address=${encodeURIComponent(fullAddress)}&method=13`,
+          { cache: "no-store" }, // Tarayıcının eski veriyi hatırlamasını kesin olarak engeller
         );
         const data = await res.json();
 
