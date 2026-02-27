@@ -75,4 +75,5 @@ export interface AuthContextType {
   deleteAccount: () => Promise<void>;
   updateName: (newName: string) => Promise<void>;
   updatePassword: (currentPass: string, newPass: string) => Promise<void>;
+  registerNotification: () => Promise<void>; //
 }

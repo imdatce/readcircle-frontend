@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const { login } = useAuth();
+  const { registerNotification } = useAuth();
+  registerNotification();
   const { t } = useLanguage();
   const router = useRouter();
 
@@ -46,7 +48,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50 dark:bg-black/90 p-4 transition-colors duration-500">
-       <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div className="absolute top-[10%] left-[10%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-[10%] right-[10%] w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>

@@ -10,6 +10,8 @@ import {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
+import { fetchMessaging } from "@/utils/firebase";
+import { getToken } from "firebase/messaging";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
-// Açılışta token varsa backend'den güncel profil (ve rol) bilgisini çekiyoruz
+  // Açılışta token varsa backend'den güncel profil (ve rol) bilgisini çekiyoruz
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUsername = localStorage.getItem("username");
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (storedToken) {
       fetchProfile(storedToken);
+      registerNotification();
     }
   }, [logout]);
 
@@ -168,6 +171,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const registerNotification = async () => {
+    try {
+      const messaging = await fetchMessaging();
+      if (!messaging) return;
+
+      // 1. Kullanıcıdan bildirim izni iste
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        console.log("Bildirim izni reddedildi.");
+        return;
+      }
+
+      // 2. Firebase'den benzersiz cihaz token'ını al
+      // VAPID_KEY: Firebase Console -> Project Settings -> Cloud Messaging -> Web Push certificates içindeki "Key pair"
+      const currentToken = await getToken(messaging, {
+        vapidKey:
+          "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
+      });
+
+      if (currentToken) {
+        // 3. Backend'e gönder
+        const authToken = localStorage.getItem("token");
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ token: currentToken }),
+          },
+        );
+        console.log("Bildirim kaydı başarılı!");
+      }
+    } catch (error) {
+      console.error("Bildirim kaydı sırasında hata:", error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -179,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deleteAccount,
         updateName,
         updatePassword,
+        registerNotification,
       }}
     >
       {children}
