@@ -19,11 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SURA | Zikir ve Hatim Platformu",
-description: "SURA ile Kuran hatimleri, Cevşen halkaları ve zikir programlarını kolayca organize edin.",
-  manifest: "/manifest.json", // PWA için manifest eklendi
+  title: "SURA | Spiritual Union for Reflection & Affinity",
+  description: "Kur'an, Risale-i Nur ve manevi görev dağıtım platformu.",
+  manifest: "/manifest.json",
 };
-
 export const viewport = {
   themeColor: "#10B981", // PWA tarayıcı çubuğu rengi eklendi
 };

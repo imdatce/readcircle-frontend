@@ -6,7 +6,7 @@ import QiblaWidget from "@/components/resources/QiblaWidget";
 import ReligiousDaysWidget from "@/components/resources/ReligiousDaysWidget"; 
 
 export const metadata = {
-  title: "Namaz Vakitleri | ReadCircle",
+  title: "Namaz Vakitleri | SURA",
   description:
     "Günlük namaz vakitlerinizi takip edin ve çevrenizdeki camileri bulun.",
 };

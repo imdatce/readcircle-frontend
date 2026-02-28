@@ -1,5 +1,7 @@
 "use client";
 import { useLanguage } from "@/context/LanguageContext";
+import Link from "next/link";
+import SubNavigation from "./SubNavigation";
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -10,6 +12,8 @@ export default function Footer() {
 
   return (
     <footer className="mt-auto border-t border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/90 backdrop-blur-xl transition-colors duration-300">
+      <SubNavigation />
+
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
@@ -24,10 +28,12 @@ export default function Footer() {
           </div>
 
           <div className="text-center md:text-right flex flex-col items-center md:items-end gap-1">
-            <p className="font-bold text-emerald-600 dark:text-emerald-500 text-sm bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full mb-1">
-              {t("allahAccept")}
-            </p>
-
+            <Link
+              href="/about"
+              className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 font-bold text-sm uppercase tracking-wider"
+            >
+              About Us
+            </Link>
             <p className="text-xs text-gray-400 dark:text-gray-500">
               &copy; {currentYear} {t("rightsReserved")}
             </p>
