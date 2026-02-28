@@ -987,6 +987,14 @@ export default function Header() {
                               <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                               Günlük Zikir Takibi
                             </Link>
+                            <Link
+                              href="/agenda/dualarim"
+                              onClick={closeMenu}
+                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                              Kişisel Dua Listem
+                            </Link>
                           </div>
                         )}
 
