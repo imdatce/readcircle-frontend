@@ -2,7 +2,6 @@
 "use client";
 
 import React, { use, useState, useMemo, useCallback } from "react";
-import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
 import ReadingModal from "@/components/modals/ReadingModal";
@@ -186,17 +185,54 @@ export default function JoinPage({
 
   if (error || !session)
     return (
-      <div className="flex h-screen items-center justify-center p-6 text-center">
-        <div className="bg-white dark:bg-gray-900 p-6 md:p-8 rounded-3xl shadow-xl border border-red-100 dark:border-red-900/30 max-w-md w-full">
-          <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white mb-4">
-            {t("errorOccurred")}
+      <div className="flex min-h-screen items-center justify-center p-6 text-center bg-[#FDFCF7] dark:bg-[#061612] relative overflow-hidden">
+        {/* Arka plan ışığı */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-red-400/10 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="bg-white/80 dark:bg-[#0a1f1a]/80 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-red-100 dark:border-red-900/30 max-w-md w-full animate-in zoom-in-95 duration-500 relative z-10">
+          <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-800/50">
+            <svg
+              className="w-10 h-10"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+
+          <h2 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white mb-3">
+            Halka Bulunamadı
           </h2>
-          <Link
-            href="/"
-            className="inline-block px-8 py-3 bg-gray-800 text-white rounded-xl font-bold text-sm md:text-base"
-          >
-            {t("backHome")}
-          </Link>
+
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+            Girdiğiniz davet kodu (
+            <span className="font-bold text-gray-700 dark:text-gray-300">
+              {code}
+            </span>
+            ) veya bağlantı geçersiz, süresi dolmuş veya yönetici tarafından
+            silinmiş olabilir. Lütfen kodu kontrol edip tekrar deneyin.
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push("/sessions")}
+              className="w-full py-3.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all active:scale-95"
+            >
+              Tekrar Kod Girmeyi Dene
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 transition-all active:scale-95"
+            >
+              {t("backHome") || "Ana Sayfaya Dön"}
+            </button>
+          </div>
         </div>
       </div>
     );

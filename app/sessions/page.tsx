@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import SessionCard from "@/components/home/SessionCard";
 import { DistributionSession } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 
 export default function SessionsPage() {
   const router = useRouter();
@@ -17,6 +20,40 @@ export default function SessionsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"created" | "joined">("created");
+
+  // 1. AuthContext'ten kullanıcıyı alıyoruz
+  const { user } = useAuth();
+
+  // 2. Modallar ve Input State'leri
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [joinCode, setJoinCode] = useState(""); // <-- YENİ: Katılım kodu state'i
+
+  // 3. Artı (+) Butonuna Tıklandığında Çalışacak Fonksiyon
+  const handleCreateSession = () => {
+    if (!user) {
+      setIsModalOpen(true);
+    } else {
+      router.push("/admin");
+    }
+  };
+
+  // <-- YENİ: Kod veya Link ile Katılma Fonksiyonu -->
+  const handleJoinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+
+    if (!user) {
+      // Giriş yapmamışsa modalı aç
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Link yapıştırıldıysa en sondaki kodu al (Örn: site.com/join/ABC123 -> ABC123)
+    const code = joinCode.split("/").pop()?.trim();
+    if (code) {
+      router.push(`/join/${code}`);
+    }
+  };
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -56,7 +93,6 @@ export default function SessionsPage() {
     fetchSessions();
   }, []);
 
-  // --- EKLENEN FONKSİYONLAR ---
   const handleReset = async (code: string) => {
     if (
       !window.confirm(
@@ -70,7 +106,6 @@ export default function SessionsPage() {
       const baseUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-      // HATA DÜZELTİLDİ: URL /api/distribution/reset-session/ olarak güncellendi
       const response = await fetch(
         `${baseUrl}/api/distribution/reset-session/${code}`,
         {
@@ -103,7 +138,6 @@ export default function SessionsPage() {
       const baseUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-      // HATA DÜZELTİLDİ: URL /api/distribution/delete-session/ olarak güncellendi
       const response = await fetch(
         `${baseUrl}/api/distribution/delete-session/${code}`,
         {
@@ -137,7 +171,6 @@ export default function SessionsPage() {
       const baseUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-      // HATA DÜZELTİLDİ: URL /api/distribution/leave-session/ olarak güncellendi
       const response = await fetch(
         `${baseUrl}/api/distribution/leave-session/${code}`,
         {
@@ -156,8 +189,6 @@ export default function SessionsPage() {
       console.error("Ayrılma hatası:", error);
     }
   };
-
-  // -----------------------------
 
   return (
     <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500 relative overflow-hidden">
@@ -191,10 +222,29 @@ export default function SessionsPage() {
               Halkalar
             </h1>
           </div>
-          <div className="w-12"></div> {/* Dengeleyici boşluk */}
+
+          <button
+            onClick={handleCreateSession}
+            className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 shrink-0"
+            title="Yeni Halka Oluştur"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={3}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
         </div>
 
-        {/* Sekmeler (Segmented Control Stili) */}
+        {/* Sekmeler */}
         <div className="flex justify-center">
           <div className="inline-flex bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-2xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
             <button
@@ -263,36 +313,39 @@ export default function SessionsPage() {
                       router={router}
                       t={t}
                       type="managed"
-                      onReset={handleReset} // <-- BURASI EKLENDİ
-                      onDelete={handleDelete} // <-- BURASI EKLENDİ
+                      onReset={handleReset}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] border border-dashed border-gray-300 dark:border-gray-700">
-                  <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                <button
+                  onClick={handleCreateSession}
+                  className="w-full group flex flex-col items-center justify-center py-20 px-4 text-center bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all duration-300"
+                >
+                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 group-hover:bg-emerald-500 text-gray-400 dark:text-gray-500 group-hover:text-white rounded-full flex items-center justify-center mb-4 transition-colors duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-emerald-500/30">
                     <svg
-                      className="w-10 h-10"
+                      className="w-10 h-10 group-hover:scale-110 transition-transform"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        d="M12 4v16m8-8H4"
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-gray-800 dark:text-gray-200 mb-2">
-                    Henüz Halka Yok
+                  <h3 className="text-xl font-black text-gray-800 dark:text-gray-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-2 transition-colors">
+                    Yeni Halka Oluştur
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm">
-                    Yönettiğiniz herhangi bir halka bulunmuyor. Ana sayfadan
-                    yeni bir okuma halkası başlatabilirsiniz.
+                  <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm group-hover:text-gray-600 dark:group-hover:text-gray-300">
+                    Şu an yönettiğiniz bir halka bulunmuyor. Buraya tıklayarak
+                    yeni bir Kur'an veya Cevşen halkası başlatabilirsiniz.
                   </p>
-                </div>
+                </button>
               ))}
 
             {activeTab === "joined" &&
@@ -305,13 +358,14 @@ export default function SessionsPage() {
                       router={router}
                       t={t}
                       type="joined"
-                      onLeave={handleLeave} // <-- BURASI EKLENDİ
+                      onLeave={handleLeave}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] border border-dashed border-gray-300 dark:border-gray-700">
-                  <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                // <-- YENİ: KOD İLE KATILMA EKRANI (Mavi Tema) -->
+                <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center py-12 px-6 text-center bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] border-2 border-dashed border-gray-300 dark:border-gray-700">
+                  <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-6 shadow-sm">
                     <svg
                       className="w-10 h-10"
                       fill="none"
@@ -322,22 +376,63 @@ export default function SessionsPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
                       />
                     </svg>
                   </div>
+
                   <h3 className="text-xl font-black text-gray-800 dark:text-gray-200 mb-2">
                     Henüz Katılım Yok
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm">
-                    Şu an için katıldığınız bir halka görünmüyor. Size
-                    gönderilen bir davet koduyla halkalara katılabilirsiniz.
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
+                    Size gönderilen bir davet kodunu veya bağlantısını aşağıya
+                    yapıştırarak hemen bir halkaya katılabilirsiniz.
                   </p>
+
+                  <form
+                    onSubmit={handleJoinSubmit}
+                    className="w-full flex flex-col gap-3"
+                  >
+                    <input
+                      type="text"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value)}
+                      placeholder="Davet kodu veya bağlantısı..."
+                      className="w-full px-5 py-3.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 rounded-xl text-sm font-bold outline-none transition-colors text-gray-800 dark:text-white placeholder:font-medium"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!joinCode.trim()}
+                      className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Halkaya Katıl
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                        />
+                      </svg>
+                    </button>
+                  </form>
                 </div>
               ))}
           </div>
         )}
       </div>
+
+      <LoginRequiredModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Giriş Yapmanız Gerekiyor"
+        message="Yeni bir halka oluşturmak veya yönetmek için lütfen hesabınıza giriş yapın."
+      />
     </div>
   );
 }

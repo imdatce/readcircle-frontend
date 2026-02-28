@@ -170,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${currentToken}`,
         },
+        // BURAYI DÜZELTİYORUZ (Eski orijinal haline döndürüyoruz)
         body: JSON.stringify({ currentPassword, newPassword }),
       },
     );

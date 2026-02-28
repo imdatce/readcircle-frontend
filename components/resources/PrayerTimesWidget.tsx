@@ -357,7 +357,7 @@ export default function PrayerTimesWidget() {
     <div className="bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-5 md:p-6 shadow-sm border border-emerald-100 dark:border-emerald-900/30 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
-      <div className="flex flex-col mb-6 relative z-10">
+      <div className="flex flex-col mb-6 relative z-50">
         <div className="w-full">
           <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
             Namaz Vakitleri
@@ -394,7 +394,7 @@ export default function PrayerTimesWidget() {
                     type="text"
                     value={editCity}
                     onChange={handleCityChange}
-                    placeholder="Şehir (Örn: Erzurum)"
+                    placeholder="Şehir (Örn: İstanbul)"
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm disabled:opacity-50"
                   />
                   {filteredCities.length > 0 && (
@@ -421,7 +421,7 @@ export default function PrayerTimesWidget() {
                       if (turkeyDistricts.length > 0 && !editDistrict)
                         setFilteredDistricts(turkeyDistricts);
                     }}
-                    placeholder="İlçe (Örn: Horasan)"
+                    placeholder="İlçe (Örn: Fatih)"
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 pr-10 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
                   />
                   <button
