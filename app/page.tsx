@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
@@ -18,7 +19,6 @@ import {
   DashboardSkeleton,
   Step,
 } from "@/components/home/HomeWidgets";
-import PrayerTimesWidget from "@/components/resources/PrayerTimesWidget";
 
 function HomeContent() {
   const { t, language } = useLanguage();
@@ -179,8 +179,8 @@ function HomeContent() {
         <div className="text-center max-w-4xl mx-auto mb-8 md:mb-12">
           {/* Başlık (Boşlukları kısıldı) */}
           <h1 className="text-3xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] md:leading-[1.15]">
-            <span className="block text-gray-800 dark:text-white drop-shadow-sm">
-              {t("landingHeroTitlePart1") || "İslami Kaynak"}
+            <span className="block mt-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 animate-gradient pb-2">
+              {t("landingHeroTitlePart1") || "İslami Kaynaklar"}
             </span>
             <span className="block mt-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 animate-gradient pb-2">
               {t("landingHeroTitlePart2") || "Okuma ve Paylaşma"}
@@ -423,9 +423,6 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Nasıl Çalışır Bölümü (Boşluklar Daha da Daraltıldı) */}
-        {/* Nasıl Çalışır Bölümü (Boşluklar İyice Daraltıldı) */}
-        {/* mb-3 olan alt boşluk mb-1'e çekildi */}
         <div className="max-w-3xl mx-auto bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-5 shadow-sm border border-gray-200 dark:border-gray-800 mb-1">
           <h2 className="text-lg md:text-xl font-bold text-center mb-5 text-gray-800 dark:text-gray-100">
             {t("howItWorksTitle")}
@@ -437,126 +434,87 @@ function HomeContent() {
           </div>
         </div>
       </div>
-      {/* max-w-7xl Kapandı, böylece alttaki bölüm sayfayı tam kaplar */}
 
       {/* --- PLATFORMDA NELER YAPABİLİRSİNİZ BÖLÜMÜ --- */}
-      {/* pt-4 md:pt-6 olan üst dolgular pt-2 md:pt-3'e düşürüldü */}
-      <section className="pt-2 pb-12 md:pt-3 md:pb-16 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-1/2 bg-teal-500/5 dark:bg-teal-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+      <section className="pt-2 pb-12 md:pt-3 md:pb-20 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
+        {/* Arka plan parlama efekti */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-1/2 bg-teal-500/5 dark:bg-teal-500/10 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
+          <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-4xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
               {t("featuresTitle") || "Platformda Neler Yapabilirsiniz?"}
             </h2>
-            <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
               {t("featuresSubtitle") ||
-                "İslami okumalarınızı düzenleyin, manevi ajandanızı oluşturun ve sevdiklerinizle ortak hatim halkalarında buluşun."}
+                "Sadece bir okuma platformu değil; ibadetlerinizi takip edebileceğiniz, sevdiklerinizle manevi halkalarda buluşabileceğiniz kapsamlı bir dijital asistan."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-            {/* KART 1: Zengin Kütüphane */}
-            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl hover:shadow-amber-500/5 dark:hover:shadow-amber-900/20 hover:-translate-y-1.5 transition-all duration-300 group">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mb-4 shadow-md shadow-amber-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg
-                  className="w-6 h-6 md:w-7 md:h-7 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-base md:text-lg font-black text-gray-900 dark:text-white mb-2 tracking-wide">
-                {t("featureLibraryTitle") || "Zengin Kütüphane"}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 md:gap-6">
+            {/* KART 4: Okuma Halkaları */}
+            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 hover:-translate-y-2 transition-all duration-300 group">
+            
+              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                Okuma Halkaları
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed font-medium">
-                {t("featureLibraryDesc") ||
-                  "Kur'an-ı Kerim, Risale-i Nur, Cevşen ve Dualara tek tıkla ulaşın. Akıllı hafıza ile her zaman tam kaldığınız satırdan okumaya devam edin."}
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                Sevdiklerinizle dijital hatim grupları kurun. Cüzleri, Cevşen
+                bablarını veya özel duaları{" "}
+                <strong className="text-blue-600 dark:text-blue-400 font-bold">
+                  hızlıca paylaştırın
+                </strong>
+                . Grubunuzun okuma ilerlemesini anlık statiklerle takip edin.
               </p>
             </div>
 
-            {/* KART 2: Manevi Ajanda */}
-            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl hover:shadow-teal-500/5 dark:hover:shadow-teal-900/20 hover:-translate-y-1.5 transition-all duration-300 group">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center mb-4 shadow-md shadow-teal-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg
-                  className="w-6 h-6 md:w-7 md:h-7 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-base md:text-lg font-black text-gray-900 dark:text-white mb-2 tracking-wide">
-                {t("featureAgendaTitle") || "Manevi Ajanda"}
+            {/* KART 1: Zengin Kütüphane & Külliyat */}
+            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-amber-500/10 dark:hover:shadow-amber-900/20 hover:-translate-y-2 transition-all duration-300 group">
+             
+              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                Zengin Külliyat
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed font-medium">
-                {t("featureAgendaDesc") ||
-                  "Günlük namaz ve ibadet çetelenizi tutun. Geçmiş kaza namazı borçlarınızı hesaplayıp veritabanı güvencesiyle eritmeye başlayın."}
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                Kur'an-ı Kerim, Risale-i Nur, Cevşen, Esma-ül Hüsna ve özel
+                dualara tek platformdan erişin.{" "}
+                <strong className="text-amber-600 dark:text-amber-400 font-bold">
+                  Akıllı hafıza
+                </strong>{" "}
+                özelliği ile her zaman tam kaldığınız sayfadan okumaya devam
+                edin.
               </p>
             </div>
 
-            {/* KART 3: Okuma Halkaları */}
-            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl hover:shadow-blue-500/5 dark:hover:shadow-blue-900/20 hover:-translate-y-1.5 transition-all duration-300 group">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-md shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg
-                  className="w-6 h-6 md:w-7 md:h-7 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-base md:text-lg font-black text-gray-900 dark:text-white mb-2 tracking-wide">
-                {t("featureCirclesTitle") || "Okuma Halkaları"}
+            {/* KART 2: Namaz Vakitleri & Rehber */}
+            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-teal-500/10 dark:hover:shadow-teal-900/20 hover:-translate-y-2 transition-all duration-300 group">
+       
+              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                İbadet Asistanı
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed font-medium">
-                {t("featureCirclesDesc") ||
-                  "Arkadaşlarınızla dijital hatim grupları kurun. Cüzleri, Cevşen bablarını veya Risale bölümlerini kolayca paylaşıp takibini yapın."}
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                Bulunduğunuz konuma özel{" "}
+                <strong className="text-teal-600 dark:text-teal-400 font-bold">
+                  Namaz Vakitleri
+                </strong>
+                , aylık imsakiye, canlı Kıble Pusulası ve dini günler takvimini
+                kullanın. Çevrenizdeki en yakın camileri tek tıkla haritada
+                bulun.
               </p>
             </div>
 
-            {/* KART 4: Kişiselleştirme */}
-            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl hover:shadow-purple-500/5 dark:hover:shadow-purple-900/20 hover:-translate-y-1.5 transition-all duration-300 group">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg
-                  className="w-6 h-6 md:w-7 md:h-7 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-base md:text-lg font-black text-gray-900 dark:text-white mb-2 tracking-wide">
-                {t("featureCustomTitle") || "Tam Kişiselleştirme"}
+            {/* KART 3: Manevi Ajanda & Zikirmatik */}
+            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-purple-500/10 dark:hover:shadow-purple-900/20 hover:-translate-y-2 transition-all duration-300 group">
+         
+              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                Manevi Ajanda
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed font-medium">
-                {t("featureCustomDesc") ||
-                  "Göz yormayan karanlık mod, çoklu dil desteği, font boyutu ayarları ve Arapça/Türkçe/Meal sekmeleriyle okuma deneyiminizi özelleştirin."}
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                Günlük namaz ve vakit tesbihatlarınızı takip edin.{" "}
+                <strong className="text-purple-600 dark:text-purple-400 font-bold">
+                  Kaza Namazı
+                </strong>{" "}
+                çetelenizi tutarak geçmiş borçlarınızı planlayın. Ekrana entegre
+                zikirmatik ile virdlerinizi kolayca çekin.
               </p>
             </div>
           </div>

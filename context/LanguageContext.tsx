@@ -299,7 +299,7 @@ const translations: TranslationStructure = {
         "Göz yormayan karanlık mod, çoklu dil desteği, font boyutu ayarları ve Arapça/Latince/Meal sekmeleriyle okuma deneyiminizi özelleştirin.",
     },
     landingSection: {
-      landingHeroTitlePart1: "İslami Kaynak",
+      landingHeroTitlePart1: "İslami Kaynakları",
       landingHeroTitlePart2: "Okuma ve Paylaştırma",
       landingHeroTitlePart3: "Platformu",
       landingHeroSubtitle:
