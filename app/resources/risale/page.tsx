@@ -25,7 +25,7 @@ function RisaleContent() {
   const [loading, setLoading] = useState(false);
 
   const [fontLevel, setFontLevel] = useState(3);
-  const [isSepia, setIsSepia] = useState(false);
+  const [isSepia, setIsSepia] = useState(false); // DÜZELTİLDİ: setIsSepia eklendi
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -145,26 +145,12 @@ function RisaleContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookParam]);
 
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Tam ekran hatası: ${err.message}`);
-      });
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    }
-  };
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", handleFsChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFsChange);
-  }, []);
+  // Native API yerine sadece state değiştiriyoruz
+  const toggleFullScreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -188,12 +174,20 @@ function RisaleContent() {
     };
   }, [isSepia]);
 
+  // === 1. OTOMATİK KAYDIRMA MANTIĞI ===
   useEffect(() => {
     if (!isAutoScrolling || view !== "reading") return;
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-    let exactScrollY = window.scrollY;
+
+    const scroller = isFullscreen ? scrollContainerRef.current : window;
+    if (!scroller) return;
+
+    let exactScrollY =
+      isFullscreen && scrollContainerRef.current
+        ? scrollContainerRef.current.scrollTop
+        : window.scrollY;
 
     const baseSpeed = 40;
 
@@ -207,15 +201,34 @@ function RisaleContent() {
         exactScrollY += moveBy;
 
         const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
+          isFullscreen && scrollContainerRef.current
+            ? scrollContainerRef.current.scrollHeight -
+              scrollContainerRef.current.clientHeight
+            : document.documentElement.scrollHeight - window.innerHeight;
 
+        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          window.scrollTo(0, maxScroll);
+          if (isFullscreen && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: maxScroll,
+              behavior: "auto",
+            });
+          } else {
+            window.scrollTo({ top: maxScroll, behavior: "auto" });
+          }
           setIsAutoScrolling(false);
           return;
         }
 
-        window.scrollTo(0, exactScrollY);
+        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
+        if (isFullscreen && scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({
+            top: exactScrollY,
+            behavior: "auto",
+          });
+        } else {
+          window.scrollTo({ top: exactScrollY, behavior: "auto" });
+        }
       }
 
       animationFrameId = requestAnimationFrame(scrollStep);
@@ -223,30 +236,8 @@ function RisaleContent() {
 
     animationFrameId = requestAnimationFrame(scrollStep);
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [isAutoScrolling, autoScrollSpeed, view]);
-
-  useEffect(() => {
-    const handleInteraction = (e: Event) => {
-      if (isAutoScrolling && view === "reading") {
-        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10) {
-          setIsAutoScrolling(false);
-        } else if (e.type === "touchstart" || e.type === "touchmove") {
-          setIsAutoScrolling(false);
-        }
-      }
-    };
-    window.addEventListener("wheel", handleInteraction, { passive: true });
-    window.addEventListener("touchstart", handleInteraction, { passive: true });
-    window.addEventListener("touchmove", handleInteraction, { passive: true });
-    return () => {
-      window.removeEventListener("wheel", handleInteraction);
-      window.removeEventListener("touchstart", handleInteraction);
-      window.removeEventListener("touchmove", handleInteraction);
-    };
-  }, [isAutoScrolling, view]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isAutoScrolling, autoScrollSpeed, view, isFullscreen]);
 
   const cycleSpeed = () => {
     const speeds = [0.5, 1, 1.5, 2, 3];
@@ -428,19 +419,49 @@ function RisaleContent() {
             {/* OKUMA GÖRÜNÜMÜ */}
             {view === "reading" && (
               <div
+                ref={scrollContainerRef}
+                onPointerDown={(e) => {
+                  // YENİ EKLENEN KORUMA: Eğer tıklanan yer üst menü veya bir buton ise kaydırmayı durdurma
+                  const target = e.target as HTMLElement;
+                  if (target.closest("button") || target.closest(".sticky"))
+                    return;
+
+                  if (isAutoScrolling) {
+                    setIsAutoScrolling(false);
+                    (window as any)._justStoppedScroll = true;
+                    setTimeout(() => {
+                      (window as any)._justStoppedScroll = false;
+                    }, 300);
+                  }
+                }}
                 onClick={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest("button") || target.closest(".sticky"))
                     return;
+                  if ((window as any)._justStoppedScroll) return;
                   toggleFullScreen();
                 }}
-                className={`relative min-h-screen transition-all duration-500 cursor-pointer ${isFullscreen ? "bg-transparent" : ""}`}
+                className={`relative transition-all duration-500 cursor-pointer ${
+                  !isAutoScrolling ? "scroll-smooth" : "scroll-auto"
+                } ${
+                  isFullscreen
+                    ? `fixed inset-0 z-[9999] overflow-y-auto px-0 py-8 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#FDFCF7] dark:bg-[#061612]"}`
+                    : "min-h-screen"
+                }`}
               >
+                {/* Header ve SubNavigation'ı tam ekrandayken gizlemek için dinamik stil eklentisi */}
+                {isFullscreen && (
+                  <style>{`
+                    header, #sub-navigation { display: none !important; }
+                  `}</style>
+                )}
+
+                {/* Kontrol paneli tasarımı kaldığı yerden devam ediyor... */}
                 <div
-                  className={`sticky top-0 z-50 p-3 md:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm transition-all duration-500 ${
+                  className={`sticky z-50 p-3 md:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm transition-all duration-500 ${
                     isFullscreen
-                      ? "opacity-0 hover:opacity-100 pointer-events-auto"
-                      : "opacity-100 rounded-[2rem] border mt-[-1.5rem] mb-4"
+                      ? "top-0 opacity-0 hover:opacity-100 pointer-events-auto"
+                      : "top-16 md:top-20 opacity-100 rounded-[2rem] border mt-[-1.5rem] mb-4"
                   }`}
                 >
                   <div className="flex justify-between items-center max-w-5xl mx-auto w-full px-2">
@@ -476,7 +497,7 @@ function RisaleContent() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsSepia(!isSepia);
+                            setIsSepia((prev) => !prev); // DÜZELTİLDİ
                             if (
                               typeof navigator !== "undefined" &&
                               navigator.vibrate
@@ -520,7 +541,7 @@ function RisaleContent() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsAutoScrolling(!isAutoScrolling);
+                            setIsAutoScrolling((prev) => !prev);
                             if (
                               typeof navigator !== "undefined" &&
                               navigator.vibrate
@@ -563,7 +584,7 @@ function RisaleContent() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFullScreen();
+                            toggleFullScreen(); // DÜZELTİLDİ
                             if (
                               typeof navigator !== "undefined" &&
                               navigator.vibrate

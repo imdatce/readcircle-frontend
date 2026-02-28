@@ -232,7 +232,7 @@ export default function CevsenPage() {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [barVisible, setBarVisible] = useState(true);
-
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const TABS: { id: TabType; label: string }[] = [
     { id: "ARABIC", label: "Arapça" },
     { id: "LATIN", label: "Okunuşu" },
@@ -302,7 +302,15 @@ export default function CevsenPage() {
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-    let exactScrollY = window.scrollY;
+
+    // Tam ekrandayken scroll hedefi "div", normalken "window" olmalıdır
+    const scroller = isFullscreen ? scrollContainerRef.current : window;
+    if (!scroller) return;
+
+    let exactScrollY =
+      isFullscreen && scrollContainerRef.current
+        ? scrollContainerRef.current.scrollTop
+        : window.scrollY;
 
     const baseSpeed = 40;
 
@@ -316,15 +324,34 @@ export default function CevsenPage() {
         exactScrollY += moveBy;
 
         const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
+          isFullscreen && scrollContainerRef.current
+            ? scrollContainerRef.current.scrollHeight -
+              scrollContainerRef.current.clientHeight
+            : document.documentElement.scrollHeight - window.innerHeight;
 
+        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          window.scrollTo(0, maxScroll);
+          if (isFullscreen && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: maxScroll,
+              behavior: "auto",
+            });
+          } else {
+            window.scrollTo({ top: maxScroll, behavior: "auto" });
+          }
           setIsAutoScrolling(false);
           return;
         }
 
-        window.scrollTo(0, exactScrollY);
+        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
+        if (isFullscreen && scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({
+            top: exactScrollY,
+            behavior: "auto",
+          });
+        } else {
+          window.scrollTo({ top: exactScrollY, behavior: "auto" });
+        }
       }
 
       animationFrameId = requestAnimationFrame(scrollStep);
@@ -335,12 +362,20 @@ export default function CevsenPage() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isAutoScrolling, autoScrollSpeed]);
+  }, [isAutoScrolling, autoScrollSpeed, isFullscreen]);
 
   // Manuel kaydırmada oto-kaydırmayı durdur
   useEffect(() => {
     const handleInteraction = (e: Event) => {
       if (isAutoScrolling) {
+        // YENİ EKLENEN KISIM: Eğer dokunulan yer bir buton veya link ise müdahale etme!
+        if (
+          e.target instanceof Element &&
+          e.target.closest("button, a, input")
+        ) {
+          return;
+        }
+
         if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10) {
           setIsAutoScrolling(false);
         } else if (e.type === "touchstart" || e.type === "touchmove") {
@@ -532,8 +567,15 @@ export default function CevsenPage() {
 
   return (
     <div
+      ref={scrollContainerRef} // <-- YENİ
       onClick={handleContentClick}
-      className={`min-h-screen py-8 px-2 sm:px-6 lg:px-8 font-sans scroll-smooth transition-colors duration-500 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}
+      className={`font-sans transition-colors duration-500 px-2 sm:px-6 lg:px-8 ${
+        !isAutoScrolling ? "scroll-smooth" : "scroll-auto" // <-- YENİ: Çatışmayı önler
+      } ${
+        isFullscreen
+          ? "fixed inset-0 z-[9999] overflow-y-auto py-8"
+          : "min-h-screen py-8"
+      } ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}
     >
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Üst Bar */}
@@ -644,7 +686,7 @@ export default function CevsenPage() {
               {/* Oto Kaydırma Başlat/Durdur */}
               <button
                 onClick={() => {
-                  setIsAutoScrolling(!isAutoScrolling);
+                  setIsAutoScrolling((prev) => !prev);
                   if (typeof navigator !== "undefined" && navigator.vibrate)
                     navigator.vibrate(20);
                 }}

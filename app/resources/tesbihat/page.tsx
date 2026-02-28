@@ -547,6 +547,8 @@ function TesbihatContent() {
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [barVisible, setBarVisible] = useState(true);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // Wake Lock API (Ekranın kapanmasını önler)
   const wakeLockRef = useRef<any>(null);
   useEffect(() => {
@@ -601,7 +603,14 @@ function TesbihatContent() {
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-    let exactScrollY = window.scrollY;
+
+    const scroller = isFullscreen ? scrollContainerRef.current : window;
+    if (!scroller) return;
+
+    let exactScrollY =
+      isFullscreen && scrollContainerRef.current
+        ? scrollContainerRef.current.scrollTop
+        : window.scrollY;
 
     const baseSpeed = 40;
 
@@ -615,29 +624,62 @@ function TesbihatContent() {
         exactScrollY += moveBy;
 
         const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
+          isFullscreen && scrollContainerRef.current
+            ? scrollContainerRef.current.scrollHeight -
+              scrollContainerRef.current.clientHeight
+            : document.documentElement.scrollHeight - window.innerHeight;
 
+        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          window.scrollTo(0, maxScroll);
+          if (isFullscreen && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: maxScroll,
+              behavior: "auto",
+            });
+          } else {
+            window.scrollTo({ top: maxScroll, behavior: "auto" });
+          }
           setIsAutoScrolling(false);
           return;
         }
-        window.scrollTo(0, exactScrollY);
+
+        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
+        if (isFullscreen && scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTo({
+            top: exactScrollY,
+            behavior: "auto",
+          });
+        } else {
+          window.scrollTo({ top: exactScrollY, behavior: "auto" });
+        }
       }
+
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
+
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isAutoScrolling, autoScrollSpeed]);
+  }, [isAutoScrolling, autoScrollSpeed, isFullscreen]);
 
   // Manuel kaydırmada oto-kaydırmayı durdur
   useEffect(() => {
     const handleInteraction = (e: Event) => {
       if (isAutoScrolling) {
+        if (
+          e.target instanceof Element &&
+          e.target.closest("button, a, input")
+        ) {
+          return;
+        }
+
         if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10) {
           setIsAutoScrolling(false);
-        } else if (e.type === "touchstart" || e.type === "touchmove") {
+        } else if (
+          e.type === "touchstart" ||
+          e.type === "touchmove" ||
+          e.type === "mousedown"
+        ) {
           setIsAutoScrolling(false);
         }
       }
@@ -645,34 +687,20 @@ function TesbihatContent() {
     window.addEventListener("wheel", handleInteraction, { passive: true });
     window.addEventListener("touchstart", handleInteraction, { passive: true });
     window.addEventListener("touchmove", handleInteraction, { passive: true });
+    window.addEventListener("mousedown", handleInteraction, { passive: true });
+
     return () => {
       window.removeEventListener("wheel", handleInteraction);
       window.removeEventListener("touchstart", handleInteraction);
       window.removeEventListener("touchmove", handleInteraction);
+      window.removeEventListener("mousedown", handleInteraction);
     };
   }, [isAutoScrolling]);
 
   // Tam ekranı algılama
   const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Tam ekran hatası: ${err.message}`);
-      });
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    }
+    setIsFullscreen((prev) => !prev);
   };
-
-  useEffect(() => {
-    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", handleFsChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFsChange);
-  }, []);
 
   const cycleSpeed = () => {
     const speeds = [0.5, 1, 1.5, 2, 3];
@@ -735,19 +763,44 @@ function TesbihatContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleContentClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest("button, a, input")) return;
-    toggleFullScreen();
-  };
-
   const isHeaderVisible = barVisible && !isFullscreen;
 
   return (
     <ReadingContext.Provider value={{ isSepia }}>
       <div
-        onClick={handleContentClick}
-        className={`min-h-screen py-6 px-3 sm:px-6 lg:px-8 transition-colors duration-500 cursor-pointer ${
-          isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"
+        ref={scrollContainerRef}
+        onPointerDown={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.closest("button") || target.closest(".sticky")) return;
+
+          if (isAutoScrolling) {
+            setIsAutoScrolling(false);
+            (window as any)._justStoppedScroll = true;
+            setTimeout(() => {
+              (window as any)._justStoppedScroll = false;
+            }, 300);
+          }
+        }}
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.closest("button") || target.closest(".sticky")) return;
+          if ((window as any)._justStoppedScroll) return;
+          toggleFullScreen();
+        }}
+        className={`transition-colors duration-500 cursor-pointer ${
+          !isAutoScrolling ? "scroll-smooth" : "scroll-auto"
+        } ${
+          isFullscreen
+            ? `fixed inset-0 z-[9999] overflow-y-auto px-3 sm:px-6 lg:px-8 py-6 ${
+                isSepia
+                  ? "sepia-theme bg-[#F4ECD8]"
+                  : "bg-[#F8FAFC] dark:bg-gray-950"
+              }`
+            : `min-h-screen py-6 px-3 sm:px-6 lg:px-8 ${
+                isSepia
+                  ? "sepia-theme bg-[#F4ECD8]"
+                  : "bg-[#F8FAFC] dark:bg-gray-950"
+              }`
         }`}
       >
         <div className="max-w-3xl mx-auto space-y-4">
@@ -820,7 +873,7 @@ function TesbihatContent() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsSepia(!isSepia);
+                    setIsSepia((prev) => !prev);
                     if (typeof navigator !== "undefined" && navigator.vibrate)
                       navigator.vibrate(20);
                   }}
@@ -861,7 +914,7 @@ function TesbihatContent() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsAutoScrolling(!isAutoScrolling);
+                    setIsAutoScrolling((prev) => !prev);
                     if (typeof navigator !== "undefined" && navigator.vibrate)
                       navigator.vibrate(20);
                   }}
@@ -964,7 +1017,6 @@ function TesbihatContent() {
           {/* İÇERİK ALANLARI */}
           <div
             className="pb-20 pt-4"
-            onPointerDown={() => setIsAutoScrolling(false)}
             style={
               {
                 "--font-offset": `${fontOffset}px`,

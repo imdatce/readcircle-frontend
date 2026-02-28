@@ -105,7 +105,11 @@ export default function SubNavigation() {
   ];
 
   return (
-    <nav className="w-full bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
+    <nav
+      id="sub-navigation"
+      className="w-full bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40"
+    >
+      {" "}
       <div className="max-w-4xl mx-auto px-1 py-1.5">
         <div className="grid grid-cols-4 gap-1">
           {navItems.map((item) => {

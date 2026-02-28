@@ -1091,7 +1091,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
     >
       <div
         className={`relative w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
