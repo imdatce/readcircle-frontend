@@ -121,19 +121,24 @@ export default function AdminPage() {
 
   const categorizedResources = useMemo(() => {
     if (!resources.length) return [];
-    
+
     // Dağıtım listesinde GÖSTERİLMEYECEK kaynakların kodları (Backend'den nasıl geliyorsa o şekilde yazılmalı)
-    const EXCLUDED_RESOURCE_KEYS = ["ESMAULHUSNA", "GUNLUKDUALAR", "KURANDUALARI", "DUALAR"]; 
+    const EXCLUDED_RESOURCE_KEYS = [
+      "ESMAULHUSNA",
+      "GUNLUKDUALAR",
+      "KURANDUALARI",
+      "DUALAR",
+    ];
 
     const categories: Record<string, Resource[]> = {};
     CATEGORY_ORDER.forEach((cat) => (categories[cat] = []));
 
     resources.forEach((resource) => {
       const upperCode = resource.codeKey?.toUpperCase() || "";
-      
+
       // Eğer kaynak dışlanmış listedeyse, döngünün bu adımını atla (kategoriye ekleme)
       if (EXCLUDED_RESOURCE_KEYS.includes(upperCode)) {
-        return; 
+        return;
       }
 
       const category = CATEGORY_MAPPING[upperCode] || "DHIKRS";
@@ -196,7 +201,7 @@ export default function AdminPage() {
         participants: parseInt(participants) || 10,
         customTotals: customTotals,
         description: finalDescription,
-        ownerDeviceId: deviceId,
+        ownerDeviceId: user ? user : deviceId, // Giriş yapmışsa ismini, yapmamışsa cihaz kimliğini gönderir
       };
 
       const res = await fetch(`${apiUrl}/api/distribution/create`, {

@@ -13,20 +13,22 @@ interface AdminStats {
   totalAssignments: number;
 }
 
-// YENİ EKLENEN ALANLAR (taskCount, totalTasks, completedTasks)
+// GÜNCELLENDİ: taskCount yerine createdSessionsCount
 interface UserData {
   id: number;
   username: string;
   role: string;
-  taskCount: number;
+  createdSessionsCount: number;
 }
 
+// GÜNCELLENDİ: createdBy eklendi
 interface SessionData {
   id: number;
   code: string;
   description: string;
   totalTasks: number;
   completedTasks: number;
+  createdBy: string;
 }
 
 interface AdminData {
@@ -36,7 +38,7 @@ interface AdminData {
 }
 
 export default function SuperAdminPage() {
-  const { role, token } = useAuth();
+  const { role, token, user: currentUser } = useAuth(); // currentUser'i de çekiyoruz ki kendimizi silmeyelim
   const { t } = useLanguage();
   const router = useRouter();
 
@@ -71,6 +73,44 @@ export default function SuperAdminPage() {
 
     if (token) fetchAdminData();
   }, [role, token, router]);
+
+  // YENİ: KULLANICI SİLME FONKSİYONU
+  const handleDeleteUser = async (userId: number, username: string) => {
+    if (
+      !window.confirm(
+        `"${username}" adlı kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?`,
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/admin/delete-user/${userId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.ok) {
+        // Ekranda canlı olarak kullanıcıyı tablodan çıkar ve istatistiği güncelle
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            stats: { ...prev.stats, totalUsers: prev.stats.totalUsers - 1 },
+            users: prev.users.filter((u) => u.id !== userId),
+          };
+        });
+      } else {
+        const err = await response.json();
+        alert(err.message || "Silme işlemi başarısız oldu.");
+      }
+    } catch (error) {
+      console.error("Silme hatası:", error);
+      alert("Bir hata oluştu.");
+    }
+  };
 
   if (role !== "ROLE_ADMIN") return null;
 
@@ -180,7 +220,7 @@ export default function SuperAdminPage() {
           </div>
 
           <div className="p-0 overflow-x-auto">
-            {/* KULLANICILAR TABLOSU */}
+            {/* --- KULLANICILAR TABLOSU --- */}
             {activeTab === "users" && (
               <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
                 <thead className="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50">
@@ -188,7 +228,8 @@ export default function SuperAdminPage() {
                     <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Kullanıcı Adı</th>
                     <th className="px-6 py-4">Yetki</th>
-                    <th className="px-6 py-4 text-center">Aldığı Görevler</th>
+                    <th className="px-6 py-4 text-center">Kurduğu Halkalar</th>
+                    <th className="px-6 py-4 text-center">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,15 +249,43 @@ export default function SuperAdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2.5 py-1 rounded-lg text-xs font-black ${u.role === "ROLE_ADMIN" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black ${
+                            u.role === "ROLE_ADMIN"
+                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                          }`}
                         >
                           {u.role === "ROLE_ADMIN" ? "YÖNETİCİ" : "KULLANICI"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg font-black">
-                          {u.taskCount} Görev
+                        <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-black">
+                          {u.createdSessionsCount} Halka
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {/* Kişi kendini silemez */}
+                        {u.username !== currentUser && (
+                          <button
+                            onClick={() => handleDeleteUser(u.id, u.username)}
+                            className="p-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500 rounded-lg transition-colors inline-flex"
+                            title="Kullanıcıyı Sil"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -224,20 +293,20 @@ export default function SuperAdminPage() {
               </table>
             )}
 
-            {/* HALKALAR TABLOSU */}
+            {/* --- HALKALAR TABLOSU --- */}
             {activeTab === "sessions" && (
               <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
                 <thead className="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50">
                   <tr>
                     <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Halka Kodu</th>
+                    <th className="px-6 py-4">Oluşturan (Sahip)</th>
                     <th className="px-6 py-4">Açıklama</th>
                     <th className="px-6 py-4 min-w-[200px]">İlerleme Durumu</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.sessions.map((s) => {
-                    // İlerleme yüzdesini hesapla
                     const percent =
                       s.totalTasks === 0
                         ? 0
@@ -253,6 +322,11 @@ export default function SuperAdminPage() {
                         <td className="px-6 py-4">
                           <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-black uppercase tracking-wider">
                             {s.code}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs">
+                            {s.createdBy}
                           </span>
                         </td>
                         <td className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">
