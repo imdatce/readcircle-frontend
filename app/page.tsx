@@ -408,37 +408,61 @@ function HomeContent() {
           </div>
         )}
 
-        <div className="max-w-4xl mx-auto mb-16 px-4">
-          {/* Ana Konteynır: Glassmorphism ve yumuşak gölgelerle premium bir hava */}
-          <div className="group relative bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2.5rem] p-3 shadow-2xl shadow-emerald-500/10 border border-white/60 dark:border-gray-800 transition-all duration-500 hover:border-emerald-500/30">
-            {/* Üst Bar: Pencere hissi veren dekoratif noktalar */}
-            <div className="flex items-center justify-between px-6 py-4">
-              <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
-                {t("howItWorksTitle")}
-              </h2>
-              <div className="w-12"></div> {/* Dengeleme için boş alan */}
-            </div>
+     <div className="max-w-7xl mx-auto mb-1 px-2 md:px-4">
+  <div className="group relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-2xl rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/80 dark:border-gray-800 transition-all duration-700">
+    
+    {/* 1. Başlık Alanı */}
+    <div className="pt-8 pb-4 md:pt-10 md:pb-6 text-center">
+      <h2 className="text-xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
+        {t("howItWorksTitle")}
+      </h2>
+    </div>
 
-            {/* Resim Alanı: Tam sizin resminizin oranında (2816/1536) */}
-            <div className="relative w-full aspect-[2816/1536] rounded-[1.8rem] overflow-hidden border border-gray-100 dark:border-gray-800">
-              <Image
-                src="/background/system-working.jpg"
-                alt="How it works"
-                fill
-                // object-cover: Alanı tam doldurur.
-                // transition: Hover durumunda çok hafif yakınlaşma yaparak derinlik hissi verir.
-                className="object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
-                priority
-              />
+    {/* 2. Geniş Resim Alanı */}
+    <div className="px-2 md:px-10">
+      <div className="relative w-full aspect-[2816/1536] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-gray-100/50 dark:bg-black/20 border border-gray-100 dark:border-white/5">
+        <Image
+          src="/background/system-working.jpg"
+          alt="System Workflow"
+          fill
+          className="object-contain md:object-cover"
+          priority
+        />
+      </div>
+    </div>
 
-              {/* Hafif Gradyan Overlay: Resmin üzerine çok ince bir gölge atarak daha derin görünmesini sağlar */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
-            </div>
+    {/* 3. Alt Kısım: Her Zaman Yan Yana 3 Kutu */}
+    <div className="p-2 md:p-10">
+      <div className="grid grid-cols-3 gap-1.5 md:gap-6">
+        
+        {[
+          { id: "1", color: "emerald" },
+          { id: "2", color: "blue" },
+          { id: "3", color: "purple" }
+        ].map((step) => (
+          <div 
+            key={step.id} 
+            className="bg-white/40 dark:bg-white/5 p-2 md:p-6 rounded-[1rem] md:rounded-[2rem] border border-white/60 dark:border-gray-800 flex flex-col items-center text-center shadow-sm"
+          >
 
-            {/* Alt Süsleme: Parlama efekti */}
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            
+            {/* Başlık: Mobilde text-[9px] */}
+            <h4 className="font-black text-gray-900 dark:text-white mb-1 uppercase text-[9px] md:text-xs tracking-tighter leading-tight">
+              {t(`step${step.id}Title`)}
+            </h4>
+            
+            {/* Açıklama: Mobilde text-[8px] ve görünür (hidden kaldırıldı) */}
+            <p className="text-[8px] md:text-sm text-gray-600 dark:text-gray-400 leading-tight md:leading-relaxed font-medium">
+              {t(`step${step.id}Desc`)}
+            </p>
           </div>
-        </div>
+        ))}
+
+      </div>
+    </div>
+
+  </div>
+</div>
       </div>
 
       <section className="pt-2 pb-12 md:pt-3 md:pb-20 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
