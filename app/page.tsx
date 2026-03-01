@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -413,7 +413,6 @@ function HomeContent() {
           <div className="group relative bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2.5rem] p-3 shadow-2xl shadow-emerald-500/10 border border-white/60 dark:border-gray-800 transition-all duration-500 hover:border-emerald-500/30">
             {/* Üst Bar: Pencere hissi veren dekoratif noktalar */}
             <div className="flex items-center justify-between px-6 py-4">
-   
               <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
                 {t("howItWorksTitle")}
               </h2>
@@ -457,60 +456,140 @@ function HomeContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 md:gap-6">
-            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 hover:-translate-y-2 transition-all duration-300 group">
-              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                {t("featCirclesTitle") || "Okuma Halkaları"}
-              </h3>
-              <p
-                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    t("featCirclesDesc") ||
-                    "Sevdiklerinizle dijital hatim grupları kurun. Cüzleri, Cevşen bablarını veya özel duaları <strong class='text-blue-600 dark:text-blue-400 font-bold'>hızlıca paylaştırın</strong>. Grubunuzun okuma ilerlemesini anlık statiklerle takip edin.",
-                }}
-              />
+            <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
+              {/* Üst Kısım: Resim Alanı */}
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
+                  src="/background/possibilities/okuma-halkalari.jpg"
+                  alt={t("featCirclesTitle")}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  priority
+                />
+                {/* Resim üzerindeki hafif parlama efekti */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
+              </div>
+
+              {/* Alt Kısım: Metin İçeriği */}
+              <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {t("featCirclesTitle") || "Okuma Halkaları"}
+                </h3>
+
+                <p
+                  className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      t("featCirclesDesc") ||
+                      "Sevdiklerinizle dijital hatim grupları kurun. Cüzleri, Cevşen bablarını veya özel duaları <strong class='text-blue-600 dark:text-blue-400 font-bold'>hızlıca paylaştırın</strong>. Grubunuzun okuma ilerlemesini anlık statiklerle takip edin.",
+                  }}
+                />
+              </div>
+
+              {/* Dekoratif Alt Çizgi - Sadece hover durumunda parlar */}
+              <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700"></div>
             </div>
 
-            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-amber-500/10 dark:hover:shadow-amber-900/20 hover:-translate-y-2 transition-all duration-300 group">
-              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                {t("featLibraryTitle") || "Zengin Külliyat"}
-              </h3>
-              <p
-                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    t("featLibraryDesc") ||
-                    "Kur'an-ı Kerim, Risale-i Nur, Cevşen, Esma-ül Hüsna ve özel dualara tek platformdan erişin. <strong class='text-amber-600 dark:text-amber-400 font-bold'>Akıllı hafıza</strong> özelliği ile her zaman tam kaldığınız sayfadan okumaya devam edin.",
-                }}
-              />
+            <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
+              {/* Üst Kısım: Resim Alanı */}
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
+                  src="/background/possibilities/zengin-kulliyat.jpg"
+                  alt={t("featLibraryTitle")}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  priority
+                />
+                {/* Resim üzerindeki hafif sıcak tonlu parlama efekti */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
+              </div>
+
+              {/* Alt Kısım: Metin İçeriği */}
+              <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                  {t("featLibraryTitle") || "Zengin Külliyat"}
+                </h3>
+
+                <p
+                  className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      t("featLibraryDesc") ||
+                      "Kur'an-ı Kerim, Risale-i Nur, Cevşen, Esma-ül Hüsna ve özel dualara tek platformdan erişin. <strong class='text-amber-600 dark:text-amber-400 font-bold'>Akıllı hafıza</strong> özelliği ile her zaman tam kaldığınız sayfadan okumaya devam edin.",
+                  }}
+                />
+              </div>
+
+              {/* Dekoratif Alt Çizgi - Amber (Turuncu) tonlarında parlar */}
+              <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-700"></div>
             </div>
 
-            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-teal-500/10 dark:hover:shadow-teal-900/20 hover:-translate-y-2 transition-all duration-300 group">
-              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                {t("featAssistantTitle") || "İbadet Asistanı"}
-              </h3>
-              <p
-                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    t("featAssistantDesc") ||
-                    "Bulunduğunuz konuma özel <strong class='text-teal-600 dark:text-teal-400 font-bold'>Namaz Vakitleri</strong>, aylık imsakiye, canlı Kıble Pusulası ve dini günler takvimini kullanın. Çevrenizdeki en yakın camileri tek tıkla haritada bulun.",
-                }}
-              />
+            <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
+              {/* Üst Kısım: Resim Alanı */}
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
+                  src="/background/possibilities/ibadet-asistani.jpg"
+                  alt={t("featAssistantTitle")}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  priority
+                />
+                {/* Resim üzerindeki hafif turkuaz tonlu parlama efekti */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
+              </div>
+
+              {/* Alt Kısım: Metin İçeriği */}
+              <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                  {t("featAssistantTitle") || "İbadet Asistanı"}
+                </h3>
+
+                <p
+                  className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      t("featAssistantDesc") ||
+                      "Bulunduğunuz konuma özel <strong class='text-teal-600 dark:text-teal-400 font-bold'>Namaz Vakitleri</strong>, aylık imsakiye, canlı Kıble Pusulası ve dini günler takvimini kullanın. Çevrenizdeki en yakın camileri tek tıkla haritada bulun.",
+                  }}
+                />
+              </div>
+
+              {/* Dekoratif Alt Çizgi - Teal (Turkuaz) tonlarında parlar */}
+              <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-700"></div>
             </div>
 
-            <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-purple-500/10 dark:hover:shadow-purple-900/20 hover:-translate-y-2 transition-all duration-300 group">
-              <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                {t("featAgendaTitle") || "Manevi Ajanda"}
-              </h3>
-              <p
-                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
-                dangerouslySetInnerHTML={{
-                  __html:
-                    t("featAgendaDesc") ||
-                    "Günlük namaz ve vakit tesbihatlarınızı takip edin. <strong class='text-purple-600 dark:text-purple-400 font-bold'>Kaza Namazı</strong> çetelenizi tutarak geçmiş borçlarınızı planlayın. Ekrana entegre zikirmatik ile virdlerinizi kolayca çekin.",
-                }}
-              />
+            <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
+              {/* Üst Kısım: Resim Alanı */}
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
+                  src="/background/possibilities/manevi-ajanda.jpg"
+                  alt={t("featAgendaTitle")}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  priority
+                />
+                {/* Resim üzerindeki hafif mor tonlu parlama efekti */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
+              </div>
+
+              {/* Alt Kısım: Metin İçeriği */}
+              <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {t("featAgendaTitle") || "Manevi Ajanda"}
+                </h3>
+
+                <p
+                  className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      t("featAgendaDesc") ||
+                      "Günlük namaz ve vakit tesbihatlarınızı takip edin. <strong class='text-purple-600 dark:text-purple-400 font-bold'>Kaza Namazı</strong> çetelenizi tutarak geçmiş borçlarınızı planlayın. Ekrana entegre zikirmatik ile virdlerinizi kolayca çekin.",
+                  }}
+                />
+              </div>
+
+              {/* Dekoratif Alt Çizgi - Mor (Purple) tonlarında parlar */}
+              <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-700"></div>
             </div>
           </div>
         </div>
