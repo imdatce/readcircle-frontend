@@ -10,6 +10,9 @@ export default function PrayerTimesWidget() {
   const [timings, setTimings] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // YENİ EKLENEN STATE: Lokasyonun hafızadan okunup okunmadığını takip eder
+  const [isLocationLoaded, setIsLocationLoaded] = useState(false);
+
   // Vakit İsimleri (İngilizce -> Dil Karşılığı)
   const PRAYER_NAMES: Record<string, string> = {
     Fajr: t("prayerFajr") || "İmsak",
@@ -59,6 +62,9 @@ export default function PrayerTimesWidget() {
           console.error("Hafıza okuma hatası", e);
         }
       }
+
+      // EKLENDİ: Hafıza kontrolü bitti, artık API çağrısı yapılabilir
+      setIsLocationLoaded(true);
     };
 
     loadLocation();
@@ -68,6 +74,9 @@ export default function PrayerTimesWidget() {
   }, []);
 
   useEffect(() => {
+    // EKLENDİ: Lokasyon henüz okunmadıysa fonksiyonu durdur (API'ye gitme)
+    if (!isLocationLoaded) return;
+
     async function fetchPrayerTimes() {
       setLoading(true);
       setShowMonthly(false);
@@ -101,7 +110,9 @@ export default function PrayerTimesWidget() {
     }
 
     fetchPrayerTimes();
-  }, [city, country, district]);
+
+    // EKLENDİ: isLocationLoaded state'i dependency dizisine eklendi
+  }, [city, country, district, isLocationLoaded]);
 
   const handleToggleMonthly = async () => {
     if (showMonthly) {
