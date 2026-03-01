@@ -127,10 +127,6 @@ function parseMeaningEn(raw: string) {
     .map((l) => l.trim())
     .filter((l) => l !== "");
   let Praise = "";
-<<<<<<< HEAD
-=======
-  
->>>>>>> a8dd6eb (feat: HomeAyahSection and optimized images)
 
   const subhIdx = lines.findIndex((l) => SUBHANEKE_RE.test(l));
   if (subhIdx >= 0) {
@@ -145,12 +141,6 @@ function parseMeaningEn(raw: string) {
 
   return { header: "", items, Praise };
 }
-
-<<<<<<< HEAD
-=======
-
->>>>>>> a8dd6eb (feat: HomeAyahSection and optimized images)
-// Arapça rakamlara dönüştürme
 const toArabicNumeral = (num: number) => {
   const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
   return num
@@ -293,7 +283,6 @@ export default function CevsenPage() {
     const fetchCevsenData = async () => {
       setLoading(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-<<<<<<< HEAD
 
       // Seçili dile göre meal dosyasının ismini belirliyoruz
       let meaningFileName = "cevsen_tr.txt";
@@ -301,8 +290,6 @@ export default function CevsenPage() {
         meaningFileName = "cevsen_en.txt";
       }
 
-=======
->>>>>>> a8dd6eb (feat: HomeAyahSection and optimized images)
       const urls: Record<TabType, string> = {
         ARABIC: `${apiUrl}/cevsen.txt`,
         LATIN: `${apiUrl}/cevsen_latin.txt`,
@@ -417,7 +404,7 @@ export default function CevsenPage() {
 
   const getAllBabs = (fullText: string) => {
     if (!fullText) return [];
-<<<<<<< HEAD
+
 
     // Metin içinde ### varsa, doğrudan en temiz yöntem olarak ondan bölelim
     if (fullText.includes("###")) {
@@ -427,9 +414,6 @@ export default function CevsenPage() {
         .filter((chunk) => chunk !== "");
     }
 
-    // Eğer ### yoksa eski yöntemle satır satır okuyup bölme
-=======
->>>>>>> a8dd6eb (feat: HomeAyahSection and optimized images)
     const lines = fullText
       .split("\n")
       .map((l) => l.trim())
