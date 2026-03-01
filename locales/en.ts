@@ -437,6 +437,7 @@ export const en = {
     confirmDeleteUser:
         'Are you sure you want to permanently delete the user "{username}"?',
     deleteFailed: "Deletion process failed.",
+    deleteAccountButton: "Delete account",
     // --- HOME PAGE ---
     landingHeroTitlePart1: "Islamic Resources",
     landingHeroTitlePart2: "Reading and Sharing",

@@ -329,7 +329,7 @@ export default function SessionsPage() {
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm group-hover:text-gray-600 dark:group-hover:text-gray-300">
                     {t("noManagedCircleDesc") ||
-                      "Şu an yönettiğiniz bir halka bulunmuyor. Buraya tıklayarak yeni bir Kur'an veya Cevşen halkası başlatabilirsiniz."}
+                      "Şu an yönettiğiniz bir halka bulunmuyor. Buraya tıklayarak yeni bir Kur'an, Cevşen veya zikir halkası başlatabilirsiniz."}
                   </p>
                 </button>
               ))}

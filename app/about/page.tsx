@@ -1,5 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
-"use client";
+ "use client";
 
 import React, { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +14,7 @@ function AboutContent() {
       title: t("featureHatimTitle") || "Hatim Halkaları",
       desc:
         t("featureHatimDesc") ||
-        "Kullanıcıların bir araya gelerek cüzleri paylaştığı, uzaktan da olsa cemaat bilincini yaşatan dijital dağıtım sistemi.",
+        "Kullanıcıların bir araya gelerek cüzleri paylaştığı, uzaktan da olsa topluluk bilincini yaşatan dijital dağıtım sistemi.",
       icon: (
         <svg
           className="w-6 h-6"

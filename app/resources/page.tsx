@@ -183,10 +183,6 @@ export default function ResourcesPage() {
                     {resource.desc}
                   </p>
 
-                  {/* Dekoratif Çizgi */}
-                  <div
-                    className={`mt-auto pt-3 w-8 h-1 rounded-full ${style.text} bg-current opacity-30 group-hover:opacity-100 transition-opacity`}
-                  ></div>
                 </div>
               </Link>
             );

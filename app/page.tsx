@@ -248,88 +248,89 @@ function HomeContent() {
 
             {user && (
               <div className="relative group mt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex items-center justify-center gap-4 mb-4 text-gray-400">
-                  <div className="h-px w-12 bg-gray-200 dark:bg-gray-800"></div>
-                  <span className="text-xs font-black uppercase tracking-[0.2em]">
-                    {t("myCirclesTitle") || "Halkalarım"}
-                  </span>
-                  <div className="h-px w-12 bg-gray-200 dark:bg-gray-800"></div>
-                </div>
+                <div className="bg-gray-100/50 dark:bg-black/40 pt-4 px-2 pb-2 rounded-[1.8rem] md:rounded-[2.4rem] border border-gray-200 dark:border-gray-800 shadow-inner relative max-w-2xl mx-auto backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-4 mb-3 text-gray-400">
+                    <div className="h-px w-12 bg-gray-200 dark:bg-gray-700"></div>
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">
+                      {t("myCirclesTitle") || "Halkalarım"}
+                    </span>
+                    <div className="h-px w-12 bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <button
+                      onClick={() => toggleTab("managed")}
+                      className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "managed" ? "bg-white dark:bg-gray-800 border-blue-500 shadow-xl shadow-blue-500/20 text-blue-700 dark:text-blue-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-blue-200 dark:hover:border-blue-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                    >
+                      <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
+                        <div
+                          className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "managed" ? "bg-blue-600 text-white rotate-6 shadow-lg shadow-blue-500/40" : "bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/btn:bg-blue-100 dark:group-hover/btn:bg-blue-900/40 group-hover/btn:scale-110"}`}
+                        >
+                          <svg
+                            className="h-6 w-6 md:h-7 md:w-7"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                            />
+                          </svg>
+                        </div>
+                        <div className="text-center min-w-0">
+                          <span
+                            className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "managed" ? "text-blue-700 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
+                          >
+                            {t("managedSessions") || "Yönettiğim"}
+                          </span>
+                          <span
+                            className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "managed" ? "opacity-100 text-blue-500/70" : "opacity-50"}`}
+                          >
+                            {createdSessions.length} {t("circle") || "Halka"}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
 
-                <div className="bg-gray-100/50 dark:bg-black/40 p-2 rounded-[1.8rem] md:rounded-[2.4rem] border border-gray-200 dark:border-gray-800 shadow-inner flex flex-row gap-2 relative max-w-2xl mx-auto backdrop-blur-sm">
-                  <button
-                    onClick={() => toggleTab("managed")}
-                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "managed" ? "bg-white dark:bg-gray-800 border-blue-500 shadow-xl shadow-blue-500/20 text-blue-700 dark:text-blue-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-blue-200 dark:hover:border-blue-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"}`}
-                  >
-                    <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
-                      <div
-                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "managed" ? "bg-blue-600 text-white rotate-6 shadow-lg shadow-blue-500/40" : "bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/btn:bg-blue-100 dark:group-hover/btn:bg-blue-900/40 group-hover/btn:scale-110"}`}
-                      >
-                        <svg
-                          className="h-6 w-6 md:h-7 md:w-7"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}
+                    <button
+                      onClick={() => toggleTab("joined")}
+                      className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "joined" ? "bg-white dark:bg-gray-800 border-emerald-500 shadow-xl shadow-emerald-500/20 text-emerald-700 dark:text-emerald-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
+                    >
+                      <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
+                        <div
+                          className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "joined" ? "bg-emerald-600 text-white -rotate-6 shadow-lg shadow-emerald-500/40" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 group-hover/btn:bg-emerald-100 dark:group-hover/btn:bg-emerald-900/40 group-hover/btn:scale-110"}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                          />
-                        </svg>
+                          <svg
+                            className="h-6 w-6 md:h-7 md:w-7"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="text-center min-w-0">
+                          <span
+                            className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "joined" ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
+                          >
+                            {t("joinedSessions") || "Katıldığım"}
+                          </span>
+                          <span
+                            className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "joined" ? "opacity-100 text-emerald-500/70" : "opacity-50"}`}
+                          >
+                            {mySessions.length} {t("circle") || "Halka"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-center min-w-0">
-                        <span
-                          className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "managed" ? "text-blue-700 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
-                        >
-                          {t("managedSessions") || "Yönettiğim"}
-                        </span>
-                        <span
-                          className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "managed" ? "opacity-100 text-blue-500/70" : "opacity-50"}`}
-                        >
-                          {createdSessions.length} {t("circle") || "Halka"}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => toggleTab("joined")}
-                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "joined" ? "bg-white dark:bg-gray-800 border-emerald-500 shadow-xl shadow-emerald-500/20 text-emerald-700 dark:text-emerald-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
-                  >
-                    <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
-                      <div
-                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "joined" ? "bg-emerald-600 text-white -rotate-6 shadow-lg shadow-emerald-500/40" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 group-hover/btn:bg-emerald-100 dark:group-hover/btn:bg-emerald-900/40 group-hover/btn:scale-110"}`}
-                      >
-                        <svg
-                          className="h-6 w-6 md:h-7 md:w-7"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="text-center min-w-0">
-                        <span
-                          className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "joined" ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
-                        >
-                          {t("joinedSessions") || "Katıldığım"}
-                        </span>
-                        <span
-                          className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "joined" ? "opacity-100 text-emerald-500/70" : "opacity-50"}`}
-                        >
-                          {mySessions.length} {t("circle") || "Halka"}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -408,61 +409,55 @@ function HomeContent() {
           </div>
         )}
 
-     <div className="max-w-7xl mx-auto mb-1 px-2 md:px-4">
-  <div className="group relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-2xl rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/80 dark:border-gray-800 transition-all duration-700">
-    
-    {/* 1. Başlık Alanı */}
-    <div className="pt-8 pb-4 md:pt-10 md:pb-6 text-center">
-      <h2 className="text-xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
-        {t("howItWorksTitle")}
-      </h2>
-    </div>
+        <div className="max-w-7xl mx-auto mb-1 px-2 md:px-4">
+          <div className="group relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-2xl rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/80 dark:border-gray-800 transition-all duration-700">
+            {/* 1. Başlık Alanı */}
+            <div className="pt-8 pb-4 md:pt-10 md:pb-6 text-center">
+              <h2 className="text-xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
+                {t("howItWorksTitle")}
+              </h2>
+            </div>
 
-    {/* 2. Geniş Resim Alanı */}
-    <div className="px-2 md:px-10">
-      <div className="relative w-full aspect-[2816/1536] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-gray-100/50 dark:bg-black/20 border border-gray-100 dark:border-white/5">
-        <Image
-          src="/background/system-working.jpg"
-          alt="System Workflow"
-          fill
-          className="object-contain md:object-cover"
-          priority
-        />
-      </div>
-    </div>
+            {/* 2. Geniş Resim Alanı */}
+            <div className="px-2 md:px-10">
+              <div className="relative w-full aspect-[2816/1536] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-gray-100/50 dark:bg-black/20 border border-gray-100 dark:border-white/5">
+                <Image
+                  src="/background/system-working.jpg"
+                  alt="System Workflow"
+                  fill
+                  className="object-contain md:object-cover"
+                  priority
+                />
+              </div>
+            </div>
 
-    {/* 3. Alt Kısım: Her Zaman Yan Yana 3 Kutu */}
-    <div className="p-2 md:p-10">
-      <div className="grid grid-cols-3 gap-1.5 md:gap-6">
-        
-        {[
-          { id: "1", color: "emerald" },
-          { id: "2", color: "blue" },
-          { id: "3", color: "purple" }
-        ].map((step) => (
-          <div 
-            key={step.id} 
-            className="bg-white/40 dark:bg-white/5 p-2 md:p-6 rounded-[1rem] md:rounded-[2rem] border border-white/60 dark:border-gray-800 flex flex-col items-center text-center shadow-sm"
-          >
+            {/* 3. Alt Kısım: Her Zaman Yan Yana 3 Kutu */}
+            <div className="p-2 md:p-10">
+              <div className="grid grid-cols-3 gap-1.5 md:gap-6">
+                {[
+                  { id: "1", color: "emerald" },
+                  { id: "2", color: "blue" },
+                  { id: "3", color: "purple" },
+                ].map((step) => (
+                  <div
+                    key={step.id}
+                    className="bg-white/40 dark:bg-white/5 p-2 md:p-6 rounded-[1rem] md:rounded-[2rem] border border-white/60 dark:border-gray-800 flex flex-col items-center text-center shadow-sm"
+                  >
+                    {/* Başlık */}
+                    <h4 className="font-black text-gray-900 dark:text-white mb-1 uppercase text-[15px] md:text-sm tracking-tighter leading-tight">
+                      {t(`step${step.id}Title`)}
+                    </h4>
 
-            
-            {/* Başlık: Mobilde text-[9px] */}
-            <h4 className="font-black text-gray-900 dark:text-white mb-1 uppercase text-[9px] md:text-xs tracking-tighter leading-tight">
-              {t(`step${step.id}Title`)}
-            </h4>
-            
-            {/* Açıklama: Mobilde text-[8px] ve görünür (hidden kaldırıldı) */}
-            <p className="text-[8px] md:text-sm text-gray-600 dark:text-gray-400 leading-tight md:leading-relaxed font-medium">
-              {t(`step${step.id}Desc`)}
-            </p>
+                    {/* Açıklama */}
+                    <p className="text-[15px] md:text-sm text-gray-600 dark:text-gray-400 leading-snug md:leading-relaxed font-medium">
+                      {t(`step${step.id}Desc`)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
-
-      </div>
-    </div>
-
-  </div>
-</div>
+        </div>
       </div>
 
       <section className="pt-2 pb-12 md:pt-3 md:pb-20 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
@@ -481,7 +476,6 @@ function HomeContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 md:gap-6">
             <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
-              {/* Üst Kısım: Resim Alanı */}
               <div className="relative w-full aspect-video overflow-hidden">
                 <Image
                   src="/background/possibilities/okuma-halkalari.jpg"
@@ -490,16 +484,12 @@ function HomeContent() {
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
                   priority
                 />
-                {/* Resim üzerindeki hafif parlama efekti */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
               </div>
-
-              {/* Alt Kısım: Metin İçeriği */}
               <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
                 <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {t("featCirclesTitle") || "Okuma Halkaları"}
                 </h3>
-
                 <p
                   className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
                   dangerouslySetInnerHTML={{
@@ -509,13 +499,10 @@ function HomeContent() {
                   }}
                 />
               </div>
-
-              {/* Dekoratif Alt Çizgi - Sadece hover durumunda parlar */}
               <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700"></div>
             </div>
 
             <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
-              {/* Üst Kısım: Resim Alanı */}
               <div className="relative w-full aspect-video overflow-hidden">
                 <Image
                   src="/background/possibilities/zengin-kulliyat.jpg"
@@ -524,16 +511,12 @@ function HomeContent() {
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
                   priority
                 />
-                {/* Resim üzerindeki hafif sıcak tonlu parlama efekti */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
               </div>
-
-              {/* Alt Kısım: Metin İçeriği */}
               <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
                 <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                   {t("featLibraryTitle") || "Zengin Külliyat"}
                 </h3>
-
                 <p
                   className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
                   dangerouslySetInnerHTML={{
@@ -543,13 +526,10 @@ function HomeContent() {
                   }}
                 />
               </div>
-
-              {/* Dekoratif Alt Çizgi - Amber (Turuncu) tonlarında parlar */}
               <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-700"></div>
             </div>
 
             <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
-              {/* Üst Kısım: Resim Alanı */}
               <div className="relative w-full aspect-video overflow-hidden">
                 <Image
                   src="/background/possibilities/ibadet-asistani.jpg"
@@ -558,16 +538,12 @@ function HomeContent() {
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
                   priority
                 />
-                {/* Resim üzerindeki hafif turkuaz tonlu parlama efekti */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
               </div>
-
-              {/* Alt Kısım: Metin İçeriği */}
               <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
                 <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                   {t("featAssistantTitle") || "İbadet Asistanı"}
                 </h3>
-
                 <p
                   className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
                   dangerouslySetInnerHTML={{
@@ -577,13 +553,10 @@ function HomeContent() {
                   }}
                 />
               </div>
-
-              {/* Dekoratif Alt Çizgi - Teal (Turkuaz) tonlarında parlar */}
               <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-700"></div>
             </div>
 
             <div className="group relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
-              {/* Üst Kısım: Resim Alanı */}
               <div className="relative w-full aspect-video overflow-hidden">
                 <Image
                   src="/background/possibilities/manevi-ajanda.jpg"
@@ -592,16 +565,12 @@ function HomeContent() {
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
                   priority
                 />
-                {/* Resim üzerindeki hafif mor tonlu parlama efekti */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/20 dark:from-black/20 to-transparent"></div>
               </div>
-
-              {/* Alt Kısım: Metin İçeriği */}
               <div className="p-6 md:p-8 flex-grow flex flex-col justify-center">
                 <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {t("featAgendaTitle") || "Manevi Ajanda"}
                 </h3>
-
                 <p
                   className="text-gray-500 dark:text-gray-400 text-sm md:text-base leading-relaxed font-medium"
                   dangerouslySetInnerHTML={{
@@ -611,8 +580,6 @@ function HomeContent() {
                   }}
                 />
               </div>
-
-              {/* Dekoratif Alt Çizgi - Mor (Purple) tonlarında parlar */}
               <div className="h-1.5 w-0 group-hover:w-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-700"></div>
             </div>
           </div>
