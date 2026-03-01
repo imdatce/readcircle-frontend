@@ -6,8 +6,7 @@ import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { SessionSummary } from "@/types";
-
-// Modüllerimiz
+import Image from "next/image";
 import { sortSessions } from "@/utils/sessionUtils";
 import GlobalLoading from "@/components/common/GlobalLoading";
 import HomeAyahSection from "@/components/home/HomeAyahSection";
@@ -16,7 +15,6 @@ import {
   DashboardColumn,
   EmptyState,
   DashboardSkeleton,
-  Step,
 } from "@/components/home/HomeWidgets";
 
 function HomeContent() {
@@ -410,14 +408,36 @@ function HomeContent() {
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] p-5 shadow-sm border border-gray-200 dark:border-gray-800 mb-1">
-          <h2 className="text-lg md:text-xl font-bold text-center mb-5 text-gray-800 dark:text-gray-100">
-            {t("howItWorksTitle")}
-          </h2>
-          <div className="grid grid-cols-3 gap-3 relative">
-            <Step num="1" title={t("step1Title")} desc={t("step1Desc")} />
-            <Step num="2" title={t("step2Title")} desc={t("step2Desc")} />
-            <Step num="3" title={t("step3Title")} desc={t("step3Desc")} />
+        <div className="max-w-4xl mx-auto mb-16 px-4">
+          {/* Ana Konteynır: Glassmorphism ve yumuşak gölgelerle premium bir hava */}
+          <div className="group relative bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2.5rem] p-3 shadow-2xl shadow-emerald-500/10 border border-white/60 dark:border-gray-800 transition-all duration-500 hover:border-emerald-500/30">
+            {/* Üst Bar: Pencere hissi veren dekoratif noktalar */}
+            <div className="flex items-center justify-between px-6 py-4">
+   
+              <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+                {t("howItWorksTitle")}
+              </h2>
+              <div className="w-12"></div> {/* Dengeleme için boş alan */}
+            </div>
+
+            {/* Resim Alanı: Tam sizin resminizin oranında (2816/1536) */}
+            <div className="relative w-full aspect-[2816/1536] rounded-[1.8rem] overflow-hidden border border-gray-100 dark:border-gray-800">
+              <Image
+                src="/background/system-working.jpg"
+                alt="How it works"
+                fill
+                // object-cover: Alanı tam doldurur.
+                // transition: Hover durumunda çok hafif yakınlaşma yaparak derinlik hissi verir.
+                className="object-cover transition-transform duration-1000 group-hover:scale-[1.03]"
+                priority
+              />
+
+              {/* Hafif Gradyan Overlay: Resmin üzerine çok ince bir gölge atarak daha derin görünmesini sağlar */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+            </div>
+
+            {/* Alt Süsleme: Parlama efekti */}
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           </div>
         </div>
       </div>
