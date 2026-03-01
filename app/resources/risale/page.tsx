@@ -25,7 +25,7 @@ function RisaleContent() {
   const [loading, setLoading] = useState(false);
 
   const [fontLevel, setFontLevel] = useState(3);
-  const [isSepia, setIsSepia] = useState(false); // DÜZELTİLDİ: setIsSepia eklendi
+  const [isSepia, setIsSepia] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -66,11 +66,8 @@ function RisaleContent() {
         });
       }
     };
-    if (view === "reading") {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
-    }
+    if (view === "reading") requestWakeLock();
+    else releaseWakeLock();
     return () => releaseWakeLock();
   }, [view]);
 
@@ -93,9 +90,7 @@ function RisaleContent() {
               f.name.toLowerCase() === autoFile.toLowerCase() ||
               f.name.toLowerCase().includes(autoFile.toLowerCase()),
           );
-          if (targetFile) {
-            handleSelectChapter(targetFile, book);
-          }
+          if (targetFile) handleSelectChapter(targetFile, book);
         }
       }
     } catch (e) {
@@ -147,7 +142,6 @@ function RisaleContent() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Native API yerine sadece state değiştiriyoruz
   const toggleFullScreen = () => {
     setIsFullscreen((prev) => !prev);
   };
@@ -159,28 +153,24 @@ function RisaleContent() {
     if (isSepia) {
       root.classList.remove("dark");
     } else {
-      if (currentTheme === "dark") {
-        root.classList.add("dark");
-      } else if (
+      if (currentTheme === "dark") root.classList.add("dark");
+      else if (
         !currentTheme &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
+      )
         root.classList.add("dark");
-      }
     }
-
     return () => {
       if (currentTheme === "dark") root.classList.add("dark");
     };
   }, [isSepia]);
 
-  // === 1. OTOMATİK KAYDIRMA MANTIĞI ===
+  // === OTOMATİK KAYDIRMA MANTIĞI ===
   useEffect(() => {
     if (!isAutoScrolling || view !== "reading") return;
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-
     const scroller = isFullscreen ? scrollContainerRef.current : window;
     if (!scroller) return;
 
@@ -188,7 +178,6 @@ function RisaleContent() {
       isFullscreen && scrollContainerRef.current
         ? scrollContainerRef.current.scrollTop
         : window.scrollY;
-
     const baseSpeed = 40;
 
     const scrollStep = (timestamp: number) => {
@@ -206,36 +195,28 @@ function RisaleContent() {
               scrollContainerRef.current.clientHeight
             : document.documentElement.scrollHeight - window.innerHeight;
 
-        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          if (isFullscreen && scrollContainerRef.current) {
+          if (isFullscreen && scrollContainerRef.current)
             scrollContainerRef.current.scrollTo({
               top: maxScroll,
               behavior: "auto",
             });
-          } else {
-            window.scrollTo({ top: maxScroll, behavior: "auto" });
-          }
+          else window.scrollTo({ top: maxScroll, behavior: "auto" });
           setIsAutoScrolling(false);
           return;
         }
 
-        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
-        if (isFullscreen && scrollContainerRef.current) {
+        if (isFullscreen && scrollContainerRef.current)
           scrollContainerRef.current.scrollTo({
             top: exactScrollY,
             behavior: "auto",
           });
-        } else {
-          window.scrollTo({ top: exactScrollY, behavior: "auto" });
-        }
+        else window.scrollTo({ top: exactScrollY, behavior: "auto" });
       }
-
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
-
     return () => cancelAnimationFrame(animationFrameId);
   }, [isAutoScrolling, autoScrollSpeed, view, isFullscreen]);
 
@@ -296,6 +277,7 @@ function RisaleContent() {
             <button
               onClick={goBack}
               className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-full transition-all group"
+              title={t("back") || "Geri"}
             >
               <svg
                 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:-translate-x-1 transition-transform"
@@ -312,7 +294,9 @@ function RisaleContent() {
               </svg>
             </button>
             <h1 className="text-sm md:text-base font-black text-emerald-800 dark:text-emerald-100 uppercase tracking-[0.2em]">
-              {view === "books" ? "Risale-i Nur Külliyatı" : selectedBook?.name}
+              {view === "books"
+                ? t("risaleTitle") || "Risale-i Nur Külliyatı"
+                : selectedBook?.name}
             </h1>
             <div className="w-10"></div>
           </div>
@@ -325,7 +309,7 @@ function RisaleContent() {
               <div className="absolute inset-0 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <p className="text-emerald-600 dark:text-emerald-400 font-bold tracking-widest animate-pulse text-xs uppercase">
-              Metin Hazırlanıyor...
+              {t("compilingTexts") || "Metin Hazırlanıyor..."}
             </p>
           </div>
         ) : (
@@ -355,7 +339,7 @@ function RisaleContent() {
                     </div>
                     <div>
                       <h3 className="font-black text-sm md:text-lg uppercase tracking-wider text-emerald-50">
-                        Okumaya Devam Et
+                        {t("continueReading") || "Okumaya Devam Et"}
                       </h3>
                       <p className="text-emerald-100/80 text-xs md:text-sm font-medium mt-0.5 truncate max-w-[200px] md:max-w-md">
                         {lastRead.book.name} /{" "}
@@ -421,11 +405,9 @@ function RisaleContent() {
               <div
                 ref={scrollContainerRef}
                 onPointerDown={(e) => {
-                  // YENİ EKLENEN KORUMA: Eğer tıklanan yer üst menü veya bir buton ise kaydırmayı durdurma
                   const target = e.target as HTMLElement;
                   if (target.closest("button") || target.closest(".sticky"))
                     return;
-
                   if (isAutoScrolling) {
                     setIsAutoScrolling(false);
                     (window as any)._justStoppedScroll = true;
@@ -441,28 +423,14 @@ function RisaleContent() {
                   if ((window as any)._justStoppedScroll) return;
                   toggleFullScreen();
                 }}
-                className={`relative transition-all duration-500 cursor-pointer ${
-                  !isAutoScrolling ? "scroll-smooth" : "scroll-auto"
-                } ${
-                  isFullscreen
-                    ? `fixed inset-0 z-[9999] overflow-y-auto px-0 py-8 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#FDFCF7] dark:bg-[#061612]"}`
-                    : "min-h-screen"
-                }`}
+                className={`relative transition-all duration-500 cursor-pointer ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isFullscreen ? `fixed inset-0 z-[9999] overflow-y-auto px-0 py-8 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#FDFCF7] dark:bg-[#061612]"}` : "min-h-screen"}`}
               >
-                {/* Header ve SubNavigation'ı tam ekrandayken gizlemek için dinamik stil eklentisi */}
                 {isFullscreen && (
-                  <style>{`
-                    header, #sub-navigation { display: none !important; }
-                  `}</style>
+                  <style>{`header, #sub-navigation { display: none !important; }`}</style>
                 )}
 
-                {/* Kontrol paneli tasarımı kaldığı yerden devam ediyor... */}
                 <div
-                  className={`sticky z-50 p-3 md:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm transition-all duration-500 ${
-                    isFullscreen
-                      ? "top-0 opacity-0 hover:opacity-100 pointer-events-auto"
-                      : "top-16 md:top-20 opacity-100 rounded-[2rem] border mt-[-1.5rem] mb-4"
-                  }`}
+                  className={`sticky z-50 p-3 md:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm transition-all duration-500 ${isFullscreen ? "top-0 opacity-0 hover:opacity-100 pointer-events-auto" : "top-16 md:top-20 opacity-100 rounded-[2rem] border mt-[-1.5rem] mb-4"}`}
                 >
                   <div className="flex justify-between items-center max-w-5xl mx-auto w-full px-2">
                     <h3 className="font-black text-xs md:text-base tracking-tight text-emerald-700 dark:text-emerald-400 truncate mr-2">
@@ -477,6 +445,7 @@ function RisaleContent() {
                             handleFontChange(Math.max(0, fontLevel - 1));
                           }}
                           disabled={fontLevel === 0}
+                          title={t("decreaseFont") || "Yazıyı Küçült"}
                           className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
                         >
                           A-
@@ -488,27 +457,23 @@ function RisaleContent() {
                             handleFontChange(Math.min(8, fontLevel + 1));
                           }}
                           disabled={fontLevel === 8}
+                          title={t("increaseFont") || "Yazıyı Büyüt"}
                           className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
                         >
                           A+
                         </button>
-
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsSepia((prev) => !prev); // DÜZELTİLDİ
+                            setIsSepia((prev) => !prev);
                             if (
                               typeof navigator !== "undefined" &&
                               navigator.vibrate
                             )
                               navigator.vibrate(20);
                           }}
-                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                            isSepia
-                              ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
-                              : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
                           title={t("eyeProtection") || "Okuma Modu (Sepya)"}
                         >
                           <svg
@@ -525,7 +490,6 @@ function RisaleContent() {
                             <circle cx="12" cy="12" r="3" />
                           </svg>
                         </button>
-
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
@@ -537,7 +501,6 @@ function RisaleContent() {
                         >
                           {autoScrollSpeed}x
                         </button>
-
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -548,11 +511,7 @@ function RisaleContent() {
                             )
                               navigator.vibrate(20);
                           }}
-                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                            isAutoScrolling
-                              ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                              : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
                           title={
                             isAutoScrolling
                               ? t("stopAutoScroll") || "Durdur"
@@ -579,23 +538,18 @@ function RisaleContent() {
                             </svg>
                           )}
                         </button>
-
                         <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFullScreen(); // DÜZELTİLDİ
+                            toggleFullScreen();
                             if (
                               typeof navigator !== "undefined" &&
                               navigator.vibrate
                             )
                               navigator.vibrate(20);
                           }}
-                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                            isFullscreen
-                              ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                              : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isFullscreen ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"}`}
                           title={t("fullscreen") || "Tam Ekran"}
                         >
                           {isFullscreen ? (
@@ -631,6 +585,7 @@ function RisaleContent() {
                       <button
                         onClick={goBack}
                         className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
+                        title={t("close") || "Kapat"}
                       >
                         <svg
                           className="w-5 h-5"
@@ -651,11 +606,7 @@ function RisaleContent() {
                 </div>
 
                 <div
-                  className={`mx-auto transition-all duration-700 select-none ${
-                    isFullscreen
-                      ? "max-w-full px-6 pt-10"
-                      : "max-w-4xl p-6 md:p-12 bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800"
-                  }`}
+                  className={`mx-auto transition-all duration-700 select-none ${isFullscreen ? "max-w-full px-6 pt-10" : "max-w-4xl p-6 md:p-12 bg-white/40 dark:bg-gray-900/40 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800"}`}
                 >
                   <div
                     className={`risale-content prose prose-emerald dark:prose-invert max-w-none font-serif leading-[1.8] font-level-${fontLevel}`}
@@ -669,7 +620,7 @@ function RisaleContent() {
                       onClick={goBack}
                       className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
                     >
-                      Bölüm Listesine Dön
+                      {t("backToChapterList") || "Bölüm Listesine Dön"}
                     </button>
                   </div>
                 )}

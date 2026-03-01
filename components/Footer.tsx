@@ -19,27 +19,30 @@ export default function Footer() {
           <div className="text-center md:text-left">
             <h2 className="text-xl font-black tracking-tight mb-2">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
-                {"Spiritual Union for Reflection & Affinity"}
+                {/* Marka sloganını da i18n'e bağladık */}
+                {t("slogan") || "Spiritual Union for Reflection & Affinity"}
               </span>
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed mx-auto md:mx-0">
-              {t("footerDesc")}
+              {t("footerDesc") ||
+                "Manevi yolculuğunuzda size eşlik eden dijital rehberiniz."}
             </p>
           </div>
 
           <div className="text-center md:text-right flex flex-col items-center md:items-end gap-1">
             <Link
               href="/about"
-              className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 font-bold text-sm uppercase tracking-wider"
+              className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 font-bold text-sm uppercase tracking-wider transition-colors"
             >
-              About Us
+              {t("aboutUs") || "Hakkımızda"}
             </Link>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              &copy; {currentYear} {t("rightsReserved")}
+              &copy; {currentYear}{" "}
+              {t("rightsReserved") || "Tüm hakları saklıdır."}
             </p>
 
             <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-600 mt-1 group">
-              <span>Developed By</span>
+              <span>{t("developedBy") || "Geliştiren"}</span>
               {developerLink ? (
                 <a
                   href={developerLink}

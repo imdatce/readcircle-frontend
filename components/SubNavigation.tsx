@@ -3,13 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
 
 export default function SubNavigation() {
   const pathname = usePathname();
+  const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
 
   const navItems = [
     {
-      name: "Halkalar",
+      name: t("navCircles") || "Halkalar",
       href: "/sessions",
       icon: (
         <svg
@@ -28,7 +30,7 @@ export default function SubNavigation() {
       ),
     },
     {
-      name: "Kaynaklar",
+      name: t("navResources") || "Kaynaklar",
       href: "/resources",
       icon: (
         <svg
@@ -47,7 +49,7 @@ export default function SubNavigation() {
       ),
     },
     {
-      name: "Ajandam",
+      name: t("navAgenda") || "Ajandam",
       href: "/agenda",
       icon: (
         <svg
@@ -65,9 +67,8 @@ export default function SubNavigation() {
         </svg>
       ),
     },
-    // === YENİ: VAKİTLER BUTONU (Minimal Cami İkonu) ===
     {
-      name: "NAMAZ",
+      name: t("navPrayer") || "NAMAZ",
       href: "/prayer-times",
       icon: (
         <svg
@@ -77,27 +78,22 @@ export default function SubNavigation() {
           stroke="currentColor"
           strokeWidth={2}
         >
-          {/* Ana Kubbe */}
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M8 12C8 7.5 12 3 12 3C12 3 16 7.5 16 12V21H8V12Z"
           />
-          {/* Kubbe üstü alem */}
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3V1" />
-          {/* Sol Minare */}
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M4 21V8C4 8 5 6 6 6C7 6 8 8 8 8"
           />
-          {/* Sağ Minare */}
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M20 21V8C20 8 19 6 18 6C17 6 16 8 16 8"
           />
-          {/* Zemin Çizgisi */}
           <path strokeLinecap="round" strokeLinejoin="round" d="M2 21H22" />
         </svg>
       ),
@@ -109,7 +105,6 @@ export default function SubNavigation() {
       id="sub-navigation"
       className="w-full bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40"
     >
-      {" "}
       <div className="max-w-4xl mx-auto px-1 py-1.5">
         <div className="grid grid-cols-4 gap-1">
           {navItems.map((item) => {

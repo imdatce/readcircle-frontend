@@ -1,89 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import ReadingModal, {
   ReadingModalContent,
 } from "@/components/modals/ReadingModal";
 import { CevsenBab, Resource } from "@/types";
-
-// Sayfada gösterilecek duaların listesi ve tasarımları
-const DUALAR_LIST = [
-  {
-    id: "bedir",
-    title: "Ashab-ı Bedir",
-    codeKey: "BEDIR",
-    type: "LIST_BASED",
-    desc: "Bedir ehlinin mübarek isimleri",
-    color: "emerald",
-  },
-  {
-    id: "uhud",
-    title: "Şüheda-i Uhud",
-    codeKey: "UHUD",
-    type: "LIST_BASED",
-    desc: "Uhud şehitlerinin mübarek isimleri",
-    color: "emerald",
-  },
-  {
-    id: "tevhidname",
-    title: "Tevhidname",
-    codeKey: "TEVHIDNAME",
-    type: "LIST_BASED",
-    desc: "Tevhid hakikatleri ve zikirleri",
-    color: "blue",
-  },
-  {
-    id: "tefriciye",
-    title: "Salât-ı Tefriciye",
-    codeKey: "TEFRICIYE",
-    type: "COUNTABLE",
-    desc: "Sıkıntıların def'i için okunan salavat",
-    color: "amber",
-  },
-  {
-    id: "munciye",
-    title: "Salât-ı Münciye",
-    codeKey: "MUNCIYE",
-    type: "COUNTABLE",
-    desc: "Tüncînâ Duası ve Salavatı",
-    color: "amber",
-  },
-  {
-    id: "salavat",
-    title: "Özel Salavatlar",
-    codeKey: "OZELSALAVAT",
-    type: "COUNTABLE",
-    desc: "Peygamber Efendimiz'e (asm) salavatlar",
-    color: "indigo",
-  },
-  {
-    id: "kurandualari",
-    title: "Kur'an'dan Dualar",
-    codeKey: "KURANDUALARI",
-    type: "LIST_BASED",
-    desc: "Kur'an'da geçen Peygamber duaları",
-    color: "amber",
-  },
-  {
-    id: "esmaulhusna",
-    title: "Esma-ül Hüsna",
-    codeKey: "ESMAULHUSNA",
-    type: "CUSTOM_PAGE",
-    desc: "Allah'ın 99 İsmi, faziletleri ve zikirleri",
-    color: "emerald",
-  },
-  {
-    id: "gunluk-dualar",
-    title: "Günlük Dualar",
-    codeKey: "GUNLUKDUALAR",
-    type: "CUSTOM_PAGE",
-    desc: "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
-    color: "indigo",
-  },
-];
 
 const colorStyles: Record<string, string> = {
   emerald:
@@ -107,10 +31,89 @@ function DualarContent() {
     null,
   );
 
-  // URL'deki 'dua' parametresini yakalıyoruz
   const duaParam = searchParams.get("dua");
 
-  // Tüm kaynakları Backend'den çek
+  // DUALAR_LIST'i useMemo içine alıyoruz ki dil değiştiğinde anında tetiklensin.
+  const DUALAR_LIST = useMemo(
+    () => [
+      {
+        id: "bedir",
+        title: t("duaBedirTitle") || "Ashab-ı Bedir",
+        codeKey: "BEDIR",
+        type: "LIST_BASED",
+        desc: t("duaBedirDesc") || "Bedir ehlinin mübarek isimleri",
+        color: "emerald",
+      },
+      {
+        id: "uhud",
+        title: t("duaUhudTitle") || "Şüheda-i Uhud",
+        codeKey: "UHUD",
+        type: "LIST_BASED",
+        desc: t("duaUhudDesc") || "Uhud şehitlerinin mübarek isimleri",
+        color: "emerald",
+      },
+      {
+        id: "tevhidname",
+        title: t("duaTevhidnameTitle") || "Tevhidname",
+        codeKey: "TEVHIDNAME",
+        type: "LIST_BASED",
+        desc: t("duaTevhidnameDesc") || "Tevhid hakikatleri ve zikirleri",
+        color: "blue",
+      },
+      {
+        id: "tefriciye",
+        title: t("duaTefriciyeTitle") || "Salât-ı Tefriciye",
+        codeKey: "TEFRICIYE",
+        type: "COUNTABLE",
+        desc: t("duaTefriciyeDesc") || "Sıkıntıların def'i için okunan salavat",
+        color: "amber",
+      },
+      {
+        id: "munciye",
+        title: t("duaMunciyeTitle") || "Salât-ı Münciye",
+        codeKey: "MUNCIYE",
+        type: "COUNTABLE",
+        desc: t("duaMunciyeDesc") || "Tüncînâ Duası ve Salavatı",
+        color: "amber",
+      },
+      {
+        id: "salavat",
+        title: t("duaSalavatTitle") || "Özel Salavatlar",
+        codeKey: "OZELSALAVAT",
+        type: "COUNTABLE",
+        desc: t("duaSalavatDesc") || "Peygamber Efendimiz'e (asm) salavatlar",
+        color: "indigo",
+      },
+      {
+        id: "kurandualari",
+        title: t("duaKuranTitle") || "Kur'an'dan Dualar",
+        codeKey: "KURANDUALARI",
+        type: "LIST_BASED",
+        desc: t("duaKuranDesc") || "Kur'an'da geçen Peygamber duaları",
+        color: "amber",
+      },
+      {
+        id: "esmaulhusna",
+        title: t("duaEsmaTitle") || "Esma-ül Hüsna",
+        codeKey: "ESMAULHUSNA",
+        type: "CUSTOM_PAGE",
+        desc: t("duaEsmaDesc") || "Allah'ın 99 İsmi, faziletleri ve zikirleri",
+        color: "emerald",
+      },
+      {
+        id: "gunluk-dualar",
+        title: t("duaDailyTitle") || "Günlük Dualar",
+        codeKey: "GUNLUKDUALAR",
+        type: "CUSTOM_PAGE",
+        desc:
+          t("duaDailyDesc") ||
+          "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
+        color: "indigo",
+      },
+    ],
+    [t],
+  );
+
   useEffect(() => {
     const fetchResources = async () => {
       try {
@@ -134,24 +137,20 @@ function DualarContent() {
     fetchResources();
   }, []);
 
-  // Kaynaklar yüklendikten SONRA, URL'de dua parametresi varsa otomatik aç
   useEffect(() => {
     if (!loading && resources.length > 0 && duaParam) {
       const targetDua = DUALAR_LIST.find((d) => d.id === duaParam);
       if (targetDua) {
-        // ESLint uyarısını (şelale render) aşmak için Promise kullanıyoruz
         Promise.resolve().then(() => handleOpenDua(targetDua, true));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, resources, duaParam]);
+  }, [loading, resources, duaParam, DUALAR_LIST]);
 
-  // Duayı Açma Fonksiyonu (isAuto parametresi, URL değişikliğini kontrol etmek içindir)
   const handleOpenDua = (
     duaConfig: (typeof DUALAR_LIST)[0],
     isAuto = false,
   ) => {
-    // Eğer tıklamayla gelindiyse (otomatik değilse), URL'i temiz bir şekilde güncelle
     if (!isAuto) {
       router.replace(`/resources/dualar?dua=${duaConfig.id}`, {
         scroll: false,
@@ -163,15 +162,13 @@ function DualarContent() {
       return;
     }
 
-    // 1. Tıklanan duayı çekilen resources listesinden bul
     const resource = resources.find((r) => r.codeKey === duaConfig.codeKey);
 
     if (!resource) {
-      alert("Bu içerik henüz sisteme yüklenmemiş.");
+      alert(t("contentNotUploaded") || "Bu içerik henüz sisteme yüklenmemiş.");
       return;
     }
 
-    // 2. Dili seç
     let translation = resource.translations?.find(
       (trans: any) => trans.langCode === language,
     );
@@ -183,16 +180,14 @@ function DualarContent() {
 
     const description = translation?.description;
     if (!description) {
-      alert("İçerik bulunamadı.");
+      alert(t("contentNotFound") || "İçerik bulunamadı.");
       return;
     }
 
     let parsedModalContent: ReadingModalContent;
 
-    // 3. Tipine göre veriyi ayrıştır
     if (duaConfig.type === "COUNTABLE") {
       const parts = description.split("|||");
-
       parsedModalContent = {
         title: duaConfig.title,
         type: "SALAVAT",
@@ -202,10 +197,9 @@ function DualarContent() {
           meaning: parts[2]?.trim() || "",
         },
         codeKey: duaConfig.codeKey,
-        ignoreSavedProgress: true, // Her açılışta başa dönsün
+        ignoreSavedProgress: true,
       };
     } else {
-      // LIST_BASED (Bedir, Uhud, Tevhidname vb.)
       let separator = "###";
       if (
         (duaConfig.codeKey === "BEDIR" || duaConfig.codeKey === "UHUD") &&
@@ -236,14 +230,13 @@ function DualarContent() {
         cevsenData: parsedData,
         startUnit: 1,
         codeKey: duaConfig.codeKey,
-        ignoreSavedProgress: true, // Her açılışta başa dönsün
+        ignoreSavedProgress: true,
       };
     }
 
     setModalContent(parsedModalContent);
   };
 
-  // Modalı kapatırken URL'i eski (parametresiz) haline döndürür
   const handleCloseModal = () => {
     setModalContent(null);
     router.replace("/resources/dualar", { scroll: false });
@@ -252,11 +245,12 @@ function DualarContent() {
   return (
     <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Üst Başlık (Geri Butonu ile) */}
+        {/* Üst Başlık */}
         <div className="flex items-center justify-between bg-white/50 dark:bg-[#0a1f1a] backdrop-blur-md p-4 rounded-[2rem] border border-blue-100/20 dark:border-blue-900/30 shadow-sm">
           <button
             onClick={() => router.push("/resources")}
             className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all group"
+            title={t("backToResources") || "Geri"}
           >
             <svg
               className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:-translate-x-1 transition-transform"
@@ -273,7 +267,7 @@ function DualarContent() {
             </svg>
           </button>
           <h1 className="text-sm md:text-base font-black text-blue-800 dark:text-blue-100 uppercase tracking-[0.2em]">
-            Dualar ve Virdler
+            {t("dualarTitle") || "Dualar ve Virdler"}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -300,7 +294,6 @@ function DualarContent() {
                       {dua.desc}
                     </p>
                   </div>
-                  {/* Dekoratif Arka Plan İkonu */}
                   <svg
                     className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10 group-hover:scale-110 transition-transform duration-500"
                     fill="currentColor"
@@ -315,16 +308,13 @@ function DualarContent() {
         )}
       </div>
 
-      {/* Okuma Modalı Çağırımı */}
+      {/* Okuma Modalı */}
       {modalContent && (
         <ReadingModal
           content={modalContent}
           onClose={handleCloseModal}
-          onUpdateContent={(newContent) => {
-            if (newContent) setModalContent(newContent);
-            else setModalContent(null);
-          }}
-          userName="Serbest Okuma"
+          onUpdateContent={(newContent) => setModalContent(newContent || null)}
+          userName={t("freeReading") || "Serbest Okuma"}
           localCounts={{}}
           onDecrementCount={() => {}}
           t={t}
@@ -334,7 +324,6 @@ function DualarContent() {
   );
 }
 
-// Next.js UseSearchParams kullanımı için Suspense Sarmalayıcı
 export default function DualarPage() {
   return (
     <Suspense

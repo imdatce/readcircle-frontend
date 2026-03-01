@@ -13,7 +13,6 @@ interface AdminStats {
   totalAssignments: number;
 }
 
-// GÜNCELLENDİ: taskCount yerine createdSessionsCount
 interface UserData {
   id: number;
   username: string;
@@ -21,7 +20,6 @@ interface UserData {
   createdSessionsCount: number;
 }
 
-// GÜNCELLENDİ: createdBy eklendi
 interface SessionData {
   id: number;
   code: string;
@@ -38,7 +36,7 @@ interface AdminData {
 }
 
 export default function SuperAdminPage() {
-  const { role, token, user: currentUser } = useAuth(); // currentUser'i de çekiyoruz ki kendimizi silmeyelim
+  const { role, token, user: currentUser } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
 
@@ -61,7 +59,9 @@ export default function SuperAdminPage() {
         );
 
         if (!response.ok)
-          throw new Error("Veriler çekilirken bir hata oluştu.");
+          throw new Error(
+            t("errorOccurred") || "Veriler çekilirken bir hata oluştu.",
+          );
         const result = await response.json();
         setData(result);
       } catch (err: any) {
@@ -72,16 +72,15 @@ export default function SuperAdminPage() {
     };
 
     if (token) fetchAdminData();
-  }, [role, token, router]);
+  }, [role, token, router, t]);
 
-  // YENİ: KULLANICI SİLME FONKSİYONU
   const handleDeleteUser = async (userId: number, username: string) => {
-    if (
-      !window.confirm(
-        `"${username}" adlı kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?`,
-      )
-    )
-      return;
+    // Çeviriye parametre gönderebilmek için basit bir replace mantığı kullanıyoruz
+    const confirmMsg = t("confirmDeleteUser")
+      ? t("confirmDeleteUser").replace("{username}", username)
+      : `"${username}" adlı kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?`;
+
+    if (!window.confirm(confirmMsg)) return;
 
     try {
       const response = await fetch(
@@ -93,7 +92,6 @@ export default function SuperAdminPage() {
       );
 
       if (response.ok) {
-        // Ekranda canlı olarak kullanıcıyı tablodan çıkar ve istatistiği güncelle
         setData((prev) => {
           if (!prev) return prev;
           return {
@@ -104,11 +102,13 @@ export default function SuperAdminPage() {
         });
       } else {
         const err = await response.json();
-        alert(err.message || "Silme işlemi başarısız oldu.");
+        alert(
+          err.message || t("deleteFailed") || "Silme işlemi başarısız oldu.",
+        );
       }
     } catch (error) {
       console.error("Silme hatası:", error);
-      alert("Bir hata oluştu.");
+      alert(t("errorOccurred") || "Bir hata oluştu.");
     }
   };
 
@@ -127,13 +127,13 @@ export default function SuperAdminPage() {
       <div className="min-h-screen flex items-center justify-center p-4 text-center">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-xl border border-red-100 max-w-md w-full">
           <h2 className="text-xl font-bold text-red-500 mb-4">
-            {error || "Hata!"}
+            {error || t("errorOccurred")}
           </h2>
           <Link
             href="/"
             className="px-6 py-2 bg-gray-800 text-white rounded-xl"
           >
-            Anasayfaya Dön
+            {t("backHome") || "Anasayfaya Dön"}
           </Link>
         </div>
       </div>
@@ -148,6 +148,7 @@ export default function SuperAdminPage() {
             <Link
               href="/"
               className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-xl hover:text-purple-600 transition-colors"
+              title={t("backHome")}
             >
               <svg
                 className="w-5 h-5"
@@ -168,7 +169,7 @@ export default function SuperAdminPage() {
             </h1>
           </div>
           <div className="text-xs font-bold text-gray-400 uppercase tracking-widest px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
-            SÜPER ADMİN
+            {t("superAdminRole") || "SÜPER ADMİN"}
           </div>
         </div>
       </header>
@@ -199,37 +200,35 @@ export default function SuperAdminPage() {
           <div className="flex border-b border-gray-100 dark:border-gray-800 p-2 gap-2 bg-gray-50/50 dark:bg-gray-900/50">
             <button
               onClick={() => setActiveTab("users")}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
-                activeTab === "users"
-                  ? "bg-white dark:bg-gray-800 text-purple-600 shadow-sm border border-gray-200 dark:border-gray-700"
-                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === "users" ? "bg-white dark:bg-gray-800 text-purple-600 shadow-sm border border-gray-200 dark:border-gray-700" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
             >
               {t("users") || "Kullanıcılar"} ({data.users.length})
             </button>
             <button
               onClick={() => setActiveTab("sessions")}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
-                activeTab === "sessions"
-                  ? "bg-white dark:bg-gray-800 text-purple-600 shadow-sm border border-gray-200 dark:border-gray-700"
-                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === "sessions" ? "bg-white dark:bg-gray-800 text-purple-600 shadow-sm border border-gray-200 dark:border-gray-700" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"}`}
             >
-              {t("sessions") || "Dağıtım Halkaları"} ({data.sessions.length})
+              {t("distributionCircles") || "Dağıtım Halkaları"} (
+              {data.sessions.length})
             </button>
           </div>
 
           <div className="p-0 overflow-x-auto">
-            {/* --- KULLANICILAR TABLOSU --- */}
             {activeTab === "users" && (
               <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
                 <thead className="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50">
                   <tr>
                     <th className="px-6 py-4">ID</th>
-                    <th className="px-6 py-4">Kullanıcı Adı</th>
-                    <th className="px-6 py-4">Yetki</th>
-                    <th className="px-6 py-4 text-center">Kurduğu Halkalar</th>
-                    <th className="px-6 py-4 text-center">İşlem</th>
+                    <th className="px-6 py-4">
+                      {t("usernameLabel") || "Kullanıcı Adı"}
+                    </th>
+                    <th className="px-6 py-4">{t("roleLabel") || "Yetki"}</th>
+                    <th className="px-6 py-4 text-center">
+                      {t("createdCirclesLabel") || "Kurduğu Halkalar"}
+                    </th>
+                    <th className="px-6 py-4 text-center">
+                      {t("actionLabel") || "İşlem"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,27 +248,25 @@ export default function SuperAdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2.5 py-1 rounded-lg text-xs font-black ${
-                            u.role === "ROLE_ADMIN"
-                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                          }`}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black ${u.role === "ROLE_ADMIN" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
                         >
-                          {u.role === "ROLE_ADMIN" ? "YÖNETİCİ" : "KULLANICI"}
+                          {u.role === "ROLE_ADMIN"
+                            ? t("adminRole") || "YÖNETİCİ"
+                            : t("userRole") || "KULLANICI"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-black">
-                          {u.createdSessionsCount} Halka
+                          {u.createdSessionsCount}{" "}
+                          {t("circleCountLabel") || "Halka"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        {/* Kişi kendini silemez */}
                         {u.username !== currentUser && (
                           <button
                             onClick={() => handleDeleteUser(u.id, u.username)}
                             className="p-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500 rounded-lg transition-colors inline-flex"
-                            title="Kullanıcıyı Sil"
+                            title={t("deleteUser") || "Kullanıcıyı Sil"}
                           >
                             <svg
                               className="w-5 h-5"
@@ -293,16 +290,23 @@ export default function SuperAdminPage() {
               </table>
             )}
 
-            {/* --- HALKALAR TABLOSU --- */}
             {activeTab === "sessions" && (
               <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
                 <thead className="text-xs text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50">
                   <tr>
                     <th className="px-6 py-4">ID</th>
-                    <th className="px-6 py-4">Halka Kodu</th>
-                    <th className="px-6 py-4">Oluşturan (Sahip)</th>
-                    <th className="px-6 py-4">Açıklama</th>
-                    <th className="px-6 py-4 min-w-[200px]">İlerleme Durumu</th>
+                    <th className="px-6 py-4">
+                      {t("circleCodeLabel") || "Halka Kodu"}
+                    </th>
+                    <th className="px-6 py-4">
+                      {t("ownerLabel") || "Oluşturan (Sahip)"}
+                    </th>
+                    <th className="px-6 py-4">
+                      {t("descriptionLabel") || "Açıklama"}
+                    </th>
+                    <th className="px-6 py-4 min-w-[200px]">
+                      {t("progressStatusLabel") || "İlerleme Durumu"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,7 +336,7 @@ export default function SuperAdminPage() {
                         <td className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">
                           {s.description || (
                             <span className="text-gray-400 italic">
-                              İsimsiz Halka
+                              {t("unnamedCircle") || "İsimsiz Halka"}
                             </span>
                           )}
                         </td>
@@ -340,7 +344,8 @@ export default function SuperAdminPage() {
                           <div className="flex flex-col gap-1.5">
                             <div className="flex justify-between text-xs font-bold">
                               <span className="text-gray-500 dark:text-gray-400">
-                                {s.completedTasks} / {s.totalTasks} Görev
+                                {s.completedTasks} / {s.totalTasks}{" "}
+                                {t("taskCountLabel") || "Görev"}
                               </span>
                               <span
                                 className={
@@ -373,7 +378,6 @@ export default function SuperAdminPage() {
   );
 }
 
-// YARDIMCI BİLEŞEN: İSTATİSTİK KARTLARI
 function StatCard({ title, value, icon, color }: any) {
   const colors: any = {
     blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/30",

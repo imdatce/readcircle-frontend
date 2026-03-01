@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider } from "@/context/LanguageContext";
+import { LanguageProvider, Language } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "@/context/ThemeContext";
 import SubNavigation from "@/components/SubNavigation";
+import { cookies } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,20 +21,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SURA | Spiritual Union for Reflection & Affinity",
-  description: "Kur'an, Risale-i Nur ve manevi görev dağıtım platformu.",
+  description:
+    "Kur'an, Risale-i Nur ve manevi görev dağıtım platformu. / Quran, Risale-i Nur and spiritual task distribution platform.",
   manifest: "/manifest.json",
 };
+
 export const viewport = {
-  themeColor: "#10B981", // PWA tarayıcı çubuğu rengi eklendi
+  themeColor: "#10B981",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("NEXT_LOCALE");
+  const initialLang = (localeCookie?.value as Language) || "tr";
+
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang={initialLang} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-gray-100 relative`}
       >
@@ -44,18 +51,15 @@ export default function RootLayout({
               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
             }}
           ></div>
-
           <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-emerald-500/25 dark:bg-emerald-600/20 rounded-full blur-[120px] opacity-60 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-
           <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-500/25 dark:bg-blue-600/20 rounded-full blur-[120px] opacity-50 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-
           <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-amber-400/20 dark:bg-amber-600/15 rounded-full blur-[100px] opacity-40 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-emerald-100/30 dark:to-emerald-950/40 pointer-events-none"></div>
         </div>
 
-        <AuthProvider>
-          <LanguageProvider>
+        {/* DİKKAT: En dışta LanguageProvider var */}
+        <LanguageProvider initialLanguage={initialLang}>
+          <AuthProvider>
             <ThemeProvider>
               <div className="flex flex-col min-h-screen relative z-10">
                 <Header />
@@ -64,8 +68,8 @@ export default function RootLayout({
                 <Footer />
               </div>
             </ThemeProvider>
-          </LanguageProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

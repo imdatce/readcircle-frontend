@@ -1,160 +1,167 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
+ "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import LoginRequiredModal from "@/components/LoginRequiredModal";
-// SENİN KENDİ AUTH SİSTEMİNİ İÇE AKTARIYORUZ
 import { useAuth } from "@/context/AuthContext";
 
 export default function AgendaPage() {
   const { t } = useLanguage();
   const router = useRouter();
-
-  // AuthContext'ten kullanıcı bilgisini alıyoruz
   const { user } = useAuth();
 
-  // Modal ve Yüklenme State'leri
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Hydration hatasını önlemek için
+  // Hydration hatasını ve ESLint uyarısını önlemek için
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-  }, []);
+    // requestAnimationFrame kullanarak işlemi asenkron hale getiriyoruz
+    const handle = requestAnimationFrame(() => {
+      setIsMounted(true);
+    });
 
-  // Kartlara tıklandığında çalışacak fonksiyon
+    return () => cancelAnimationFrame(handle);
+  }, []);
   const handleCardClick = (href: string) => {
     if (!isMounted) return;
-
-    // Eğer user yoksa (null ise) giriş yapmamıştır, modalı aç
     if (!user) {
       setIsModalOpen(true);
     } else {
-      // Giriş yapmışsa sayfaya yönlendir
       router.push(href);
     }
   };
 
-  const menuItems = [
-    {
-      title: "Günlük Namaz Takibi",
-      description: "Beş vakit namazını takip et, huzura odaklan.",
-      href: "/prayers?tab=gunluk",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: "bg-teal-500",
-      lightColor: "bg-teal-50 dark:bg-teal-900/20",
-      textColor: "text-teal-700 dark:text-teal-400",
-    },
-    {
-      title: "Kaza Namazı Takibi",
-      description: "Geçmiş borçlarını planla ve adım adım bitir.",
-      href: "/prayers?tab=kaza",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: "bg-amber-500",
-      lightColor: "bg-amber-50 dark:bg-amber-900/20",
-      textColor: "text-amber-700 dark:text-amber-400",
-    },
-    {
-      title: "Hatim Yolculuğum",
-      description: "Kur'an ile bağını koparma, hedefine yaklaş.",
-      href: "/resources/quran",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-          />
-        </svg>
-      ),
-      color: "bg-emerald-500",
-      lightColor: "bg-emerald-50 dark:bg-emerald-900/20",
-      textColor: "text-emerald-700 dark:text-emerald-400",
-    },
-    {
-      title: "Günlük Zikir Takibi",
-      description: "Dilini ve kalbini zikirle diri tut, virdini tamamla.",
-      href: "/agenda/dhikr",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-          />
-        </svg>
-      ),
-      color: "bg-blue-500",
-      lightColor: "bg-blue-50 dark:bg-blue-900/20",
-      textColor: "text-blue-700 dark:text-blue-400",
-    },
-    {
-      title: "Kişisel Dua Listem",
-      description: "Sevdiklerini ekle, niyet et ve onlara dua et.",
-      href: "/agenda/dualarim",
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-          />
-        </svg>
-      ),
-      color: "bg-rose-500",
-      lightColor: "bg-rose-50 dark:bg-rose-900/20",
-      textColor: "text-rose-700 dark:text-rose-400",
-    },
-  ];
+  // Menü öğelerini t() fonksiyonuna bağlayarak dinamik hale getirdik
+  const menuItems = useMemo(
+    () => [
+      {
+        title: t("dailyPrayerTracking") || "Günlük Namaz Takibi",
+        description:
+          t("dailyPrayerDesc") ||
+          "Beş vakit namazını takip et, huzura odaklan.",
+        href: "/prayers?tab=gunluk",
+        icon: (
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        ),
+        color: "bg-teal-500",
+        lightColor: "bg-teal-50 dark:bg-teal-900/20",
+        textColor: "text-teal-700 dark:text-teal-400",
+      },
+      {
+        title: t("qadaPrayerTracking") || "Kaza Namazı Takibi",
+        description:
+          t("qadaPrayerDesc") || "Geçmiş borçlarını planla ve adım adım bitir.",
+        href: "/prayers?tab=kaza",
+        icon: (
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        ),
+        color: "bg-amber-500",
+        lightColor: "bg-amber-50 dark:bg-amber-900/20",
+        textColor: "text-amber-700 dark:text-amber-400",
+      },
+      {
+        title: t("myHatimJourney") || "Hatim Yolculuğum",
+        description:
+          t("hatimJourneyDesc") ||
+          "Kur'an ile bağını koparma, hedefine yaklaş.",
+        href: "/resources/quran",
+        icon: (
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+        ),
+        color: "bg-emerald-500",
+        lightColor: "bg-emerald-50 dark:bg-emerald-900/20",
+        textColor: "text-emerald-700 dark:text-emerald-400",
+      },
+      {
+        title: t("dailyDhikrTracking") || "Günlük Zikir Takibi",
+        description:
+          t("dailyDhikrDesc") ||
+          "Dilini ve kalbini zikirle diri tut, virdini tamamla.",
+        href: "/agenda/dhikr",
+        icon: (
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+            />
+          </svg>
+        ),
+        color: "bg-blue-500",
+        lightColor: "bg-blue-50 dark:bg-blue-900/20",
+        textColor: "text-blue-700 dark:text-blue-400",
+      },
+      {
+        title: t("personalDuaList") || "Kişisel Dua Listem",
+        description:
+          t("personalDuaDesc") ||
+          "Sevdiklerini ekle, niyet et ve onlara dua et.",
+        href: "/agenda/dualarim",
+        icon: (
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+          </svg>
+        ),
+        color: "bg-rose-500",
+        lightColor: "bg-rose-50 dark:bg-rose-900/20",
+        textColor: "text-rose-700 dark:text-rose-400",
+      },
+    ],
+    [t],
+  );
 
   return (
     <div className="min-h-screen bg-[#FDFCF7] dark:bg-[#061612] py-8 px-4 sm:px-6 transition-colors duration-500 relative">
@@ -162,10 +169,11 @@ export default function AgendaPage() {
         {/* Başlık Bölümü */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-            Manevi Ajandam
+            {t("agendaPageTitle") || "Manevi Ajandam"}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            Gelişimini takip et, ibadetlerini düzenle.
+            {t("agendaPageSubtitle") ||
+              "Gelişimini takip et, ibadetlerini düzenle."}
           </p>
         </div>
 
@@ -219,8 +227,11 @@ export default function AgendaPage() {
         <LoginRequiredModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title="Giriş Yapmanız Gerekiyor"
-          message="Ajandanıza erişmek ve ibadetlerinizi takip etmek için lütfen hesabınıza giriş yapın."
+          title={t("loginRequiredTitle") || "Giriş Yapmanız Gerekiyor"}
+          message={
+            t("loginRequiredAgendaDesc") ||
+            "Ajandanıza erişmek ve ibadetlerinizi takip etmek için lütfen hesabınıza giriş yapın."
+          }
         />
       )}
     </div>

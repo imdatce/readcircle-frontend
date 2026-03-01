@@ -1,22 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-
-// Hazır Zikir Şablonları
-const PREDEFINED_DHIKRS = [
-  { id: "estagfirullah", name: "Estağfirullah", defaultTarget: 100 },
-  { id: "salavat", name: "Salavat-ı Şerife", defaultTarget: 100 },
-  { id: "kelime_tevhid", name: "Lâ ilâhe illallah", defaultTarget: 100 },
-  { id: "subhanallah", name: "Subhanallah", defaultTarget: 33 },
-  { id: "elhamdulillah", name: "Elhamdulillah", defaultTarget: 33 },
-  { id: "allahu_ekber", name: "Allahu Ekber", defaultTarget: 33 },
-  {
-    id: "hasbunallah",
-    name: "Hasbunallahu ve ni'mel vekil",
-    defaultTarget: 100,
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 interface UserDhikr {
   id: string;
@@ -25,6 +12,7 @@ interface UserDhikr {
 }
 
 export default function DhikrAgendaPage() {
+  const { t } = useLanguage();
   const [myDhikrs, setMyDhikrs] = useState<UserDhikr[]>([]);
   const [todayProgress, setTodayProgress] = useState<Record<string, number>>(
     {},
@@ -48,47 +36,100 @@ export default function DhikrAgendaPage() {
   } | null>(null);
   const [templateTarget, setTemplateTarget] = useState("");
 
-  // Ana Ekrandan Hedef Düzenleme Stateleri
+  // Hedef Düzenleme Stateleri
   const [editingDhikrId, setEditingDhikrId] = useState<string | null>(null);
   const [editTargetValue, setEditTargetValue] = useState("");
 
-  // Zikirmatik State (Bu state ÇEKİLEN zikir sayısını tutar, ekranda KALAN gösterilir)
+  // Zikirmatik State
   const [currentCount, setCurrentCount] = useState(0);
+
+  // i18n uyumlu şablon listesi (t ile her dilde farklı isim alabilir)
+  const PREDEFINED_DHIKRS = useMemo(
+    () => [
+      {
+        id: "estagfirullah",
+        name: t("dhikrEstagfirullah") || "Estağfirullah",
+        defaultTarget: 100,
+      },
+      {
+        id: "salavat",
+        name: t("dhikrSalavat") || "Salavat-ı Şerife",
+        defaultTarget: 100,
+      },
+      {
+        id: "kelime_tevhid",
+        name: t("dhikrTevhid") || "Lâ ilâhe illallah",
+        defaultTarget: 100,
+      },
+      {
+        id: "subhanallah",
+        name: t("dhikrSubhanallah") || "Subhanallah",
+        defaultTarget: 33,
+      },
+      {
+        id: "elhamdulillah",
+        name: t("dhikrElhamdulillah") || "Elhamdulillah",
+        defaultTarget: 33,
+      },
+      {
+        id: "allahu_ekber",
+        name: t("dhikrAllahuEkber") || "Allahu Ekber",
+        defaultTarget: 33,
+      },
+      {
+        id: "hasbunallah",
+        name: t("dhikrHasbunallah") || "Hasbunallahu ve ni'mel vekil",
+        defaultTarget: 100,
+      },
+    ],
+    [t],
+  );
 
   // Verileri Yükle
   useEffect(() => {
-    const savedDhikrs = localStorage.getItem("my_daily_dhikrs");
-    if (savedDhikrs) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMyDhikrs(JSON.parse(savedDhikrs));
-    } else {
-      const defaultDhikrs: UserDhikr[] = PREDEFINED_DHIKRS.slice(0, 3).map(
-        (d) => ({
+    // 1. Önce verileri hazırlayan bir fonksiyon tanımlıyoruz
+    const initializeDhikrData = () => {
+      // Zikir listesini al
+      const savedDhikrs = localStorage.getItem("my_daily_dhikrs");
+      let initialDhikrs: UserDhikr[];
+
+      if (savedDhikrs) {
+        initialDhikrs = JSON.parse(savedDhikrs);
+      } else {
+        initialDhikrs = PREDEFINED_DHIKRS.slice(0, 3).map((d) => ({
           id: d.id,
           name: d.name,
           target: d.defaultTarget,
-        }),
-      );
-       setMyDhikrs(defaultDhikrs);
-      localStorage.setItem("my_daily_dhikrs", JSON.stringify(defaultDhikrs));
-    }
-
-    const todayStr = new Date().toISOString().split("T")[0];
-    const savedProgress = localStorage.getItem("dhikr_progress_today");
-    if (savedProgress) {
-      const parsed = JSON.parse(savedProgress);
-      if (parsed.date === todayStr) {
-         setTodayProgress(parsed.counts);
-      } else {
-        localStorage.setItem(
-          "dhikr_progress_today",
-          JSON.stringify({ date: todayStr, counts: {} }),
-        );
+        }));
+        localStorage.setItem("my_daily_dhikrs", JSON.stringify(initialDhikrs));
       }
-    }
-  }, []);
 
-  // Yeni Özel Zikir Ekleme
+      // Progress (ilerleme) verisini al
+      const todayStr = new Date().toISOString().split("T")[0];
+      const savedProgress = localStorage.getItem("dhikr_progress_today");
+      let initialProgress = {};
+
+      if (savedProgress) {
+        const parsed = JSON.parse(savedProgress);
+        if (parsed.date === todayStr) {
+          initialProgress = parsed.counts;
+        } else {
+          localStorage.setItem(
+            "dhikr_progress_today",
+            JSON.stringify({ date: todayStr, counts: {} }),
+          );
+        }
+      }
+
+      // 2. State'leri tek bir seferde güncelliyoruz
+      setMyDhikrs(initialDhikrs);
+      setTodayProgress(initialProgress);
+    };
+
+    // Fonksiyonu çağır
+    initializeDhikrData();
+  }, [PREDEFINED_DHIKRS]);
+
   const handleAddCustom = () => {
     if (!customName.trim() || !customTarget) return;
     const newDhikr: UserDhikr = {
@@ -104,11 +145,7 @@ export default function DhikrAgendaPage() {
     setIsAddModalOpen(false);
   };
 
-  const handleTemplateClick = (pd: {
-    id: string;
-    name: string;
-    defaultTarget: number;
-  }) => {
+  const handleTemplateClick = (pd: any) => {
     setSelectedTemplate(pd);
     setTemplateTarget(pd.defaultTarget.toString());
   };
@@ -145,7 +182,6 @@ export default function DhikrAgendaPage() {
     setEditingDhikrId(null);
   };
 
-
   const openZikirmatik = (dhikr: UserDhikr) => {
     if (editingDhikrId) return;
     setActiveZikirmatik(dhikr);
@@ -153,11 +189,12 @@ export default function DhikrAgendaPage() {
   };
 
   const handleDeleteDhikr = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Tıklamanın zikirmatiği açmasını engeller
-    const updated = myDhikrs.filter(d => d.id !== id);
+    e.stopPropagation();
+    const updated = myDhikrs.filter((d) => d.id !== id);
     setMyDhikrs(updated);
     localStorage.setItem("my_daily_dhikrs", JSON.stringify(updated));
   };
+
   const closeZikirmatik = () => {
     if (!activeZikirmatik) return;
     const todayStr = new Date().toISOString().split("T")[0];
@@ -168,42 +205,31 @@ export default function DhikrAgendaPage() {
     setTodayProgress(newProgress);
     localStorage.setItem(
       "dhikr_progress_today",
-      JSON.stringify({
-        date: todayStr,
-        counts: newProgress,
-      }),
+      JSON.stringify({ date: todayStr, counts: newProgress }),
     );
     setActiveZikirmatik(null);
   };
 
-  // Zikir Çekme (Arttırma) - SIFIRDA DURACAK ŞEKİLDE AYARLANDI
   const incrementCount = () => {
     if (!activeZikirmatik) return;
-
-    // Eğer hedefe ulaşıldıysa saymayı durdur
     if (currentCount >= activeZikirmatik.target) {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([50, 50, 50]); // Zaten bitti uyarısı
-      }
+      if (typeof navigator !== "undefined" && navigator.vibrate)
+        navigator.vibrate([50, 50, 50]);
       return;
     }
-
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
+    if (typeof navigator !== "undefined" && navigator.vibrate)
       navigator.vibrate(30);
-    }
     setCurrentCount((prev) => prev + 1);
   };
 
-  // Titreşim (Hedefe tam ulaşıldığı an)
   useEffect(() => {
     if (
       activeZikirmatik &&
       currentCount === activeZikirmatik.target &&
       activeZikirmatik.target > 0
     ) {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
+      if (typeof navigator !== "undefined" && navigator.vibrate)
         navigator.vibrate([100, 50, 100]);
-      }
     }
   }, [currentCount, activeZikirmatik]);
 
@@ -230,8 +256,8 @@ export default function DhikrAgendaPage() {
               />
             </svg>
           </Link>
-          <h1 className="text-sm md:text-base font-black text-blue-800 dark:text-blue-100 uppercase tracking-[0.2em] flex items-center gap-2">
-            Günlük Zikir Takibi
+          <h1 className="text-sm md:text-base font-black text-blue-800 dark:text-blue-100 uppercase tracking-[0.2em]">
+            {t("dhikrAgendaTitle") || "Günlük Zikir Takibi"}
           </h1>
           <button
             onClick={() => {
@@ -263,7 +289,7 @@ export default function DhikrAgendaPage() {
               {Object.values(todayProgress).reduce((a, b) => a + b, 0)}
             </p>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-              Bugün Çekilen
+              {t("dhikrTodayTotal") || "Bugün Çekilen"}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-900 p-5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
@@ -275,7 +301,7 @@ export default function DhikrAgendaPage() {
               / {myDhikrs.length}
             </p>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-              Tamamlanan Vird
+              {t("dhikrCompletedVird") || "Tamamlanan Vird"}
             </p>
           </div>
         </div>
@@ -291,17 +317,12 @@ export default function DhikrAgendaPage() {
               <div
                 key={dhikr.id}
                 onClick={() => openZikirmatik(dhikr)}
-                className={`group/card relative overflow-hidden p-5 rounded-3xl border cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] ${
-                  isCompleted
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
-                    : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
-                }`}
+                className={`group/card relative overflow-hidden p-5 rounded-3xl border cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] ${isCompleted ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800" : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"}`}
               >
                 <div
                   className="absolute inset-y-0 left-0 bg-blue-50 dark:bg-blue-900/10 transition-all duration-1000 ease-out"
                   style={{ width: `${percent}%` }}
                 ></div>
-
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
                     <h3
@@ -322,13 +343,12 @@ export default function DhikrAgendaPage() {
                       )}
                       {dhikr.name}
                     </h3>
-
                     <div
                       className="flex items-center gap-2 mt-1"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        Hedef:
+                        {t("targetLabel") || "Hedef"}:
                       </span>
                       {editingDhikrId === dhikr.id ? (
                         <div className="flex items-center gap-1 animate-in fade-in">
@@ -342,7 +362,7 @@ export default function DhikrAgendaPage() {
                           />
                           <button
                             onClick={(e) => saveEditedTarget(dhikr.id, e)}
-                            className="w-6 h-6 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-md hover:bg-emerald-200 transition-colors"
+                            className="w-6 h-6 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-md hover:bg-emerald-200"
                           >
                             <svg
                               className="w-4 h-4"
@@ -366,8 +386,8 @@ export default function DhikrAgendaPage() {
                           </span>
                           <button
                             onClick={(e) => startEditingTarget(dhikr, e)}
-                            className="text-gray-400 hover:text-blue-500 opacity-0 group-hover/card:opacity-100 transition-opacity p-1"
-                            title="Hedefi Düzenle"
+                            className="text-gray-400 hover:text-blue-500 opacity-0 group-hover/card:opacity-100 p-1"
+                            title={t("editTarget") || "Hedefi Düzenle"}
                           >
                             <svg
                               className="w-3.5 h-3.5"
@@ -387,24 +407,14 @@ export default function DhikrAgendaPage() {
                       )}
                     </div>
                   </div>
-
                   <div className="flex items-center gap-4">
                     <span className="text-xl font-black text-blue-600 dark:text-blue-400">
-                      {/* Kartta kaç tane çekildiği yazmaya devam etsin */}
                       {current}
                     </span>
-                    <button 
-                      onClick={(e) => handleDeleteDhikr(dhikr.id, e)}
-                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
-                      title="Listeden Sil"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
                     <button
                       onClick={(e) => handleDeleteDhikr(dhikr.id, e)}
                       className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors opacity-0 group-hover/card:opacity-100"
+                      title={t("delete") || "Sil"}
                     >
                       <svg
                         className="w-4 h-4"
@@ -425,12 +435,14 @@ export default function DhikrAgendaPage() {
               </div>
             );
           })}
-
           {myDhikrs.length === 0 && (
             <div className="text-center py-10 bg-white/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-              <p className="text-gray-500 font-bold">Listeniz boş.</p>
+              <p className="text-gray-500 font-bold">
+                {t("emptyDhikrList") || "Listeniz boş."}
+              </p>
               <p className="text-sm text-gray-400 mt-1">
-                Sağ üstteki &quot;+&quot; butonundan yeni vird ekleyebilirsiniz.
+                {t("addVirdInstruction") ||
+                  "Sağ üstteki '+' butonundan yeni vird ekleyebilirsiniz."}
               </p>
             </div>
           )}
@@ -443,14 +455,16 @@ export default function DhikrAgendaPage() {
           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto hide-scrollbar">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-gray-800 dark:text-white">
-                {selectedTemplate ? "Hedef Belirle" : "Vird Ekle"}
+                {selectedTemplate
+                  ? t("setTarget") || "Hedef Belirle"
+                  : t("addVird") || "Vird Ekle"}
               </h2>
               <button
                 onClick={() => {
                   setSelectedTemplate(null);
                   setIsAddModalOpen(false);
                 }}
-                className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200"
               >
                 <svg
                   className="w-5 h-5 text-gray-500"
@@ -475,12 +489,13 @@ export default function DhikrAgendaPage() {
                     {selectedTemplate.name}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                    Bu zikir için günlük hedefinizi belirleyin.
+                    {t("setDailyTargetDesc") ||
+                      "Bu zikir için günlük hedefinizi belirleyin."}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Hedef Sayısı
+                    {t("targetNumberLabel") || "Hedef Sayısı"}
                   </label>
                   <input
                     type="number"
@@ -494,15 +509,15 @@ export default function DhikrAgendaPage() {
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setSelectedTemplate(null)}
-                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200"
+                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold"
                   >
-                    Geri
+                    {t("back") || "Geri"}
                   </button>
                   <button
                     onClick={confirmAddTemplate}
                     className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold"
                   >
-                    Kaydet ve Ekle
+                    {t("saveAndAdd") || "Kaydet ve Ekle"}
                   </button>
                 </div>
               </div>
@@ -510,11 +525,13 @@ export default function DhikrAgendaPage() {
               <div className="space-y-6">
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3">
                   <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                    Kendi Zikrini Oluştur
+                    {t("createCustomDhikr") || "Kendi Zikrini Oluştur"}
                   </h3>
                   <input
                     type="text"
-                    placeholder="Zikir Adı (Örn: Ya Şafi)"
+                    placeholder={
+                      t("dhikrNamePlaceholder") || "Zikir Adı (Örn: Ya Şafi)"
+                    }
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
                     className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-medium focus:border-blue-500 outline-none"
@@ -522,7 +539,7 @@ export default function DhikrAgendaPage() {
                   <div className="flex gap-2">
                     <input
                       type="number"
-                      placeholder="Hedef"
+                      placeholder={t("targetLabel") || "Hedef"}
                       value={customTarget}
                       onChange={(e) => setCustomTarget(e.target.value)}
                       className="w-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-medium focus:border-blue-500 outline-none"
@@ -531,14 +548,13 @@ export default function DhikrAgendaPage() {
                       onClick={handleAddCustom}
                       className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors"
                     >
-                      Oluştur
+                      {t("create") || "Oluştur"}
                     </button>
                   </div>
                 </div>
-
                 <div>
                   <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">
-                    Hazır Şablonlar
+                    {t("predefinedTemplates") || "Hazır Şablonlar"}
                   </h3>
                   <div className="space-y-2">
                     {PREDEFINED_DHIKRS.map((pd) => {
@@ -548,11 +564,7 @@ export default function DhikrAgendaPage() {
                           key={pd.id}
                           disabled={isAdded}
                           onClick={() => handleTemplateClick(pd)}
-                          className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left transition-all ${
-                            isAdded
-                              ? "bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-50 dark:bg-gray-800/50 dark:border-gray-800"
-                              : "bg-white border-blue-100 hover:bg-blue-50 dark:bg-gray-900 dark:border-blue-900/30 dark:hover:bg-blue-900/20"
-                          }`}
+                          className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left transition-all ${isAdded ? "bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-50 dark:bg-gray-800/50 dark:border-gray-800" : "bg-white border-blue-100 hover:bg-blue-50 dark:bg-gray-900 dark:border-blue-900/30 dark:hover:bg-blue-900/20"}`}
                         >
                           <div>
                             <h4
@@ -589,7 +601,7 @@ export default function DhikrAgendaPage() {
         </div>
       )}
 
-      {/* --- DEV ZİKİRMATİK EKRANI (GERİYE SAYAR VE 0'DA DURUR) --- */}
+      {/* --- DEV ZİKİRMATİK EKRANI --- */}
       {activeZikirmatik && (
         <div className="fixed inset-0 z-[9999] bg-[#FDFCF7] dark:bg-[#061612] flex flex-col items-center justify-between animate-in slide-in-from-bottom-full duration-300">
           <div className="w-full flex items-center justify-between p-6">
@@ -598,12 +610,12 @@ export default function DhikrAgendaPage() {
                 {activeZikirmatik.name}
               </h2>
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-1">
-                Hedef: {activeZikirmatik.target}
+                {t("targetLabel") || "Hedef"}: {activeZikirmatik.target}
               </p>
             </div>
             <button
               onClick={closeZikirmatik}
-              className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+              className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-300 transition-colors"
             >
               <svg
                 className="w-6 h-6"
@@ -620,15 +632,10 @@ export default function DhikrAgendaPage() {
               </svg>
             </button>
           </div>
-
           <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
             <button
               onClick={incrementCount}
-              className={`relative group w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center rounded-full transition-all duration-300 ${
-                currentCount >= activeZikirmatik.target
-                  ? "bg-emerald-500 dark:bg-emerald-600 shadow-[0_0_60px_rgba(16,185,129,0.5)] scale-105 cursor-default"
-                  : "bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-800 shadow-[0_20px_50px_rgba(59,130,246,0.4)] active:scale-95 cursor-pointer"
-              }`}
+              className={`relative group w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center rounded-full transition-all duration-300 ${currentCount >= activeZikirmatik.target ? "bg-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.5)] scale-105 cursor-default" : "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_20px_50px_rgba(59,130,246,0.4)] active:scale-95 cursor-pointer"}`}
             >
               <svg
                 className="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none"
@@ -653,33 +660,27 @@ export default function DhikrAgendaPage() {
                   className="transition-all duration-300 ease-out"
                 />
               </svg>
-
               <div className="text-center">
-                {/* HEDEFTEN KALANI GÖSTERİR (0'DA DURUR) */}
                 <span className="block text-6xl sm:text-7xl font-black text-white drop-shadow-md tracking-tighter tabular-nums">
                   {Math.max(0, activeZikirmatik.target - currentCount)}
                 </span>
-
-                {/* 0 OLDUĞUNDA ÇIKAN MESAJ */}
                 {currentCount >= activeZikirmatik.target && (
                   <span className="block mt-4 text-sm font-bold text-emerald-100 uppercase tracking-widest animate-pulse">
-                    Allah kabul etsin
+                    {t("mayAllahAccept") || "Allah kabul etsin"}
                   </span>
                 )}
               </div>
             </button>
-
-            {/* Alt Kontroller (-1 ve Sıfırla) */}
             <div className="flex items-center gap-8 mt-16">
               <button
                 onClick={() => setCurrentCount(0)}
-                className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex items-center justify-center font-bold text-xs uppercase tracking-widest shadow-sm active:scale-95 hover:bg-gray-300 dark:hover:bg-gray-700"
+                className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex items-center justify-center font-bold text-xs uppercase tracking-widest active:scale-95"
               >
-                Sıfırla
+                {t("reset") || "Sıfırla"}
               </button>
               <button
                 onClick={() => setCurrentCount(Math.max(0, currentCount - 1))}
-                className="w-16 h-16 rounded-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center shadow-sm active:scale-95 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="w-16 h-16 rounded-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center active:scale-95"
               >
                 <svg
                   className="w-8 h-8"

@@ -3,43 +3,40 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-
-// Vakit İsimleri (İngilizce -> Türkçe)
-const PRAYER_NAMES: Record<string, string> = {
-  Fajr: "İmsak",
-  Sunrise: "Güneş",
-  Dhuhr: "Öğle",
-  Asr: "İkindi",
-  Maghrib: "Akşam",
-  Isha: "Yatsı",
-};
+import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
 
 export default function PrayerTimesWidget() {
+  const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
   const [timings, setTimings] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // --- AYLIK VAKİTLER (İMSAKİYE) STATELERİ ---
+  // Vakit İsimleri (İngilizce -> Dil Karşılığı)
+  const PRAYER_NAMES: Record<string, string> = {
+    Fajr: t("prayerFajr") || "İmsak",
+    Sunrise: t("prayerSunrise") || "Güneş",
+    Dhuhr: t("prayerDhuhr") || "Öğle",
+    Asr: t("prayerAsr") || "İkindi",
+    Maghrib: t("prayerMaghrib") || "Akşam",
+    Isha: t("prayerIsha") || "Yatsı",
+  };
+
   const [showMonthly, setShowMonthly] = useState(false);
   const [monthlyTimings, setMonthlyTimings] = useState<any[]>([]);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
 
-  // --- LOKASYON STATELERİ ---
   const [country, setCountry] = useState("Turkey");
   const [city, setCity] = useState("Istanbul");
   const [district, setDistrict] = useState("");
 
-  // --- DÜZENLEME STATELERİ ---
   const [isEditing, setIsEditing] = useState(false);
   const [editCountry, setEditCountry] = useState("");
   const [editCity, setEditCity] = useState("");
   const [editDistrict, setEditDistrict] = useState("");
 
-  // Listeler
   const [countryList, setCountryList] = useState<string[]>([]);
   const [cityList, setCityList] = useState<string[]>([]);
   const [turkeyDistricts, setTurkeyDistricts] = useState<string[]>([]);
 
-  // Ekranda Görünen Listeler
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [filteredCities, setFilteredCities] = useState<string[]>([]);
   const [filteredDistricts, setFilteredDistricts] = useState<string[]>([]);
@@ -47,7 +44,6 @@ export default function PrayerTimesWidget() {
 
   const districtTimeout = useRef<any>(null);
 
-  // 1. Hafızadan Yükle ve AuthContext'ten gelen değişiklikleri dinle
   useEffect(() => {
     const loadLocation = () => {
       const savedLoc = localStorage.getItem("prayer_location");
@@ -65,34 +61,29 @@ export default function PrayerTimesWidget() {
       }
     };
 
-    loadLocation(); // Sayfa açıldığında çalıştır
+    loadLocation();
 
-    // AuthContext profil çekip lokasyonu güncellediğinde anında haberdar ol
     window.addEventListener("locationUpdated", loadLocation);
     return () => window.removeEventListener("locationUpdated", loadLocation);
   }, []);
 
-  // 2. GÜNLÜK Vakitleri Çek
   useEffect(() => {
     async function fetchPrayerTimes() {
       setLoading(true);
-      setShowMonthly(false); // Lokasyon değişince aylık listeyi kapat
-      setMonthlyTimings([]); // Eski aylık veriyi temizle
+      setShowMonthly(false);
+      setMonthlyTimings([]);
 
       try {
         const fullAddress = `${district ? district + ", " : ""}${city}, ${country}`;
-
-        // 1. ADIM: Tam bugünün tarihini GG-AA-YYYY formatında alıyoruz
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, "0");
-        const mm = String(today.getMonth() + 1).padStart(2, "0"); // Aylar 0'dan başlar
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
         const yyyy = today.getFullYear();
         const formattedDate = `${dd}-${mm}-${yyyy}`;
 
-        // 2. ADIM: Tarihi doğrudan API'ye URL parametresi olarak veriyoruz ve cache'i engelliyoruz
         const res = await fetch(
           `https://api.aladhan.com/v1/timingsByAddress/${formattedDate}?address=${encodeURIComponent(fullAddress)}&method=13`,
-          { cache: "no-store" }, // Tarayıcının eski veriyi hatırlamasını kesin olarak engeller
+          { cache: "no-store" },
         );
         const data = await res.json();
 
@@ -112,7 +103,6 @@ export default function PrayerTimesWidget() {
     fetchPrayerTimes();
   }, [city, country, district]);
 
-  // --- 3. AYLIK VAKİTLERİ ÇEK (Sadece Butona Basılınca) ---
   const handleToggleMonthly = async () => {
     if (showMonthly) {
       setShowMonthly(false);
@@ -121,7 +111,6 @@ export default function PrayerTimesWidget() {
 
     setShowMonthly(true);
 
-    // Zaten o ayın verisini çektiysek tekrar API'ye gitme
     if (monthlyTimings.length > 0) return;
 
     setMonthlyLoading(true);
@@ -146,7 +135,6 @@ export default function PrayerTimesWidget() {
     }
   };
 
-  // Düzenleme Başlat
   const handleEditOpen = async () => {
     setIsEditing(true);
     setEditCountry(country);
@@ -308,7 +296,6 @@ export default function PrayerTimesWidget() {
 
   const handleSaveLocation = async () => {
     if (editCountry.trim() && editCity.trim()) {
-      // --- YENİ: Backend'e ilçe dahil gönder ---
       const token = localStorage.getItem("token");
       if (token) {
         try {
@@ -323,7 +310,7 @@ export default function PrayerTimesWidget() {
               body: JSON.stringify({
                 city: editCity.trim(),
                 country: editCountry.trim(),
-                district: editDistrict.trim(), // İlçe eklendi
+                district: editDistrict.trim(),
               }),
             },
           );
@@ -331,7 +318,6 @@ export default function PrayerTimesWidget() {
           console.error("Lokasyon sunucuya kaydedilemedi:", error);
         }
       }
-      // ----------------------------
 
       setCountry(editCountry.trim());
       setCity(editCity.trim());
@@ -345,12 +331,10 @@ export default function PrayerTimesWidget() {
           district: editDistrict.trim(),
         }),
       );
-
       setIsEditing(false);
     }
   };
 
-  // Aladhan API saatleri "05:30 (EET)" formatında gönderiyor. Sadece saati (05:30) almak için yardımcı fonksiyon
   const cleanTime = (timeString: string) => timeString.split(" ")[0];
 
   return (
@@ -360,7 +344,7 @@ export default function PrayerTimesWidget() {
       <div className="flex flex-col mb-6 relative z-50">
         <div className="w-full">
           <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
-            Namaz Vakitleri
+            {t("prayerTimesTitle") || "Namaz Vakitleri"}
             <span className="text-emerald-500 text-2xl leading-none">۞</span>
           </h3>
 
@@ -372,7 +356,9 @@ export default function PrayerTimesWidget() {
                     type="text"
                     value={editCountry}
                     onChange={handleCountryChange}
-                    placeholder="Ülke (Örn: Turkey)"
+                    placeholder={
+                      t("countryPlaceholder") || "Ülke (Örn: Turkey)"
+                    }
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
                   />
                   {filteredCountries.length > 0 && (
@@ -394,7 +380,9 @@ export default function PrayerTimesWidget() {
                     type="text"
                     value={editCity}
                     onChange={handleCityChange}
-                    placeholder="Şehir (Örn: İstanbul)"
+                    placeholder={
+                      t("cityPlaceholder") || "Şehir (Örn: İstanbul)"
+                    }
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm disabled:opacity-50"
                   />
                   {filteredCities.length > 0 && (
@@ -421,7 +409,9 @@ export default function PrayerTimesWidget() {
                       if (turkeyDistricts.length > 0 && !editDistrict)
                         setFilteredDistricts(turkeyDistricts);
                     }}
-                    placeholder="İlçe (Örn: Fatih)"
+                    placeholder={
+                      t("districtPlaceholder") || "İlçe (Örn: Fatih)"
+                    }
                     className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 pr-10 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
                   />
                   <button
@@ -454,7 +444,7 @@ export default function PrayerTimesWidget() {
                         ))
                       ) : (
                         <li className="px-3 py-2 text-gray-400 italic">
-                          Sonuç bulunamadı.
+                          {t("noResultFound") || "Sonuç bulunamadı."}
                         </li>
                       )}
                     </ul>
@@ -466,13 +456,13 @@ export default function PrayerTimesWidget() {
                   onClick={handleSaveLocation}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-sm font-bold shadow-sm transition-colors"
                 >
-                  Kaydet
+                  {t("save") || "Kaydet"}
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
                   className="px-6 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-300 transition-colors"
                 >
-                  İptal
+                  {t("cancel") || "İptal"}
                 </button>
               </div>
             </div>
@@ -485,7 +475,7 @@ export default function PrayerTimesWidget() {
               <button
                 onClick={handleEditOpen}
                 className="bg-gray-100 dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors border border-gray-200 dark:border-gray-700"
-                title="Lokasyonu Değiştir"
+                title={t("changeLocation") || "Lokasyonu Değiştir"}
               >
                 <svg
                   className="w-4 h-4"
@@ -512,7 +502,6 @@ export default function PrayerTimesWidget() {
         </div>
       ) : timings ? (
         <>
-          {/* GÜNLÜK VAKİTLER */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 relative z-10">
             {Object.keys(PRAYER_NAMES).map((key) => {
               const trName = PRAYER_NAMES[key];
@@ -534,7 +523,6 @@ export default function PrayerTimesWidget() {
             })}
           </div>
 
-          {/* AYLIK İMSAKİYE BUTONU */}
           <div className="mt-6 flex justify-center relative z-10">
             <button
               onClick={handleToggleMonthly}
@@ -553,18 +541,19 @@ export default function PrayerTimesWidget() {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              {showMonthly ? "Aylık İmsakiyeyi Gizle" : "Aylık İmsakiyeyi Gör"}
+              {showMonthly
+                ? t("hideMonthlyCalendar") || "Aylık İmsakiyeyi Gizle"
+                : t("showMonthlyCalendar") || "Aylık İmsakiyeyi Gör"}
             </button>
           </div>
 
-          {/* AYLIK İMSAKİYE LİSTESİ (TABLO) */}
           {showMonthly && (
             <div className="mt-6 pt-6 border-t border-emerald-100 dark:border-emerald-900/30 animate-in slide-in-from-top-4 fade-in duration-500 relative z-10">
               {monthlyLoading ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
                   <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                   <p className="text-sm font-bold text-gray-500">
-                    Aylık veriler yükleniyor...
+                    {t("loadingMonthlyData") || "Aylık veriler yükleniyor..."}
                   </p>
                 </div>
               ) : (
@@ -572,18 +561,21 @@ export default function PrayerTimesWidget() {
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase text-xs">
                       <tr>
-                        <th className="px-4 py-3 rounded-tl-xl">Tarih</th>
-                        <th className="px-4 py-3">İmsak</th>
-                        <th className="px-4 py-3">Güneş</th>
-                        <th className="px-4 py-3">Öğle</th>
-                        <th className="px-4 py-3">İkindi</th>
-                        <th className="px-4 py-3">Akşam</th>
-                        <th className="px-4 py-3 rounded-tr-xl">Yatsı</th>
+                        <th className="px-4 py-3 rounded-tl-xl">
+                          {t("dateCol") || "Tarih"}
+                        </th>
+                        <th className="px-4 py-3">{PRAYER_NAMES.Fajr}</th>
+                        <th className="px-4 py-3">{PRAYER_NAMES.Sunrise}</th>
+                        <th className="px-4 py-3">{PRAYER_NAMES.Dhuhr}</th>
+                        <th className="px-4 py-3">{PRAYER_NAMES.Asr}</th>
+                        <th className="px-4 py-3">{PRAYER_NAMES.Maghrib}</th>
+                        <th className="px-4 py-3 rounded-tr-xl">
+                          {PRAYER_NAMES.Isha}
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                       {monthlyTimings.map((day: any, idx: number) => {
-                        // "Bugün" olan satırı tespit et (örn: "27-02-2026")
                         const isToday =
                           day.date.gregorian.day ===
                           String(new Date().getDate()).padStart(2, "0");
@@ -591,18 +583,14 @@ export default function PrayerTimesWidget() {
                         return (
                           <tr
                             key={idx}
-                            className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors ${
-                              isToday
-                                ? "bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500"
-                                : "bg-white dark:bg-[#0a1f1a]"
-                            }`}
+                            className={`hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors ${isToday ? "bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500" : "bg-white dark:bg-[#0a1f1a]"}`}
                           >
                             <td className="px-4 py-3 font-bold text-gray-800 dark:text-gray-200">
                               {day.date.readable.split(" ")[0]}{" "}
                               {day.date.readable.split(" ")[1]}
                               {isToday && (
                                 <span className="ml-2 text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                  Bugün
+                                  {t("today") || "Bugün"}
                                 </span>
                               )}
                             </td>
@@ -637,8 +625,8 @@ export default function PrayerTimesWidget() {
       ) : (
         <div className="text-center bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-100 dark:border-red-900/30 relative z-10">
           <p className="text-red-600 dark:text-red-400 font-bold text-sm">
-            Lokasyon bulunamadı. Lütfen İngilizce karakterler kullanmaya dikkat
-            edin (Örn: Uskudar).
+            {t("locationNotFound") ||
+              "Lokasyon bulunamadı. Lütfen İngilizce karakterler kullanmaya dikkat edin (Örn: Uskudar)."}
           </p>
         </div>
       )}

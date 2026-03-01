@@ -16,7 +16,7 @@ interface Esma {
 
 export default function EsmaUlHusnaPage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [esmaList, setEsmaList] = useState<Esma[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,22 +39,36 @@ export default function EsmaUlHusnaPage() {
           );
 
           if (esmaResource && esmaResource.translations?.length > 0) {
-            const description = esmaResource.translations[0].description;
-            const parts = description
-              .split("###")
-              .filter((p: string) => p.trim().length > 0);
+            // Dil kontrolü: Seçili dile uygun translation'ı bul
+            let translation = esmaResource.translations.find(
+              (tr: any) => tr.langCode === language,
+            );
+            if (!translation) {
+              // Bulamazsa fallback olarak 'tr'yi veya ilk geleni kullan
+              translation =
+                esmaResource.translations.find(
+                  (tr: any) => tr.langCode === "tr",
+                ) || esmaResource.translations[0];
+            }
 
-            const parsedEsma = parts.map((raw: string, index: number) => {
-              const itemParts = raw.split("|||");
-              return {
-                id: index + 1,
-                arabic: itemParts[0]?.trim() || "",
-                latin: itemParts[1]?.trim() || "",
-                meaning: itemParts[2]?.trim() || "",
-                targetCount: parseInt(itemParts[3]?.trim() || "100", 10),
-              };
-            });
-            setEsmaList(parsedEsma);
+            const description = translation.description;
+            if (description) {
+              const parts = description
+                .split("###")
+                .filter((p: string) => p.trim().length > 0);
+
+              const parsedEsma = parts.map((raw: string, index: number) => {
+                const itemParts = raw.split("|||");
+                return {
+                  id: index + 1,
+                  arabic: itemParts[0]?.trim() || "",
+                  latin: itemParts[1]?.trim() || "",
+                  meaning: itemParts[2]?.trim() || "",
+                  targetCount: parseInt(itemParts[3]?.trim() || "100", 10),
+                };
+              });
+              setEsmaList(parsedEsma);
+            }
           }
         }
       } catch (error) {
@@ -64,7 +78,7 @@ export default function EsmaUlHusnaPage() {
       }
     };
     fetchEsma();
-  }, []);
+  }, [language]); // Dile bağımlı hale getirildi
 
   const openZikirmatik = (esma: Esma) => {
     setSelectedEsma(esma);
@@ -79,6 +93,7 @@ export default function EsmaUlHusnaPage() {
           <button
             onClick={() => router.back()}
             className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-full transition-all group"
+            title={t("back") || "Geri"}
           >
             <svg
               className="w-6 h-6 text-emerald-600 dark:text-emerald-400 group-hover:-translate-x-1 transition-transform"
@@ -95,7 +110,7 @@ export default function EsmaUlHusnaPage() {
             </svg>
           </button>
           <h1 className="text-sm md:text-base font-black text-emerald-800 dark:text-emerald-100 uppercase tracking-[0.2em]">
-            Esma-ül Hüsna
+            {t("esmaTitle") || "Esma-ül Hüsna"}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -111,23 +126,23 @@ export default function EsmaUlHusnaPage() {
               <button
                 key={esma.id}
                 onClick={() => openZikirmatik(esma)}
-                className="group flex flex-col items-center p-6 bg-white dark:bg-[#0a1f1a] rounded-3xl border border-emerald-100 dark:border-emerald-900/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                className="group flex flex-col items-center p-6 bg-white dark:bg-[#0a1f1a] rounded-3xl border border-emerald-100 dark:border-emerald-900/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden text-left w-full"
               >
-                <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 pointer-events-none"></div>
 
-                <span className="text-3xl font-arabic text-emerald-600 dark:text-emerald-400 mb-3 relative z-10">
+                <span className="text-3xl font-arabic text-emerald-600 dark:text-emerald-400 mb-3 relative z-10 w-full text-center">
                   {esma.arabic}
                 </span>
-                <span className="font-bold text-gray-800 dark:text-gray-100 relative z-10 text-lg">
+                <span className="font-bold text-gray-800 dark:text-gray-100 relative z-10 text-lg w-full text-center">
                   {esma.latin}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center line-clamp-2 h-8 relative z-10">
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center line-clamp-2 h-8 relative z-10 w-full">
                   {esma.meaning}
                 </span>
 
                 <div className="mt-4 flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-1.5 rounded-full relative z-10 w-full">
                   <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    Hedef: {esma.targetCount}
+                    {t("targetLabel") || "Hedef"}: {esma.targetCount}
                   </span>
                 </div>
               </button>
@@ -143,6 +158,7 @@ export default function EsmaUlHusnaPage() {
             <button
               onClick={() => setSelectedEsma(null)}
               className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
+              title={t("close") || "Kapat"}
             >
               <svg
                 className="w-5 h-5"
@@ -159,17 +175,17 @@ export default function EsmaUlHusnaPage() {
               </svg>
             </button>
 
-            <h2 className="text-4xl font-arabic text-emerald-600 dark:text-emerald-400 mt-4 mb-2">
+            <h2 className="text-4xl font-arabic text-emerald-600 dark:text-emerald-400 mt-4 mb-2 text-center w-full">
               {selectedEsma.arabic}
             </h2>
-            <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-2">
+            <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-2 text-center w-full">
               {selectedEsma.latin}
             </h3>
-            <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-8 px-4">
+            <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-8 px-4 w-full">
               {selectedEsma.meaning}
             </p>
 
-            <div className="w-full transform scale-110 mb-4">
+            <div className="w-full transform scale-110 mb-4 flex justify-center">
               <Zikirmatik
                 currentCount={currentCount}
                 onDecrement={() =>
@@ -180,8 +196,8 @@ export default function EsmaUlHusnaPage() {
             </div>
 
             {currentCount === 0 && (
-              <div className="mt-4 px-6 py-2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 font-bold rounded-full animate-bounce">
-                Hedefe Ulaşıldı! 🤲
+              <div className="mt-4 px-6 py-2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 font-bold rounded-full animate-bounce text-center">
+                {t("targetReached") || "Hedefe Ulaşıldı! 🤲"}
               </div>
             )}
           </div>

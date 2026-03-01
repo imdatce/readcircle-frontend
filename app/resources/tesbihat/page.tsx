@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef } from "react";
+import React, { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -23,38 +23,24 @@ const SectionCard = ({
   const { isSepia } = React.useContext(ReadingContext);
   return (
     <div
-      className={`rounded-2xl p-4 sm:p-5 shadow-sm border mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500 transition-colors ${
-        isSepia
-          ? "bg-[#fdf9f2] border-[#e8dcc4]"
-          : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
-      }`}
+      className={`rounded-2xl p-4 sm:p-5 shadow-sm border mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500 transition-colors ${isSepia ? "bg-[#fdf9f2] border-[#e8dcc4]" : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"}`}
     >
       {title && (
         <h3
-          className={`font-black mb-1.5 text-[length:calc(16px+var(--font-offset))] transition-colors ${
-            isSepia
-              ? "text-amber-900"
-              : "text-emerald-700 dark:text-emerald-400"
-          }`}
+          className={`font-black mb-1.5 text-[length:calc(16px+var(--font-offset))] transition-colors ${isSepia ? "text-amber-900" : "text-emerald-700 dark:text-emerald-400"}`}
         >
           {title}
         </h3>
       )}
       {instruction && (
         <p
-          className={`font-bold mb-3 pb-2 border-b text-[length:calc(11px+var(--font-offset-small))] transition-colors ${
-            isSepia
-              ? "text-amber-700/70 border-amber-200/50"
-              : "text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-800"
-          }`}
+          className={`font-bold mb-3 pb-2 border-b text-[length:calc(11px+var(--font-offset-small))] transition-colors ${isSepia ? "text-amber-700/70 border-amber-200/50" : "text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-800"}`}
         >
           {instruction}
         </p>
       )}
       <div
-        className={`space-y-2 font-serif leading-relaxed text-[length:calc(15px+var(--font-offset))] transition-colors ${
-          isSepia ? "text-[#432C0A]" : "text-gray-800 dark:text-gray-200"
-        }`}
+        className={`space-y-2 font-serif leading-relaxed text-[length:calc(15px+var(--font-offset))] transition-colors ${isSepia ? "text-[#432C0A]" : "text-gray-800 dark:text-gray-200"}`}
       >
         {children}
       </div>
@@ -78,57 +64,27 @@ const MiniZikirmatik = ({
     <div className="inline-flex items-center gap-2 align-middle">
       {label && (
         <span
-          className={`hidden sm:inline-block text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${
-            isSepia
-              ? "text-amber-800/60"
-              : "text-emerald-800/70 dark:text-emerald-200/60"
-          }`}
+          className={`hidden sm:inline-block text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isSepia ? "text-amber-800/60" : "text-emerald-800/70 dark:text-emerald-200/60"}`}
         >
           {label}
         </span>
       )}
-
       <button
         onClick={(e) => {
-          e.stopPropagation(); // Tam ekran tetiklenmesini engelle
+          e.stopPropagation();
           if (count > 0) setCount(count - 1);
         }}
         disabled={isCompleted}
-        className={`group relative flex items-center gap-1.5 p-1 pr-1.5 rounded-full border transition-all duration-500 select-none ${
-          isCompleted
-            ? isSepia
-              ? "bg-amber-100/50 border-amber-200 shadow-[0_0_12px_rgba(217,119,6,0.1)] cursor-default"
-              : "bg-gradient-to-r from-emerald-100 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/30 border-emerald-200/80 dark:border-emerald-700/50 shadow-[0_0_12px_rgba(16,185,129,0.15)] cursor-default"
-            : isSepia
-              ? "bg-amber-50/50 border-amber-200/60 hover:border-amber-400 hover:shadow-md cursor-pointer active:scale-95"
-              : "bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-900/20 dark:to-emerald-900/20 border-amber-200/60 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md cursor-pointer active:scale-95"
-        }`}
+        className={`group relative flex items-center gap-1.5 p-1 pr-1.5 rounded-full border transition-all duration-500 select-none ${isCompleted ? (isSepia ? "bg-amber-100/50 border-amber-200 shadow-[0_0_12px_rgba(217,119,6,0.1)] cursor-default" : "bg-gradient-to-r from-emerald-100 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/30 border-emerald-200/80 dark:border-emerald-700/50 shadow-[0_0_12px_rgba(16,185,129,0.15)] cursor-default") : isSepia ? "bg-amber-50/50 border-amber-200/60 hover:border-amber-400 hover:shadow-md cursor-pointer active:scale-95" : "bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-900/20 dark:to-emerald-900/20 border-amber-200/60 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md cursor-pointer active:scale-95"}`}
         style={{ fontSize: "calc(12px + var(--font-offset-small))" }}
       >
         <div
-          className={`flex items-center justify-center min-w-[2.2rem] py-0.5 px-2 rounded-full font-bold shadow-[inset_0_1px_4px_rgba(0,0,0,0.08)] transition-colors duration-500 ${
-            isCompleted
-              ? isSepia
-                ? "bg-amber-50 text-amber-700"
-                : "bg-white/60 dark:bg-black/20 text-emerald-700 dark:text-emerald-300"
-              : isSepia
-                ? "bg-white/80 text-amber-900"
-                : "bg-white/80 dark:bg-gray-950/50 text-emerald-800 dark:text-amber-100/90"
-          }`}
+          className={`flex items-center justify-center min-w-[2.2rem] py-0.5 px-2 rounded-full font-bold shadow-[inset_0_1px_4px_rgba(0,0,0,0.08)] transition-colors duration-500 ${isCompleted ? (isSepia ? "bg-amber-50 text-amber-700" : "bg-white/60 dark:bg-black/20 text-emerald-700 dark:text-emerald-300") : isSepia ? "bg-white/80 text-amber-900" : "bg-white/80 dark:bg-gray-950/50 text-emerald-800 dark:text-amber-100/90"}`}
         >
           {count}
         </div>
-
         <div
-          className={`flex items-center justify-center w-6 h-6 rounded-full shadow-sm transition-all duration-300 ${
-            isCompleted
-              ? isSepia
-                ? "bg-amber-500 text-white shadow-[0_0_8px_rgba(245,158,11,0.5)]"
-                : "bg-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-              : isSepia
-                ? "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-[0_2px_5px_rgba(245,158,11,0.25)]"
-                : "bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-600 dark:to-emerald-800 text-white shadow-[0_2px_5px_rgba(16,185,129,0.25)]"
-          }`}
+          className={`flex items-center justify-center w-6 h-6 rounded-full shadow-sm transition-all duration-300 ${isCompleted ? (isSepia ? "bg-amber-500 text-white shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.5)]") : isSepia ? "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-[0_2px_5px_rgba(245,158,11,0.25)]" : "bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-600 dark:to-emerald-800 text-white shadow-[0_2px_5px_rgba(16,185,129,0.25)]"}`}
         >
           {isCompleted ? (
             <svg
@@ -178,16 +134,10 @@ const ZikirRow = ({
   const { isSepia } = React.useContext(ReadingContext);
   return (
     <div
-      className={`flex items-center justify-between gap-4 p-3 sm:p-4 rounded-2xl border my-3 shadow-sm transition-all hover:shadow-md ${
-        isSepia
-          ? "bg-amber-50/50 border-amber-200/50 hover:bg-amber-100/50"
-          : "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100/60 dark:border-emerald-800/30 hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20"
-      }`}
+      className={`flex items-center justify-between gap-4 p-3 sm:p-4 rounded-2xl border my-3 shadow-sm transition-all hover:shadow-md ${isSepia ? "bg-amber-50/50 border-amber-200/50 hover:bg-amber-100/50" : "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100/60 dark:border-emerald-800/30 hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20"}`}
     >
       <span
-        className={`flex-1 leading-relaxed font-serif text-[length:calc(15px+var(--font-offset))] transition-colors ${
-          isSepia ? "text-[#432C0A]" : "text-gray-800 dark:text-gray-200"
-        }`}
+        className={`flex-1 leading-relaxed font-serif text-[length:calc(15px+var(--font-offset))] transition-colors ${isSepia ? "text-[#432C0A]" : "text-gray-800 dark:text-gray-200"}`}
       >
         {text}
       </span>
@@ -210,11 +160,7 @@ const InstructionText = ({ children }: { children: React.ReactNode }) => {
   const { isSepia } = React.useContext(ReadingContext);
   return (
     <p
-      className={`font-sans font-bold my-2.5 uppercase tracking-wide text-[length:calc(10px+var(--font-offset-small))] transition-colors ${
-        isSepia
-          ? "text-amber-700/80"
-          : "text-emerald-600/80 dark:text-emerald-400/80"
-      }`}
+      className={`font-sans font-bold my-2.5 uppercase tracking-wide text-[length:calc(10px+var(--font-offset-small))] transition-colors ${isSepia ? "text-amber-700/80" : "text-emerald-600/80 dark:text-emerald-400/80"}`}
     >
       {children}
     </p>
@@ -239,13 +185,13 @@ const SalatenTuncina = () => (
   </>
 );
 
-const AyetulKursiVeTesbihler = () => (
+const AyetulKursiVeTesbihler = ({ t }: any) => (
   <>
     <Line>
       Subhanellâhi ve’l-hamdu lillâhi ve lâ ilâhe illallâhu ve’llâhu ekber, ve
       lâ havle ve lâ kuvvete illâ billâhi’l-‘aliyyi’l-‘azîm.
     </Line>
-    <InstructionText>Bu duâdan sonra "Âyetü'l Kürsî" okunur:</InstructionText>
+    <InstructionText>{t("afterDuaAyatulKursi")}</InstructionText>
     <Line>Bismillâhirrahmânirrahîm.</Line>
     <Line>
       Allâhu lâ ilâhe illâ huve’l-Hayyu’l-Kayyûm, lâ te’huzuhû sinetun ve lâ
@@ -254,20 +200,14 @@ const AyetulKursiVeTesbihler = () => (
       şey’in min ‘ilmihî illâ bimâ şâ’, vesi’a kursiyyuhu’s-semâvâti ve’l-ard,
       ve lâ ye’ûduhû hifzuhumâ ve huve’l-‘Aliyyu’l-‘Azîm.
     </Line>
-    <InstructionText>Daha sonra Tesbihler çekilir:</InstructionText>
+    <InstructionText>{t("thenTesbihats")}</InstructionText>
     <Line>Subhânellâhi bukraten ve esîlâ</Line>
-
     <ZikirRow text="Subhanallah" target={33} label="Subhanallah" />
     <Line>Elhamdulillâhi hamden kesîrâ</Line>
-
     <ZikirRow text="Elhamdulillah" target={33} label="Elhamdulillah" />
     <Line>Allâhu Ekberu kebîrâ</Line>
-
     <ZikirRow text="Allâhu Ekber" target={33} label="Allâhu Ekber" />
-
-    <InstructionText>
-      Akabinde şu dua okunur ve Namaz Duası yapılır:
-    </InstructionText>
+    <InstructionText>{t("afterThatDua")}</InstructionText>
     <Line>
       Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve
       huve ‘alâ kulli şey’in kadîr ve ileyhi’l-masîr.
@@ -275,15 +215,19 @@ const AyetulKursiVeTesbihler = () => (
   </>
 );
 
-const KelimeiTevhidVeSalavat = ({ baslangic }: { baslangic: string }) => (
+const KelimeiTevhidVeSalavat = ({
+  baslangic,
+  t,
+}: {
+  baslangic: string;
+  t: any;
+}) => (
   <>
     <InstructionText>
-      Duâdan sonra 1 defa "{baslangic}" ve 33 defa Lâ ilâhe illallah denilir.
+      {t("afterDuaTevhidStart")} "{baslangic}" {t("afterDuaTevhidEnd")}
     </InstructionText>
     <ZikirRow text="Lâ ilâhe illallah" target={33} label="Kelime-i Tevhid" />
-    <InstructionText>
-      33'üncüsünde şu ilave edilir ve tesbihata devam edilir:
-    </InstructionText>
+    <InstructionText>{t("on33rdTevhid")}</InstructionText>
     <Line>Muhammedu’r-Rasûlullahi sallâllâhu te’âlâ aleyhi ve sellem.</Line>
     {baslangic === "Fa’lem ennehû" && (
       <ZikirRow
@@ -291,7 +235,7 @@ const KelimeiTevhidVeSalavat = ({ baslangic }: { baslangic: string }) => (
         target={10}
       />
     )}
-    <InstructionText>Salavatlar:</InstructionText>
+    <InstructionText>{t("salavatsLabel")}</InstructionText>
     <Line>
       Bismillâhirrahmânirrahîm. İnne’llâhe ve melâiketehû yusallûne
       ‘ale’n-nebiyy, yâ eyyuhe’llezîne âmenû sallû aleyhi ve sellimû teslîmâ,
@@ -321,7 +265,7 @@ const KelimeiTevhidVeSalavat = ({ baslangic }: { baslangic: string }) => (
   </>
 );
 
-const IsmiAzam = () => {
+const IsmiAzam = ({ t }: any) => {
   const lines = [
     "Yâ Cemîlu Yâ Allah, Yâ Karîbu Yâ Allah",
     "Yâ Mucîbu Yâ Allah, Yâ Habîbu Yâ Allah",
@@ -355,9 +299,7 @@ const IsmiAzam = () => {
           </span>
         ))}
       </div>
-      <InstructionText>
-        Sonra eller yukarı kaldırılır ve şöyle duâ edilir:
-      </InstructionText>
+      <InstructionText>{t("handsUpDuaLabel")}</InstructionText>
       <Line>
         Yâ Rabbe’s-semâvâti ve’l-ard, Yâ Ze’l-celâli ve’l-ikrâm. Nes’eluke bi
         hakkı hâzihi’l-esmâi kullihâ en tusalliye ‘alâ seyyidinâ Muhammedin ve
@@ -371,7 +313,7 @@ const IsmiAzam = () => {
   );
 };
 
-const TercumanIsmiAzam = () => {
+const TercumanIsmiAzam = ({ t }: any) => {
   const lines = [
     "Subhâneke Yâ Allah te'âleyte Yâ Rahmân",
     "Subhâneke Yâ Rahîm te'âleyte Yâ Kerîm",
@@ -430,9 +372,7 @@ const TercumanIsmiAzam = () => {
           </div>
         ))}
       </div>
-      <InstructionText>
-        Sonra eller yukarı kaldırılır ve şöyle duâ edilir:
-      </InstructionText>
+      <InstructionText>{t("handsUpDuaLabel")}</InstructionText>
       <Line>
         Âmîn. Subhâneke âhiyyen şerâhiyyen te’aleyte lâ ilâhe illâ ente ecirnâ
         ve ecir Üstâzenâ ve Hocaefendi ve vâlidînâ ve rufekâenâ ve ecdâdenâ ve
@@ -442,18 +382,13 @@ const TercumanIsmiAzam = () => {
         hidmetinâ fî kulli enhâi’l-‘âlem ve fî kulli nevâhi’l-hayâti ve cemî’a
         tullâbi’n-nûri mine’n-nâr.
       </Line>
-      <InstructionText>
-        Burada avuç içleri aşağı çevirilerek duâya devam edilir:
-      </InstructionText>
+      <InstructionText>{t("palmsDownIstiazeLabel")}</InstructionText>
       <Line>
         Ve min kulli nâr, vehfeznâ min şerri’n-nefsi ve’ş-şeytân, ve min
         şerri’l-cinni ve’l-insân, ve min şerri’l-bid’ati ve’d-dalâlâti
         ve’l-ilhâdi ve’t-tuğyân.
       </Line>
-      <InstructionText>
-        Denildikten sonra avuç içleri tekrar yukarı çevirilerek duâya devam
-        edilir:
-      </InstructionText>
+      <InstructionText>{t("palmsUpIstiazeLabel")}</InstructionText>
       <Line>
         Bi afvike Yâ Mucîr, bi fadlike Yâ Ğaffâr, birahmetike Yâ
         Erhame’r-râhimîn. Allâhumme edhilne’l-cennete me’a’l-ebrâr bi şefâ’ati
@@ -464,7 +399,7 @@ const TercumanIsmiAzam = () => {
   );
 };
 
-const EcirnaIstiazeleri = () => (
+const EcirnaIstiazeleri = ({ t }: any) => (
   <>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1.5 mb-4 text-[length:calc(14px+var(--font-offset))] transition-all">
       <div className="col-span-full">
@@ -505,9 +440,7 @@ const EcirnaIstiazeleri = () => (
       ve’l-muslimât fî hidmetinâ fî kulli enhâi’l-‘âlem ve fî kulli
       nevâhi’l-hayât(h) ve cemî’a tullâbi’n-nûri mine’n-nâr ve min kulli nâr.
     </Line>
-    <InstructionText>
-      Avuç içleri yukarı çevirilerek istiâzeye devam edilir:
-    </InstructionText>
+    <InstructionText>{t("palmsUpAgainLabel")}</InstructionText>
     <Line>
       Bi ‘afvike Yâ Mucîr, bi fadlike Yâ Ğaffâr, bi rahmetike Yâ
       Erhame’r-Râhimîn.
@@ -540,7 +473,6 @@ function TesbihatContent() {
 
   const [fontOffset, setFontOffset] = useState(0);
 
-  // === YENİ ÖZELLİK STATELERİ ===
   const [isSepia, setIsSepia] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
@@ -549,19 +481,16 @@ function TesbihatContent() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Wake Lock API (Ekranın kapanmasını önler)
   const wakeLockRef = useRef<any>(null);
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
-        if ("wakeLock" in navigator) {
+        if ("wakeLock" in navigator)
           wakeLockRef.current = await (navigator as any).wakeLock.request(
             "screen",
           );
-        }
-      } catch (err) {
-        console.error(`Wake Lock hatası:`, err);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {}
     };
     const releaseWakeLock = () => {
       if (wakeLockRef.current !== null) {
@@ -574,36 +503,27 @@ function TesbihatContent() {
     return () => releaseWakeLock();
   }, []);
 
-  // Sepya Modu Dark Mode Geçişi
   useEffect(() => {
     const root = window.document.documentElement;
     const currentTheme = localStorage.getItem("theme");
-
-    if (isSepia) {
-      root.classList.remove("dark");
-    } else {
-      if (currentTheme === "dark") {
-        root.classList.add("dark");
-      } else if (
+    if (isSepia) root.classList.remove("dark");
+    else {
+      if (currentTheme === "dark") root.classList.add("dark");
+      else if (
         !currentTheme &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
+      )
         root.classList.add("dark");
-      }
     }
-
     return () => {
       if (currentTheme === "dark") root.classList.add("dark");
     };
   }, [isSepia]);
 
-  // Otomatik Kaydırma Algoritması
   useEffect(() => {
     if (!isAutoScrolling) return;
-
     let animationFrameId: number;
     let lastTime: number | null = null;
-
     const scroller = isFullscreen ? scrollContainerRef.current : window;
     if (!scroller) return;
 
@@ -611,7 +531,6 @@ function TesbihatContent() {
       isFullscreen && scrollContainerRef.current
         ? scrollContainerRef.current.scrollTop
         : window.scrollY;
-
     const baseSpeed = 40;
 
     const scrollStep = (timestamp: number) => {
@@ -622,66 +541,50 @@ function TesbihatContent() {
       if (deltaTime > 0 && deltaTime < 100) {
         const moveBy = (baseSpeed * autoScrollSpeed * deltaTime) / 1000;
         exactScrollY += moveBy;
-
         const maxScroll =
           isFullscreen && scrollContainerRef.current
             ? scrollContainerRef.current.scrollHeight -
               scrollContainerRef.current.clientHeight
             : document.documentElement.scrollHeight - window.innerHeight;
 
-        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          if (isFullscreen && scrollContainerRef.current) {
+          if (isFullscreen && scrollContainerRef.current)
             scrollContainerRef.current.scrollTo({
               top: maxScroll,
               behavior: "auto",
             });
-          } else {
-            window.scrollTo({ top: maxScroll, behavior: "auto" });
-          }
+          else window.scrollTo({ top: maxScroll, behavior: "auto" });
           setIsAutoScrolling(false);
           return;
         }
 
-        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
-        if (isFullscreen && scrollContainerRef.current) {
+        if (isFullscreen && scrollContainerRef.current)
           scrollContainerRef.current.scrollTo({
             top: exactScrollY,
             behavior: "auto",
           });
-        } else {
-          window.scrollTo({ top: exactScrollY, behavior: "auto" });
-        }
+        else window.scrollTo({ top: exactScrollY, behavior: "auto" });
       }
-
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
-
     return () => cancelAnimationFrame(animationFrameId);
   }, [isAutoScrolling, autoScrollSpeed, isFullscreen]);
 
-  // Manuel kaydırmada oto-kaydırmayı durdur
   useEffect(() => {
     const handleInteraction = (e: Event) => {
       if (isAutoScrolling) {
-        if (
-          e.target instanceof Element &&
-          e.target.closest("button, a, input")
-        ) {
+        if (e.target instanceof Element && e.target.closest("button, a, input"))
           return;
-        }
-
-        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10) {
+        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10)
           setIsAutoScrolling(false);
-        } else if (
+        else if (
           e.type === "touchstart" ||
           e.type === "touchmove" ||
           e.type === "mousedown"
-        ) {
+        )
           setIsAutoScrolling(false);
-        }
       }
     };
     window.addEventListener("wheel", handleInteraction, { passive: true });
@@ -697,10 +600,7 @@ function TesbihatContent() {
     };
   }, [isAutoScrolling]);
 
-  // Tam ekranı algılama
-  const toggleFullScreen = () => {
-    setIsFullscreen((prev) => !prev);
-  };
+  const toggleFullScreen = () => setIsFullscreen((prev) => !prev);
 
   const cycleSpeed = () => {
     const speeds = [0.5, 1, 1.5, 2, 3];
@@ -710,7 +610,6 @@ function TesbihatContent() {
       navigator.vibrate(15);
   };
 
-  // Sekme Dinleyicileri
   useEffect(() => {
     const validTabs = ["sabah", "ogle", "ikindi", "aksam", "yatsi"];
     if (vakitParam && validTabs.includes(vakitParam)) {
@@ -720,9 +619,7 @@ function TesbihatContent() {
 
   useEffect(() => {
     const saved = localStorage.getItem("tesbihat_font_offset");
-    if (saved) {
-      Promise.resolve().then(() => setFontOffset(Number(saved)));
-    }
+    if (saved) Promise.resolve().then(() => setFontOffset(Number(saved)));
   }, []);
 
   const handleFontChange = (newOffset: number) => {
@@ -737,26 +634,24 @@ function TesbihatContent() {
     router.replace(`/resources/tesbihat?vakit=${tabId}`, { scroll: false });
   };
 
-  const TABS = [
-    { id: "sabah", label: "Sabah Namazı" },
-    { id: "ogle", label: "Öğle Namazı" },
-    { id: "ikindi", label: "İkindi Namazı" },
-    { id: "aksam", label: "Akşam Namazı" },
-    { id: "yatsi", label: "Yatsı Namazı" },
-  ] as const;
+  const TABS = useMemo(
+    () => [
+      { id: "sabah", label: t("tabFajr") || "Sabah Namazı" },
+      { id: "ogle", label: t("tabDhuhr") || "Öğle Namazı" },
+      { id: "ikindi", label: t("tabAsr") || "İkindi Namazı" },
+      { id: "aksam", label: t("tabMaghrib") || "Akşam Namazı" },
+      { id: "yatsi", label: t("tabIsha") || "Yatsı Namazı" },
+    ],
+    [t],
+  );
 
-  // Üst çubuk gizleme mantığı
   const lastScrollY = React.useRef(0);
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
-      if (currentY < 80) {
-        setBarVisible(true);
-      } else if (currentY > lastScrollY.current + 8) {
-        setBarVisible(false);
-      } else if (currentY < lastScrollY.current - 8) {
-        setBarVisible(true);
-      }
+      if (currentY < 80) setBarVisible(true);
+      else if (currentY > lastScrollY.current + 8) setBarVisible(false);
+      else if (currentY < lastScrollY.current - 8) setBarVisible(true);
       lastScrollY.current = currentY;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -772,7 +667,6 @@ function TesbihatContent() {
         onPointerDown={(e) => {
           const target = e.target as HTMLElement;
           if (target.closest("button") || target.closest(".sticky")) return;
-
           if (isAutoScrolling) {
             setIsAutoScrolling(false);
             (window as any)._justStoppedScroll = true;
@@ -787,34 +681,11 @@ function TesbihatContent() {
           if ((window as any)._justStoppedScroll) return;
           toggleFullScreen();
         }}
-        className={`transition-colors duration-500 cursor-pointer ${
-          !isAutoScrolling ? "scroll-smooth" : "scroll-auto"
-        } ${
-          isFullscreen
-            ? `fixed inset-0 z-[9999] overflow-y-auto px-3 sm:px-6 lg:px-8 py-6 ${
-                isSepia
-                  ? "sepia-theme bg-[#F4ECD8]"
-                  : "bg-[#F8FAFC] dark:bg-gray-950"
-              }`
-            : `min-h-screen py-6 px-3 sm:px-6 lg:px-8 ${
-                isSepia
-                  ? "sepia-theme bg-[#F4ECD8]"
-                  : "bg-[#F8FAFC] dark:bg-gray-950"
-              }`
-        }`}
+        className={`transition-colors duration-500 cursor-pointer ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isFullscreen ? `fixed inset-0 z-[9999] overflow-y-auto px-3 sm:px-6 lg:px-8 py-6 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}` : `min-h-screen py-6 px-3 sm:px-6 lg:px-8 ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}`}
       >
         <div className="max-w-3xl mx-auto space-y-4">
-          {/* YENİ ÜST ARAÇ ÇUBUĞU (Header) */}
           <div
-            className={`sticky top-2 sm:top-4 z-50 p-3 sm:p-4 backdrop-blur-xl border shadow-sm transition-all duration-300 flex flex-col gap-3 ${
-              isHeaderVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-6 pointer-events-none"
-            } ${
-              isSepia
-                ? "bg-[#Fdf9f2]/90 border-[#e8dcc4] rounded-[2rem]"
-                : "bg-white/90 dark:bg-gray-900/90 border-gray-200 dark:border-gray-800 rounded-[2rem]"
-            }`}
+            className={`sticky top-2 sm:top-4 z-50 p-3 sm:p-4 backdrop-blur-xl border shadow-sm transition-all duration-300 flex flex-col gap-3 ${isHeaderVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6 pointer-events-none"} ${isSepia ? "bg-[#Fdf9f2]/90 border-[#e8dcc4] rounded-[2rem]" : "bg-white/90 dark:bg-gray-900/90 border-gray-200 dark:border-gray-800 rounded-[2rem]"}`}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
               <div className="flex items-center gap-3">
@@ -822,6 +693,7 @@ function TesbihatContent() {
                   href="/resources"
                   onClick={(e) => e.stopPropagation()}
                   className="p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl sm:rounded-2xl shadow-sm hover:shadow transition-all active:scale-95 shrink-0"
+                  title={t("backToResources") || "Kütüphaneye Dön"}
                 >
                   <svg
                     className="w-5 h-5 sm:w-6 sm:h-6"
@@ -839,12 +711,11 @@ function TesbihatContent() {
                 </Link>
                 <div>
                   <h1 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none mb-1">
-                    {t("tesbihatlar") || "Tesbihatlar"}
+                    {t("tesbihatlarTitle") || "Tesbihatlar"}
                   </h1>
                 </div>
               </div>
 
-              {/* Kontrol Butonları */}
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shrink-0 w-fit">
                 <button
                   onClick={(e) => {
@@ -853,6 +724,7 @@ function TesbihatContent() {
                   }}
                   disabled={fontOffset === -8}
                   className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
+                  title={t("decreaseFont")}
                 >
                   A-
                 </button>
@@ -864,12 +736,11 @@ function TesbihatContent() {
                   }}
                   disabled={fontOffset === 12}
                   className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
+                  title={t("increaseFont")}
                 >
                   A+
                 </button>
-
                 <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -877,12 +748,8 @@ function TesbihatContent() {
                     if (typeof navigator !== "undefined" && navigator.vibrate)
                       navigator.vibrate(20);
                   }}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                    isSepia
-                      ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
-                      : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                  }`}
-                  title="Okuma Modu (Sepya)"
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
+                  title={t("eyeProtection")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -898,19 +765,17 @@ function TesbihatContent() {
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </button>
-
                 <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     cycleSpeed();
                   }}
                   className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 transition-colors"
+                  title={t("scrollSpeed")}
                 >
                   {autoScrollSpeed}x
                 </button>
-
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -918,11 +783,10 @@ function TesbihatContent() {
                     if (typeof navigator !== "undefined" && navigator.vibrate)
                       navigator.vibrate(20);
                   }}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                    isAutoScrolling
-                      ? "bg-blue-600/15 text-blue-600 shadow-inner"
-                      : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"
-                  }`}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"}`}
+                  title={
+                    isAutoScrolling ? t("stopAutoScroll") : t("startAutoScroll")
+                  }
                 >
                   {isAutoScrolling ? (
                     <svg
@@ -944,9 +808,7 @@ function TesbihatContent() {
                     </svg>
                   )}
                 </button>
-
                 <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -954,11 +816,8 @@ function TesbihatContent() {
                     if (typeof navigator !== "undefined" && navigator.vibrate)
                       navigator.vibrate(20);
                   }}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                    isFullscreen
-                      ? "bg-blue-600/15 text-blue-600 shadow-inner"
-                      : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-                  }`}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isFullscreen ? "bg-blue-600/15 text-blue-600 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:text-gray-200"}`}
+                  title={t("fullscreen")}
                 >
                   {isFullscreen ? (
                     <svg
@@ -991,22 +850,15 @@ function TesbihatContent() {
               </div>
             </div>
 
-            {/* SEKMELER */}
             <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleTabClick(tab.id);
+                    handleTabClick(tab.id as any);
                   }}
-                  className={`px-3 py-2 rounded-xl font-bold text-[11px] sm:text-xs whitespace-nowrap transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-                      : isSepia
-                        ? "bg-[#fdf9f2] text-amber-900 border border-[#e8dcc4] hover:bg-amber-100"
-                        : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800 hover:bg-emerald-50 dark:hover:bg-gray-800"
-                  }`}
+                  className={`px-3 py-2 rounded-xl font-bold text-[11px] sm:text-xs whitespace-nowrap transition-all duration-300 ${activeTab === tab.id ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" : isSepia ? "bg-[#fdf9f2] text-amber-900 border border-[#e8dcc4] hover:bg-amber-100" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800 hover:bg-emerald-50 dark:hover:bg-gray-800"}`}
                 >
                   {tab.label}
                 </button>
@@ -1014,7 +866,6 @@ function TesbihatContent() {
             </div>
           </div>
 
-          {/* İÇERİK ALANLARI */}
           <div
             className="pb-20 pt-4"
             style={
@@ -1024,12 +875,11 @@ function TesbihatContent() {
               } as React.CSSProperties
             }
           >
-            {/* SABAH NAMAZI */}
             {activeTab === "sabah" && (
               <div>
                 <SectionCard
-                  title="Farz Namazından Sonra"
-                  instruction="Sabah namazının farzı kılınıp selâm verildikten sonra:"
+                  title={t("afterFarzPrayer")}
+                  instruction={t("afterFajrPrayerInst")}
                 >
                   <ZikirRow text="Estağfirullâh" target={3} />
                   <Line>
@@ -1037,59 +887,49 @@ function TesbihatContent() {
                     Ze’l-Celâli ve’l İkrâm.
                   </Line>
                 </SectionCard>
-
                 <SectionCard
-                  title="Salât-ı Münciye"
-                  instruction="Eller kaldırılarak okunur:"
+                  title={t("salatenTuncinaLabel")}
+                  instruction={t("handsUpDuaLabel")}
                 >
                   <SalatenTuncina />
                 </SectionCard>
-
                 <SectionCard
-                  title="Kelime-i Tevhid ve İstiâze"
-                  instruction="Duâ okunduktan sonra 1 defa şu şekilde başlanır:"
+                  title={t("tevhidAndIstiazeLabel")}
+                  instruction={t("afterDuaTevhidInst")}
                 >
                   <Line>
                     Allâhumme innâ nukaddimu ‘ileyke beyne yedey kulli nefesin
                     ve lemhatin ve lahzatin ve tarfetin yetrifû bihâ
                     ehlu’s-semâvâti ve ehlu’l-eradîne şehadeten, eşhedu en...
                   </Line>
-                  <InstructionText>
-                    Akabinde 9 defa şu cümle-i tevhid söylenir:
-                  </InstructionText>
+                  <InstructionText>{t("then9TevhidInst")}</InstructionText>
                   <ZikirRow
                     text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
                     target={10}
                   />
-                  <InstructionText>Onuncusunda ise;</InstructionText>
+                  <InstructionText>{t("on10thTevhid")}</InstructionText>
                   <Line>
                     Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
                     lehu’l-hamdu yuhyî ve yumît, ve huve hayyun lâ yemût,
                     biyedihi’l-hayr, ve huve ‘alâ kulli şey’in Kadîrun ve
                     ileyhi’l masîr.
                   </Line>
-                  <InstructionText>
-                    Denildikten sonra, eller duâ için kaldırılır ve aşağıdaki
-                    "Ecirnâ" istiâzeleri okunur:
-                  </InstructionText>
-                  <EcirnaIstiazeleri />
+                  <InstructionText>{t("ecirnaInstruction")}</InstructionText>
+                  <EcirnaIstiazeleri t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Tesbihât"
-                  instruction="Daha sonra tesbihâta devam edilir:"
+                  title={t("tesbihatlarLabel")}
+                  instruction={t("continueTesbihat")}
                 >
-                  <AyetulKursiVeTesbihler />
-                  <KelimeiTevhidVeSalavat baslangic="Fa’lem ennehû" />
+                  <AyetulKursiVeTesbihler t={t} />
+                  <KelimeiTevhidVeSalavat baslangic="Fa’lem ennehû" t={t} />
                 </SectionCard>
-
-                <SectionCard title="Tercümân-ı İsm-i A'zam Duâsı">
-                  <TercumanIsmiAzam />
+                <SectionCard title={t("tercumanIsmiAzamLabel")}>
+                  <TercumanIsmiAzam t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Aşr-ı Şerif"
-                  instruction="Bundan sonra Haşr sûresinin son âyetleri okunur:"
+                  title={t("asrISerifLabel")}
+                  instruction={t("asrISerifSabahInst")}
                 >
                   <ZikirRow
                     text="E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm"
@@ -1115,12 +955,11 @@ function TesbihatContent() {
               </div>
             )}
 
-            {/* ÖĞLE NAMAZI */}
             {activeTab === "ogle" && (
               <div>
                 <SectionCard
-                  title="Farz Namazından Sonra"
-                  instruction="Öğle namazının farzı kılınıp selâm verildikten sonra:"
+                  title={t("afterFarzPrayer")}
+                  instruction={t("afterDhuhrPrayerInst")}
                 >
                   <ZikirRow text="Estağfirullâh" target={3} />
                   <Line>
@@ -1128,29 +967,25 @@ function TesbihatContent() {
                     Ze’l-Celâli ve’l İkrâm.
                   </Line>
                 </SectionCard>
-
                 <SectionCard
-                  title="Salât-ı Münciye"
-                  instruction="Eller kaldırılarak okunur:"
+                  title={t("salatenTuncinaLabel")}
+                  instruction={t("handsUpDuaLabel")}
                 >
                   <SalatenTuncina />
                 </SectionCard>
-
                 <SectionCard
-                  title="Tesbihât"
-                  instruction="Son sünnetten sonra şu duâ okunur:"
+                  title={t("tesbihatlarLabel")}
+                  instruction={t("afterSunnahDua")}
                 >
-                  <AyetulKursiVeTesbihler />
-                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" />
+                  <AyetulKursiVeTesbihler t={t} />
+                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" t={t} />
                 </SectionCard>
-
-                <SectionCard title="İsm-i A’zam Duâsı">
-                  <IsmiAzam />
+                <SectionCard title={t("ismiAzamLabel")}>
+                  <IsmiAzam t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Aşr-ı Şerif"
-                  instruction="Bundan sonra Fetih sûresi son âyetleri okunur:"
+                  title={t("asrISerifLabel")}
+                  instruction={t("asrISerifOgleInst")}
                 >
                   <Line>E’ûzu bi’llahi mine’ş-şeytânirracîm</Line>
                   <Line>Bismillâhirrahmânirrahîm</Line>
@@ -1179,12 +1014,11 @@ function TesbihatContent() {
               </div>
             )}
 
-            {/* İKİNDİ NAMAZI */}
             {activeTab === "ikindi" && (
               <div>
                 <SectionCard
-                  title="Farz Namazından Sonra"
-                  instruction="İkindi namazının farzı kılınıp selâm verildikten sonra:"
+                  title={t("afterFarzPrayer")}
+                  instruction={t("afterAsrPrayerInst")}
                 >
                   <ZikirRow text="Estağfirullâh" target={3} />
                   <Line>
@@ -1192,29 +1026,25 @@ function TesbihatContent() {
                     Ze’l-Celâli ve’l İkrâm.
                   </Line>
                 </SectionCard>
-
                 <SectionCard
-                  title="Salât-ı Münciye"
-                  instruction="Eller kaldırılarak okunur:"
+                  title={t("salatenTuncinaLabel")}
+                  instruction={t("handsUpDuaLabel")}
                 >
                   <SalatenTuncina />
                 </SectionCard>
-
                 <SectionCard
-                  title="Tesbihât"
-                  instruction="Bundan sonra tesbihâta devam edilir:"
+                  title={t("tesbihatlarLabel")}
+                  instruction={t("continueTesbihat")}
                 >
-                  <AyetulKursiVeTesbihler />
-                  <KelimeiTevhidVeSalavat baslangic="Fa’lem ennehû" />
+                  <AyetulKursiVeTesbihler t={t} />
+                  <KelimeiTevhidVeSalavat baslangic="Fa’lem ennehû" t={t} />
                 </SectionCard>
-
-                <SectionCard title="Tercümân-ı İsm-i A'zam Duâsı">
-                  <TercumanIsmiAzam />
+                <SectionCard title={t("tercumanIsmiAzamLabel")}>
+                  <TercumanIsmiAzam t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Aşr-ı Şerif"
-                  instruction="Bundan sonra Nebe’ Sûresinin 31 ila 40. âyetleri okunur:"
+                  title={t("asrISerifLabel")}
+                  instruction={t("asrISerifIkindiInst")}
                 >
                   <Line>E’ûzu bi’llahi mine’ş-şeytânirracîm</Line>
                   <Line>Bismillâhirrahmânirrahîm</Line>
@@ -1235,12 +1065,11 @@ function TesbihatContent() {
               </div>
             )}
 
-            {/* AKŞAM NAMAZI */}
             {activeTab === "aksam" && (
               <div>
                 <SectionCard
-                  title="Farz Namazından Sonra"
-                  instruction="Akşam namazının farzı kılınıp selâm verildikten sonra:"
+                  title={t("afterFarzPrayer")}
+                  instruction={t("afterMaghribPrayerInst")}
                 >
                   <ZikirRow text="Estağfirullâh" target={3} />
                   <Line>
@@ -1248,51 +1077,43 @@ function TesbihatContent() {
                     Ze’l-Celâli ve’l İkrâm.
                   </Line>
                 </SectionCard>
-
                 <SectionCard
-                  title="Salât-ı Münciye"
-                  instruction="Eller kaldırılarak okunur:"
+                  title={t("salatenTuncinaLabel")}
+                  instruction={t("handsUpDuaLabel")}
                 >
                   <SalatenTuncina />
                 </SectionCard>
-
                 <SectionCard
-                  title="Kelime-i Tevhid ve İstiâze"
-                  instruction="Sünnetten sonra 1 defa 'Âmennâ biennehû' denilir. Akabinde 9 defa şu cümle-i tevhid söylenir:"
+                  title={t("tevhidAndIstiazeLabel")}
+                  instruction={t("afterSunnahMaghribInst")}
                 >
                   <ZikirRow
                     text="Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve lehu’l-hamdu ve huve ‘alâ kulli şey’in Kadîr."
                     target={10}
                   />
-                  <InstructionText>Onuncusunda ise;</InstructionText>
+                  <InstructionText>{t("on10thTevhid")}</InstructionText>
                   <Line>
                     Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehu’l-mulku ve
                     lehu’l-hamdu yuhyî ve yumît, ve huve hayyun lâ yemût,
                     biyedihi’l-hayr, ve huve ‘alâ kulli şey’in Kadîrun ve
                     ileyhi’l masîr.
                   </Line>
-                  <InstructionText>
-                    Denildikten sonra, eller duâ için kaldırılır ve aşağıdaki
-                    "Ecirnâ" istiâzeleri okunur:
-                  </InstructionText>
-                  <EcirnaIstiazeleri />
+                  <InstructionText>{t("ecirnaInstruction")}</InstructionText>
+                  <EcirnaIstiazeleri t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Tesbihât"
-                  instruction="Daha sonra tesbihâta devam edilir:"
+                  title={t("tesbihatlarLabel")}
+                  instruction={t("continueTesbihat")}
                 >
-                  <AyetulKursiVeTesbihler />
-                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" />
+                  <AyetulKursiVeTesbihler t={t} />
+                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" t={t} />
                 </SectionCard>
-
-                <SectionCard title="İsm-i A’zam Duâsı">
-                  <IsmiAzam />
+                <SectionCard title={t("ismiAzamLabel")}>
+                  <IsmiAzam t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Aşr-ı Şerif"
-                  instruction="Bundan sonra Haşr sûresinin son âyetleri okunur:"
+                  title={t("asrISerifLabel")}
+                  instruction={t("asrISerifSabahInst")}
                 >
                   <ZikirRow
                     text="E’ûzu bi’llahi’s-semî’i’l-‘alîmi mine’ş-şeytânirracîm"
@@ -1318,12 +1139,11 @@ function TesbihatContent() {
               </div>
             )}
 
-            {/* YATSI NAMAZI */}
             {activeTab === "yatsi" && (
               <div>
                 <SectionCard
-                  title="Farz Namazından Sonra"
-                  instruction="Yatsı namazının farzı kılınıp selâm verildikten sonra:"
+                  title={t("afterFarzPrayer")}
+                  instruction={t("afterIshaPrayerInst")}
                 >
                   <ZikirRow text="Estağfirullâh" target={3} />
                   <Line>
@@ -1331,29 +1151,25 @@ function TesbihatContent() {
                     Ze’l-Celâli ve’l İkrâm.
                   </Line>
                 </SectionCard>
-
                 <SectionCard
-                  title="Salât-ı Münciye"
-                  instruction="Eller kaldırılarak okunur:"
+                  title={t("salatenTuncinaLabel")}
+                  instruction={t("handsUpDuaLabel")}
                 >
                   <SalatenTuncina />
                 </SectionCard>
-
                 <SectionCard
-                  title="Tesbihât"
-                  instruction="Son sünnetten ve vitirden sonra şu duâ okunur:"
+                  title={t("tesbihatlarLabel")}
+                  instruction={t("afterWitrDuaInst")}
                 >
-                  <AyetulKursiVeTesbihler />
-                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" />
+                  <AyetulKursiVeTesbihler t={t} />
+                  <KelimeiTevhidVeSalavat baslangic="Fe’lem ennehû" t={t} />
                 </SectionCard>
-
-                <SectionCard title="İsm-i A’zam Duâsı">
-                  <IsmiAzam />
+                <SectionCard title={t("ismiAzamLabel")}>
+                  <IsmiAzam t={t} />
                 </SectionCard>
-
                 <SectionCard
-                  title="Aşr-ı Şerif"
-                  instruction="Bundan sonra Bakara sûresi 285-286. âyetleri (Âmenerrasûlü) okunur:"
+                  title={t("asrISerifLabel")}
+                  instruction={t("asrISerifYatsiInst")}
                 >
                   <Line>E’ûzu bi’llahi mine’ş-şeytânirracîm</Line>
                   <Line>Bismillâhirrahmânirrahîm</Line>
@@ -1389,7 +1205,6 @@ function TesbihatContent() {
   );
 }
 
-// Ana Sayfa Bileşenini Suspense İle Sarmalıyoruz
 export default function TesbihatPage() {
   return (
     <Suspense

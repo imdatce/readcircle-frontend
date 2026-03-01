@@ -41,27 +41,21 @@ function MonitorContent() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+  // i18n'e uygun şekilde refactor edildi
   const getCategoryTitle = useCallback(
     (catKey: string) => {
-      const titles: Record<string, Record<string, string>> = {
-        MAIN: {
-          tr: "Kuran-ı Kerim",
-          en: "The Holy Quran",
-          ar: "القرآن الكريم",
-        },
-        SURAHS: { tr: "Sureler", en: "Surahs", ar: "سور" },
-        PRAYERS: { tr: "Dualar", en: "Prayers", ar: "الأدعية" },
-        SALAWATS: { tr: "Salavatlar", en: "Salawats", ar: "الصلوات" },
-        NAMES: { tr: "İsimler", en: "Names", ar: "الأسماء" },
-        DHIKRS: { tr: "Zikirler", en: "Dhikrs", ar: "الأذكار" },
+      const keys: Record<string, string> = {
+        MAIN: "categoryMain",
+        SURAHS: "categorySurahs",
+        PRAYERS: "categoryPrayers",
+        SALAWATS: "categorySalawats",
+        NAMES: "categoryNames",
+        DHIKRS: "categoryDhikrs",
       };
-      const langKey =
-        language === "tr" || language === "en" || language === "ar"
-          ? language
-          : "en";
-      return titles[catKey]?.[langKey] || titles[catKey]?.["en"] || catKey;
+      const translationKey = keys[catKey];
+      return translationKey ? t(translationKey) : catKey;
     },
-    [language],
+    [t],
   );
 
   const getResourceName = useCallback(
@@ -120,8 +114,8 @@ function MonitorContent() {
 
       if (!currentUser || currentUser !== creator) {
         throw new Error(
-          t("unauthorizedAccess") ||
-            "Unauthorized Access: Only the creator of the distribution can view this dashboard.",
+          t("unauthorizedAccessDesc") ||
+            "Bu paneli sadece dağıtımı oluşturan kişi görüntüleyebilir.",
         );
       }
 
@@ -150,7 +144,6 @@ function MonitorContent() {
       })
         .then((res) => res.json())
         .then((data) => {
-          // Dağıtım listesinde GÖSTERİLMEYECEK kaynakların kodları
           const EXCLUDED_RESOURCE_KEYS = [
             "ESMAULHUSNA",
             "GUNLUKDUALAR",
@@ -158,7 +151,6 @@ function MonitorContent() {
             "DUALAR",
           ];
 
-          // Gelen veriyi (data) filtrele ve sadece izin verilenleri state'e kaydet
           const filteredResources = data.filter((resource: any) => {
             const upperCode = resource.codeKey?.toUpperCase() || "";
             return !EXCLUDED_RESOURCE_KEYS.includes(upperCode);
@@ -275,7 +267,6 @@ function MonitorContent() {
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl border-b border-gray-200/60 dark:border-gray-800/60 shadow-sm transition-all">
         <div className="max-w-6xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-2 md:gap-4">
           {/* Sol: Geri Dön Butonu */}
-          {/* Sol: Geri Dön Butonu (Önceki Sayfaya Döner) */}
           <button
             onClick={() => router.back()}
             className="group flex items-center gap-2 p-1.5 md:px-3 md:py-2 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 shrink-0 outline-none"
@@ -309,7 +300,7 @@ function MonitorContent() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-[9px] md:text-xs font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300 truncate">
-                {t("monitorTitle")}
+                {t("monitorTitle") || "Canlı İzleme"}
               </span>
             </div>
           </div>
@@ -336,7 +327,9 @@ function MonitorContent() {
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              <span className="hidden md:inline ml-2">{t("refresh")}</span>
+              <span className="hidden md:inline ml-2">
+                {t("refresh") || "Yenile"}
+              </span>
             </button>
 
             {session && (
@@ -360,7 +353,7 @@ function MonitorContent() {
                   />
                 </svg>
                 <span className="hidden md:inline ml-1.5">
-                  {t("addResource")}
+                  {t("addResource") || "Kaynak Ekle"}
                 </span>
               </button>
             )}

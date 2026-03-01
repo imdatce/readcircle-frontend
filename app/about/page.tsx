@@ -3,15 +3,19 @@
 
 import React, { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 function AboutContent() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
   const features = [
     {
-      title: "Hatim Halkaları",
-      desc: "Kullanıcıların bir araya gelerek cüzleri paylaştığı, uzaktan da olsa cemaat bilincini yaşatan dijital dağıtım sistemi.",
+      title: t("featureHatimTitle") || "Hatim Halkaları",
+      desc:
+        t("featureHatimDesc") ||
+        "Kullanıcıların bir araya gelerek cüzleri paylaştığı, uzaktan da olsa cemaat bilincini yaşatan dijital dağıtım sistemi.",
       icon: (
         <svg
           className="w-6 h-6"
@@ -32,8 +36,10 @@ function AboutContent() {
       border: "hover:border-blue-200 dark:hover:border-blue-800",
     },
     {
-      title: "Kapsamlı Kütüphane",
-      desc: "Kur'an-ı Kerim, Risale-i Nur Külliyatı, Büyük Cevşen ve Günlük Dualar... Hepsi tek bir ekranda, okuma modlarıyla elinizin altında.",
+      title: t("featureLibraryTitle") || "Kapsamlı Kütüphane",
+      desc:
+        t("featureLibraryDesc") ||
+        "Kur'an-ı Kerim, Risale-i Nur Külliyatı, Büyük Cevşen ve Günlük Dualar... Hepsi tek bir ekranda, okuma modlarıyla elinizin altında.",
       icon: (
         <svg
           className="w-6 h-6"
@@ -54,8 +60,10 @@ function AboutContent() {
       border: "hover:border-emerald-200 dark:hover:border-emerald-800",
     },
     {
-      title: "Akıllı İbadet Takibi",
-      desc: "Bulunduğunuz konuma özel namaz vakitleri, kaza borcu hesaplayıcı ve ezber bozmayan akıllı zikirmatik özellikleri.",
+      title: t("featureTrackingTitle") || "Akıllı İbadet Takibi",
+      desc:
+        t("featureTrackingDesc") ||
+        "Bulunduğunuz konuma özel namaz vakitleri, kaza borcu hesaplayıcı ve ezber bozmayan akıllı zikirmatik özellikleri.",
       icon: (
         <svg
           className="w-6 h-6"
@@ -76,8 +84,10 @@ function AboutContent() {
       border: "hover:border-amber-200 dark:hover:border-amber-800",
     },
     {
-      title: "Odaklanmış Deneyim",
-      desc: "Reklam yok, dikkat dağıtıcı bildirim yok. Sadece siz ve ibadetiniz. Gece modu ve sepya okuma filtreleriyle gözünüzü yormayan tasarım.",
+      title: t("featureFocusTitle") || "Odaklanmış Deneyim",
+      desc:
+        t("featureFocusDesc") ||
+        "Reklam yok, dikkat dağıtıcı bildirim yok. Sadece siz ve ibadetiniz. Gece modu ve sepya okuma filtreleriyle gözünüzü yormayan tasarım.",
       icon: (
         <svg
           className="w-6 h-6"
@@ -123,7 +133,7 @@ function AboutContent() {
             </svg>
           </button>
           <h1 className="text-sm md:text-base font-black text-emerald-800 dark:text-emerald-100 uppercase tracking-[0.2em]">
-            Hakkımızda
+            {t("aboutUsTitle") || "Hakkımızda"}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -151,9 +161,9 @@ function AboutContent() {
           </div>
 
           <h2 className="relative z-10 text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4 leading-tight">
-            Manevi Yaşamınızı <br />
+            {t("heroTitleLine1") || "Manevi Yaşamınızı"} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">
-              Dijitalde Yeşertin
+              {t("heroTitleLine2") || "Dijitalde Yeşertin"}
             </span>
           </h2>
 
@@ -161,39 +171,38 @@ function AboutContent() {
             <strong className="text-emerald-700 dark:text-emerald-400 font-black">
               SURA
             </strong>{" "}
-            (Spiritual Union for Reflection & Affinity), modern çağın hızında
-            maneviyatını korumak ve geliştirmek isteyenler için özel olarak
-            tasarlandı.
+            {t("heroDescription") ||
+              "(Spiritual Union for Reflection & Affinity), modern çağın hızında maneviyatını korumak ve geliştirmek isteyenler için özel olarak tasarlandı."}
           </p>
         </div>
 
         {/* 2. HİKAYEMİZ & VİZYON */}
         <div className="bg-emerald-50/50 dark:bg-[#0a1f1a]/50 rounded-[2.5rem] p-8 md:p-10 border border-emerald-100 dark:border-emerald-900/30">
           <h3 className="text-xl font-black text-emerald-800 dark:text-emerald-400 mb-4 uppercase tracking-widest text-center">
-            Neden Buradayız?
+            {t("whyWeAreHereTitle") || "Neden Buradayız?"}
           </h3>
           <div className="space-y-4 text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed text-center max-w-3xl mx-auto">
-            <p>
-              Günümüzde ekran başında geçirdiğimiz süre artarken, manevi
-              alışkanlıklarımızı sürdürmek giderek zorlaşıyor. SURA olarak biz,
-              teknolojiyi dikkat dağıtıcı bir unsur olmaktan çıkarıp,{" "}
-              <b>kulluk şuurumuzu besleyen bir araca</b> dönüştürmek için yola
-              çıktık.
-            </p>
-            <p>
-              İsmimiz <b>SURA</b> (Spiritual Union for Reflection & Affinity);
-              tefekkür, manevi bağ ve ünsiyet için ruhsal bir birlikteliği ifade
-              ediyor. Hem tekil ibadetlerinizde derinleştiğiniz hem de
-              uzaklardaki kardeşlerinizle aynı hatim veya zikir halkasında
-              buluştuğunuz dijital bir sığınak tasarladık.
-            </p>
+            <p
+              dangerouslySetInnerHTML={{
+                __html:
+                  t("whyWeAreHereP1") ||
+                  "Günümüzde ekran başında geçirdiğimiz süre artarken, manevi alışkanlıklarımızı sürdürmek giderek zorlaşıyor. SURA olarak biz, teknolojiyi dikkat dağıtıcı bir unsur olmaktan çıkarıp, <b>kulluk şuurumuzu besleyen bir araca</b> dönüştürmek için yola çıktık.",
+              }}
+            />
+            <p
+              dangerouslySetInnerHTML={{
+                __html:
+                  t("whyWeAreHereP2") ||
+                  "İsmimiz <b>SURA</b> (Spiritual Union for Reflection & Affinity); tefekkür, manevi bağ ve ünsiyet için ruhsal bir birlikteliği ifade ediyor. Hem tekil ibadetlerinizde derinleştiğiniz hem de uzaklardaki kardeşlerinizle aynı hatim veya zikir halkasında buluştuğunuz dijital bir sığınak tasarladık.",
+              }}
+            />
           </div>
         </div>
 
         {/* 3. ÖNE ÇIKAN ÖZELLİKLER (GRID) */}
         <div className="space-y-6">
           <h3 className="text-center text-lg md:text-xl font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest px-4">
-            Platformumuzda Neler Var?
+            {t("whatIsOnOurPlatformTitle") || "Platformumuzda Neler Var?"}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -236,10 +245,13 @@ function AboutContent() {
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
 
+            <h2 className="text-xl md:text-3xl font-black text-white mb-4 tracking-tight">
+              {t("adFreeFreeForYouTitle") || "Reklamsız. Ücretsiz. Sizin İçin."}
+            </h2>
+
             <p className="text-emerald-100/90 mb-8 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
-              SURA'nın büyümesine, sunucu maliyetlerine ve yeni özelliklerin
-              geliştirilmesine maddi olarak destek olmak isterseniz bağışta
-              bulunabilirsiniz.
+              {t("donationDescription") ||
+                "SURA'nın büyümesine, sunucu maliyetlerine ve yeni özelliklerin geliştirilmesine maddi olarak destek olmak isterseniz bağışta bulunabilirsiniz."}
             </p>
 
             {/* Aksiyon Butonları */}
@@ -261,7 +273,7 @@ function AboutContent() {
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                   />
                 </svg>
-                Bağış Yap
+                {t("donateButton") || "Bağış Yap"}
               </button>
 
               <button
@@ -273,7 +285,7 @@ function AboutContent() {
                 }
                 className="w-full sm:w-auto px-8 py-3.5 bg-emerald-800/50 hover:bg-emerald-800 text-white border border-emerald-700/50 hover:border-emerald-600 rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm transition-all shadow-lg active:scale-95 backdrop-blur-md flex items-center justify-center gap-2"
               >
-                İletişime Geç
+                {t("contactUsButton") || "İletişime Geç"}
               </button>
             </div>
           </div>
@@ -287,7 +299,7 @@ function AboutContent() {
         </div>
       </div>
 
-      {/* IBAN BAĞIŞ MODALI (Buraya alındı, Artık hata vermez!) */}
+      {/* IBAN BAĞIŞ MODALI */}
       {isDonationModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
@@ -328,26 +340,26 @@ function AboutContent() {
                 </svg>
               </div>
               <h3 className="text-xl font-black text-gray-900 dark:text-white">
-                Destek Olun
+                {t("donationModalTitle") || "Destek Olun"}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Aşağıdaki banka hesap bilgilerini kullanarak projemize destekte
-                bulunabilirsiniz. Allah razı olsun.
+                {t("donationModalDesc") ||
+                  "Aşağıdaki banka hesap bilgilerini kullanarak projemize destekte bulunabilirsiniz. Allah razı olsun."}
               </p>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 space-y-3">
               <div>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                  Banka
+                  {t("bankNameLabel") || "Banka"}
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  Ziraat Bankası
+                  {t("bankNameValue") || "Ziraat Bankası"}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                  Alıcı Adı Soyadı
+                  {t("receiverNameLabel") || "Alıcı Adı Soyadı"}
                 </p>
                 <div className="flex items-center justify-between gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                   <span className="font-semibold text-gray-900 dark:text-white">
@@ -356,10 +368,10 @@ function AboutContent() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText("İmdat Çelik");
-                      alert("İsim Kopyalandı!");
+                      alert(t("nameCopiedAlert") || "İsim Kopyalandı!");
                     }}
                     className="p-1.5 text-gray-500 hover:text-emerald-600 transition-colors"
-                    title="Kopyala"
+                    title={t("copyButtonTooltip") || "Kopyala"}
                   >
                     <svg
                       className="w-5 h-5"
@@ -379,7 +391,7 @@ function AboutContent() {
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                  IBAN
+                  {t("ibanLabel") || "IBAN"}
                 </p>
                 <div className="flex items-center justify-between gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                   <code className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
@@ -390,10 +402,10 @@ function AboutContent() {
                       navigator.clipboard.writeText(
                         "TR00 0000 0000 0000 0000 0000 00",
                       );
-                      alert("IBAN Kopyalandı!");
+                      alert(t("ibanCopiedAlert") || "IBAN Kopyalandı!");
                     }}
                     className="p-1.5 text-gray-500 hover:text-emerald-600 transition-colors"
-                    title="Kopyala"
+                    title={t("copyButtonTooltip") || "Kopyala"}
                   >
                     <svg
                       className="w-5 h-5"

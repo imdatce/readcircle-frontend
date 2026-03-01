@@ -17,11 +17,15 @@ export default function AdminLoading() {
         <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-emerald-100 dark:border-emerald-900/50 border-t-emerald-600 dark:border-t-emerald-500 rounded-full animate-spin"></div>
         <div className="flex flex-col gap-3 items-center">
           <p className="text-gray-800 dark:text-gray-200 font-bold animate-pulse text-base md:text-lg">
-            {t("loading")}
+            {t("loading") || "Yükleniyor..."}
           </p>
           {isSlowLoad && (
             <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm max-w-[280px] animate-in fade-in duration-1000 leading-relaxed bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-              {t("serverWakingUpPart1")} <span className="font-bold text-emerald-600 dark:text-emerald-400">30-40 {t("seconds")}</span> {t("serverWakingUpPart2")}
+              {t("serverWakingUpPart1") || "Sunucu uykuda olabilir, uyanması"}{" "}
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                30-40 {t("seconds") || "saniye"}
+              </span>{" "}
+              {t("serverWakingUpPart2") || "sürebilir. Lütfen bekleyin..."}
             </p>
           )}
         </div>

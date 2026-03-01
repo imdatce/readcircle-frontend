@@ -1,124 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
-
-// Kaynaklar için renk temaları ve ikonlar
-const RESOURCES = [
-  {
-    id: "quran",
-    titleKey: "quran",
-    descKey: "quranDesc",
-    href: "/resources/quran",
-    color: "amber",
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-6 md:h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-        />
-      </svg>
-    ),
-  },
-  {
-    id: "cevsen",
-    titleKey: "cevsen",
-    descKey: "cevsenDesc",
-    href: "/resources/cevsen",
-    color: "indigo",
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-6 md:h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-        />
-      </svg>
-    ),
-  },
-  {
-    id: "risale",
-    titleKey: "Risale-i Nur",
-    descKey: "Bedüzzaman Said Nursi'nin eserleri",
-    href: "/resources/risale",
-    color: "rose",
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-6 md:h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-        />
-      </svg>
-    ),
-  },
-  {
-    id: "tesbihat",
-    titleKey: "tesbihatlar",
-    descKey: "tesbihatlarDesc",
-    href: "/resources/tesbihat",
-    color: "emerald",
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-6 md:h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-        />
-      </svg>
-    ),
-  },
-  {
-    id: "dualar",
-    titleKey: "dualar",
-    descKey: "dualarDesc",
-    href: "/resources/dualar",
-    color: "blue",
-    icon: (
-      <svg
-        className="w-5 h-5 md:w-6 md:h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-        />
-      </svg>
-    ),
-  },
-];
 
 const colorStyles: any = {
   emerald: {
@@ -175,6 +61,123 @@ export default function ResourcesPage() {
   const { t } = useLanguage();
   const router = useRouter();
 
+  // RESOURCES dizisini useMemo ile bileşen içine taşıdık
+  const RESOURCES = useMemo(
+    () => [
+      {
+        id: "quran",
+        title: t("quran") || "Kur'an-ı Kerim",
+        desc: t("quranDesc") || "Kutsal Kitabımız",
+        href: "/resources/quran",
+        color: "amber",
+        icon: (
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+            />
+          </svg>
+        ),
+      },
+      {
+        id: "cevsen",
+        title: t("cevsen") || "Cevşen",
+        desc: t("cevsenDesc") || "Peygamber Efendimizin Duası",
+        href: "/resources/cevsen",
+        color: "indigo",
+        icon: (
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            />
+          </svg>
+        ),
+      },
+      {
+        id: "risale",
+        title: t("risale") || "Risale-i Nur",
+        desc: t("risaleDesc") || "Bedüzzaman Said Nursi'nin eserleri",
+        href: "/resources/risale",
+        color: "rose",
+        icon: (
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+        ),
+      },
+      {
+        id: "tesbihat",
+        title: t("tesbihatlar") || "Tesbihatlar",
+        desc: t("tesbihatlarDesc") || "Namaz sonrası tesbihatlar",
+        href: "/resources/tesbihat",
+        color: "emerald",
+        icon: (
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+            />
+          </svg>
+        ),
+      },
+      {
+        id: "dualar",
+        title: t("dualar") || "Dualar ve Virdler",
+        desc: t("dualarDesc") || "Çeşitli dua ve zikirler",
+        href: "/resources/dualar",
+        color: "blue",
+        icon: (
+          <svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+          </svg>
+        ),
+      },
+    ],
+    [t],
+  );
+
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-6 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-amber-400/10 dark:bg-amber-600/10 rounded-full blur-3xl opacity-50 pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
@@ -186,6 +189,7 @@ export default function ResourcesPage() {
           <button
             onClick={() => router.push("/")}
             className="p-2.5 bg-white dark:bg-gray-800 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 transition-all active:scale-95 shrink-0"
+            title={t("backHome") || "Ana Sayfa"}
           >
             <svg
               className="w-5 h-5"
@@ -232,10 +236,10 @@ export default function ResourcesPage() {
 
                 <div className="relative z-10 flex flex-col items-center">
                   <h2 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-                    {t(resource.titleKey) || resource.titleKey}
+                    {resource.title}
                   </h2>
                   <p className="hidden sm:block text-[9px] text-gray-500 dark:text-gray-400 mt-1 leading-tight line-clamp-1">
-                    {t(resource.descKey) || resource.descKey}
+                    {resource.desc}
                   </p>
                 </div>
 

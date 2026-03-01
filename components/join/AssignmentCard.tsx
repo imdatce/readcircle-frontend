@@ -27,7 +27,6 @@ export default function AssignmentCard({
   const isMyAssignment = isAssignedToMe || isAssignedToUserName;
   const canSeeDetails = isOwner || isMyAssignment;
 
-  // CHANGED: Only show as completed if the user is the owner OR it's their assignment
   const isCompleted = first.isCompleted && (isOwner || isMyAssignment);
 
   const getTypeName = (resource: any) => {
@@ -51,20 +50,21 @@ export default function AssignmentCard({
   }
 
   let displayName = "";
-  let statusText = t("statusEmpty");
+  let statusText = t("statusEmpty") || "Boş";
+
   if (isTaken) {
     if (canSeeDetails) {
       if (isMyAssignment) {
-        statusText = t("yourTask");
+        statusText = t("yourTask") || "Senin Görevin";
         displayName = "";
       } else {
-        // This block is for owners viewing someone else's taken task
-        statusText = first.isCompleted ? t("completed") : t("taken");
+        statusText = first.isCompleted
+          ? t("completed") || "Tamamlandı"
+          : t("taken") || "Alındı";
         displayName = first.assignedToName;
       }
     } else {
-      // For general users viewing a task taken by someone else
-      statusText = t("taken");
+      statusText = t("taken") || "Alındı";
       displayName = "";
     }
   }
@@ -79,7 +79,7 @@ export default function AssignmentCard({
             <span
               className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] ${isCompleted ? "text-emerald-600 dark:text-emerald-400" : isMyAssignment ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
             >
-              {t("part")} {participantNumber}
+              {t("part") || "Parça"} {participantNumber}
             </span>
             {isMyAssignment && !isCompleted && (
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
@@ -109,16 +109,15 @@ export default function AssignmentCard({
                 >
                   {isPaged
                     ? isQuran
-                      ? `${t("juz")} ${juzNumber} | ${t("page")}: ${displayStart}-${displayEnd}`
-                      : `${t("page")}: ${displayStart}-${displayEnd}`
-                    : `${count} ${t("pieces")}`}
+                      ? `${t("juz") || "Cüz"} ${juzNumber} | ${t("pageWord") || "Sayfa"}: ${displayStart}-${displayEnd}`
+                      : `${t("pageWord") || "Sayfa"}: ${displayStart}-${displayEnd}`
+                    : `${count} ${t("pieces") || "Adet"}`}
                 </span>
               );
             })}
           </div>
         </div>
         <div className="shrink-0 ml-2">
-          {/* CHANGED: Use the actual 'first.isCompleted' here for the icon logic if it's the owner, otherwise stick to the restricted 'isCompleted' */}
           {(first.isCompleted && isOwner) || isCompleted ? (
             <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-md transform scale-110">
               <svg
@@ -150,7 +149,7 @@ export default function AssignmentCard({
             </div>
           ) : (
             <span className="bg-gray-50 dark:bg-gray-800 text-gray-400 text-[8px] md:text-[9px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-full uppercase tracking-widest border border-gray-200 dark:border-gray-700 shadow-inner">
-              {t("statusEmpty")}
+              {t("statusEmpty") || "Boş"}
             </span>
           )}
         </div>
@@ -181,6 +180,7 @@ export default function AssignmentCard({
               />
             </div>
           )}
+
         {isMyAssignment && !isCompleted && (
           <div className="w-full space-y-2 md:space-y-2.5 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
             {assignments.map((a: any, idx: number) => {
@@ -211,10 +211,10 @@ export default function AssignmentCard({
                     <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                   <span>
-                    {t("readText")}{" "}
+                    {t("readText") || "Metni Oku"}{" "}
                     {assignments.length > 1
                       ? isQuran
-                        ? `(${t("juz")} ${juzNumber}, ${displayStart}-${displayEnd})`
+                        ? `(${t("juz") || "Cüz"} ${juzNumber}, ${displayStart}-${displayEnd})`
                         : `(${displayStart}-${displayEnd})`
                       : ""}
                   </span>
@@ -233,7 +233,7 @@ export default function AssignmentCard({
             onClick={() => onTakeClick(first.id)}
             className="w-full py-3.5 md:py-4 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl md:rounded-2xl font-black text-xs md:text-sm hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all active:scale-95 shadow-sm"
           >
-            {t("select")}
+            {t("select") || "Seç"}
           </button>
         ) : (
           isMyAssignment && (
@@ -256,7 +256,7 @@ export default function AssignmentCard({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  {t("finish")}
+                  {t("finish") || "Bitir"}
                 </button>
               )}
               <button
@@ -273,7 +273,7 @@ export default function AssignmentCard({
                 }}
                 className={`w-full py-3 md:py-3.5 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all active:scale-95 border-2 ${isCompleted ? "bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border-gray-200 dark:border-gray-700" : "bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50"}`}
               >
-                {isCompleted ? t("undo") : t("giveUp")}
+                {isCompleted ? t("undo") || "Geri Al" : t("giveUp") || "Bırak"}
               </button>
             </div>
           )

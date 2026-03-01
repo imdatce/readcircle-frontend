@@ -36,23 +36,24 @@ export function PrayersOnboarding({
           </svg>
         </div>
         <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-4 leading-tight">
-          {t("startTrackingQuestion")}
+          {t("startTrackingQuestion") || "Namaz Takibine Başlayalım mı?"}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">
-          {t("startTrackingDesc")}
+          {t("startTrackingDesc") ||
+            "Günlük farz ve nafile namazlarınızı takip ederek manevi gelişiminizi kayıt altına alabilirsiniz."}
         </p>
         <div className="space-y-3">
           <button
             onClick={onEnable}
             className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98]"
           >
-            {t("yesStart")}
+            {t("yesStart") || "Evet, Başla"}
           </button>
           <Link
             href="/"
             className="block w-full py-4 text-gray-400 hover:text-gray-600 font-medium transition-colors"
           >
-            {t("noMaybeLater")}
+            {t("noMaybeLater") || "Hayır, Belki Daha Sonra"}
           </Link>
         </div>
       </div>

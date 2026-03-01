@@ -20,36 +20,26 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
 
-  // Ana Akordeon State'i (sessions, resources, agenda, settings)
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(
     null,
   );
-
-  // Alt Akordeon State'i (quran, tesbihat, dualar, risale)
   const [expandedSubAccordion, setExpandedSubAccordion] = useState<
     string | null
   >(null);
-
-  // 3. Seviye Derin Akordeon (Cüzler ve Sureler için)
   const [expandedDeepAccordion, setExpandedDeepAccordion] = useState<
     string | null
   >(null);
-
   const [activeProfileModal, setActiveProfileModal] = useState<
     "name" | "password" | null
   >(null);
 
-  // Modal Input State'leri
   const [newNameInput, setNewNameInput] = useState("");
   const [nameUpdateSuccess, setNameUpdateSuccess] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
-
-  // Kur'an Son Kaldığı Sayfa State'i
   const [lastQuranPage, setLastQuranPage] = useState<number | null>(null);
 
-  // Auth özellikleri
   const { user, role, logout, updateName, updatePassword, deleteAccount } =
     useAuth();
 
@@ -76,7 +66,6 @@ export default function Header() {
     return () => ro.disconnect();
   }, [checkOverflow, user]);
 
-  // Menü her açıldığında Kur'an için son kalınan sayfayı kontrol et
   useEffect(() => {
     if (isMenuOpen) {
       try {
@@ -84,7 +73,6 @@ export default function Header() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.unit) {
-            // ÇÖZÜM BURADA: ESLint uyarısını aşmak için işlemi mikro-görev (microtask) içine alıyoruz
             Promise.resolve().then(() => setLastQuranPage(parsed.unit));
           }
         }
@@ -94,7 +82,6 @@ export default function Header() {
     }
   }, [isMenuOpen]);
 
-  // Menüyü ve açık akordeonları sıfırlayan güvenli fonksiyon
   const closeMenu = useCallback(() => {
     setIsMenuOpen(false);
     setExpandedAccordion(null);
@@ -103,11 +90,8 @@ export default function Header() {
   }, []);
 
   const toggleMenu = () => {
-    if (isMenuOpen) {
-      closeMenu();
-    } else {
-      setIsMenuOpen(true);
-    }
+    if (isMenuOpen) closeMenu();
+    else setIsMenuOpen(true);
   };
 
   const toggleAccordion = (name: string) => {
@@ -143,8 +127,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMenuOpen, closeMenu]);
 
-  const { registerNotification } = useAuth();
-
   const scrollToTop = (e: React.MouseEvent) => {
     if (window.location.pathname === "/") {
       e.preventDefault();
@@ -153,7 +135,6 @@ export default function Header() {
     closeMenu();
   };
 
-  // --- İŞLEM FONKSİYONLARI ---
   const handleNameSubmit = async () => {
     try {
       await updateName(newNameInput);
@@ -162,10 +143,10 @@ export default function Header() {
         setActiveProfileModal(null);
         setNameUpdateSuccess(false);
         setNewNameInput("");
-        logout(); // İsim değişince yeniden giriş istenir
+        logout();
       }, 2000);
     } catch (error) {
-      alert("İsim güncellenirken bir hata oluştu.");
+      alert(t("errorUpdateName") || "İsim güncellenirken bir hata oluştu.");
     }
   };
 
@@ -180,8 +161,11 @@ export default function Header() {
         setNewPassword("");
       }, 2000);
     } catch (error: any) {
-      // YENİ: Backend'den gelen asıl hatayı alert olarak basıyoruz
-      alert(error.message || "Şifre güncellenirken bir hata oluştu.");
+      alert(
+        error.message ||
+          t("errorUpdatePassword") ||
+          "Şifre güncellenirken bir hata oluştu.",
+      );
     }
   };
 
@@ -197,7 +181,7 @@ export default function Header() {
         closeMenu();
         logout();
       } catch (error) {
-        alert("Hesap silinirken bir hata oluştu.");
+        alert(t("errorDeleteAccount") || "Hesap silinirken bir hata oluştu.");
       }
     }
   };
@@ -209,7 +193,6 @@ export default function Header() {
           ref={headerInnerRef}
           className="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between"
         >
-          {/* LOGO */}
           <Link
             data-logo
             href="/"
@@ -228,7 +211,6 @@ export default function Header() {
           </Link>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* PANEL 1: Sadece Ana Sayfa, Tema ve Dil Seçenekleri */}
             {!isCompact && (
               <div
                 data-panel
@@ -263,14 +245,13 @@ export default function Header() {
               </div>
             )}
 
-            {/* PANEL 2: Hamburger Menü */}
             <div data-burger className="relative z-[60]">
               <div className="p-1.5 bg-gray-100/80 dark:bg-gray-900/80 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-inner">
                 <button
                   ref={buttonRef}
                   onClick={toggleMenu}
                   className={`p-2 rounded-xl transition-all duration-200 focus:outline-none ${isMenuOpen ? "bg-white dark:bg-gray-800 text-emerald-600 shadow-sm" : "text-gray-500 hover:text-emerald-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50"}`}
-                  aria-label="Ana Menü"
+                  aria-label={t("mainMenu") || "Ana Menü"}
                 >
                   <svg
                     className="w-4 h-4"
@@ -292,7 +273,6 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* Açılır Menü İçeriği */}
               {isMenuOpen && (
                 <div
                   ref={menuRef}
@@ -328,17 +308,16 @@ export default function Header() {
                     {user ? (
                       <>
                         <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800 mb-2 font-medium">
-                          {t("welcomeUser")?.replace("{name}", user ?? "")}
+                          {(t("welcomeUser") || "Hoş geldin, {name}").replace(
+                            "{name}",
+                            user ?? "",
+                          )}
                         </div>
 
-                        {/* 1. HALKALARIM (Akordeon) */}
+                        {/* 1. HALKALARIM */}
                         <button
                           onClick={() => toggleAccordion("sessions")}
-                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${
-                            expandedAccordion === "sessions"
-                              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${expandedAccordion === "sessions" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
                         >
                           <div className="flex items-center gap-3">
                             <svg
@@ -354,7 +333,7 @@ export default function Header() {
                                 d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"
                               />
                             </svg>
-                            Halkalarım
+                            {t("myCircles") || "Halkalarım"}
                           </div>
                           <svg
                             className={`w-4 h-4 transition-transform duration-300 ${expandedAccordion === "sessions" ? "rotate-180" : "text-gray-400"}`}
@@ -377,33 +356,30 @@ export default function Header() {
                               onClick={closeMenu}
                               className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                             >
-                              Tüm Halkalar
+                              {t("allCircles") || "Tüm Halkalar"}
                             </Link>
                             <Link
                               href="/sessions?tab=managed"
                               onClick={closeMenu}
                               className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                             >
-                              Yönettiğim Halkalar
+                              {t("managedSessions") || "Yönettiğim Halkalar"}
                             </Link>
                             <Link
                               href="/sessions?tab=joined"
                               onClick={closeMenu}
                               className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                             >
-                              Katıldığım Halkalar
+                              {t("participatedCircles") ||
+                                "Katıldığım Halkalar"}
                             </Link>
                           </div>
                         )}
 
-                        {/* 2. KAYNAKLARIM (Ana Akordeon) */}
+                        {/* 2. KAYNAKLARIM */}
                         <button
                           onClick={() => toggleAccordion("resources")}
-                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${
-                            expandedAccordion === "resources"
-                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${expandedAccordion === "resources" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
                         >
                           <div className="flex items-center gap-3">
                             <svg
@@ -419,7 +395,7 @@ export default function Header() {
                                 d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122"
                               />
                             </svg>
-                            Kaynaklarım
+                            {t("myResources") || "Kaynaklarım"}
                           </div>
                           <svg
                             className={`w-4 h-4 transition-transform duration-300 ${expandedAccordion === "resources" ? "rotate-180" : "text-gray-400"}`}
@@ -436,7 +412,6 @@ export default function Header() {
                           </svg>
                         </button>
 
-                        {/* KAYNAKLARIM (Alt Akordeonları ve Linkleri) */}
                         {expandedAccordion === "resources" && (
                           <div className="flex flex-col gap-1 px-2 py-2 mx-3 my-1 border-l-2 border-blue-100 dark:border-blue-800/50 animate-in fade-in slide-in-from-top-2">
                             <Link
@@ -444,16 +419,16 @@ export default function Header() {
                               onClick={closeMenu}
                               className="text-left px-3 py-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mb-1"
                             >
-                              Tüm Kaynaklar
+                              {t("allResources") || "Tüm Kaynaklar"}
                             </Link>
 
-                            {/* ALT AKORDEON: Kur'an-ı Kerim */}
+                            {/* ALT AKORDEON: Kur'an */}
                             <div className="flex flex-col">
                               <button
                                 onClick={() => toggleSubAccordion("quran")}
                                 className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
                               >
-                                <span>Kur&apos;an-ı Kerim</span>
+                                <span>{t("quran") || "Kur'an-ı Kerim"}</span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSubAccordion === "quran" ? "rotate-180" : ""}`}
                                   fill="none"
@@ -470,7 +445,6 @@ export default function Header() {
                               </button>
                               {expandedSubAccordion === "quran" && (
                                 <div className="flex flex-col ml-4 pl-3 border-l border-amber-200 dark:border-amber-800/50 my-1 gap-0.5 animate-in fade-in slide-in-from-top-1">
-                                  {/* YENİ: KALDIĞIM YERDEN DEVAM ET BUTONU */}
                                   {lastQuranPage && (
                                     <Link
                                       href={`/resources/quran?page=${lastQuranPage}`}
@@ -494,7 +468,6 @@ export default function Header() {
                                         "Kaldığım Yere Git"}
                                     </Link>
                                   )}
-                                  {/* YENİ EKLENEN: Hatim Yolculuğum Butonu */}
                                   <Link
                                     href="/resources/quran"
                                     onClick={closeMenu}
@@ -513,18 +486,17 @@ export default function Header() {
                                         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                                       />
                                     </svg>
-                                    Hatim Yolculuğum
+                                    {t("hatimJourney") || "Hatim Yolculuğum"}
                                   </Link>
-
                                   <Link
                                     href="/resources/quran"
                                     onClick={closeMenu}
                                     className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 rounded-md transition-colors"
                                   >
-                                    Tüm Kur&apos;an Fihristi
+                                    {t("allQuranIndex") ||
+                                      "Tüm Kur'an Fihristi"}
                                   </Link>
 
-                                  {/* CÜZLER DERİN AKORDEON */}
                                   <button
                                     onClick={() =>
                                       setExpandedDeepAccordion((prev) =>
@@ -533,7 +505,7 @@ export default function Header() {
                                     }
                                     className="flex items-center justify-between text-[13px] py-1.5 px-2 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 rounded-md transition-colors w-full text-left"
                                   >
-                                    <span>Cüzler</span>
+                                    <span>{t("juzWord") || "Cüzler"}</span>
                                     <svg
                                       className={`w-3 h-3 transition-transform duration-200 ${expandedDeepAccordion === "juz" ? "rotate-180" : ""}`}
                                       fill="none"
@@ -557,13 +529,12 @@ export default function Header() {
                                           onClick={closeMenu}
                                           className="text-sm py-2 px-3 text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors font-medium"
                                         >
-                                          {juz.id}. Cüz
+                                          {juz.id}. {t("juz") || "Cüz"}
                                         </Link>
                                       ))}
                                     </div>
                                   )}
 
-                                  {/* SURELER DERİN AKORDEON */}
                                   <button
                                     onClick={() =>
                                       setExpandedDeepAccordion((prev) =>
@@ -572,7 +543,7 @@ export default function Header() {
                                     }
                                     className="flex items-center justify-between text-[13px] py-1.5 px-2 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 rounded-md transition-colors w-full text-left"
                                   >
-                                    <span>Sureler</span>
+                                    <span>{t("surahWord") || "Sureler"}</span>
                                     <svg
                                       className={`w-3 h-3 transition-transform duration-200 ${expandedDeepAccordion === "surah" ? "rotate-180" : ""}`}
                                       fill="none"
@@ -587,7 +558,6 @@ export default function Header() {
                                       />
                                     </svg>
                                   </button>
-                                  {/* SURELER LİSTESİ İÇİNDEKİ LİNK */}
                                   {expandedDeepAccordion === "surah" && (
                                     <div className="flex flex-col ml-2 pl-2 border-l-2 border-amber-200 dark:border-amber-800/60 max-h-60 overflow-y-auto scrollbar-hide py-1 animate-in fade-in">
                                       {SURAH_DATA.map((surah) => (
@@ -606,22 +576,21 @@ export default function Header() {
                               )}
                             </div>
 
-                            {/* Cevşen (Bunun alt sayfası olmadığı için düz link) */}
                             <Link
                               href="/resources/cevsen"
                               onClick={closeMenu}
                               className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
                             >
-                              Cevşen
+                              {t("cevsen") || "Cevşen"}
                             </Link>
 
-                            {/* ALT AKORDEON: Tesbihat */}
+                            {/* Tesbihat */}
                             <div className="flex flex-col">
                               <button
                                 onClick={() => toggleSubAccordion("tesbihat")}
                                 className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                               >
-                                <span>Tesbihat</span>
+                                <span>{t("tesbihat") || "Tesbihat"}</span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSubAccordion === "tesbihat" ? "rotate-180" : ""}`}
                                   fill="none"
@@ -643,54 +612,38 @@ export default function Header() {
                                     onClick={closeMenu}
                                     className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
                                   >
-                                    Tüm Tesbihatlar
+                                    {t("allTesbihat") || "Tüm Tesbihatlar"}
                                   </Link>
-                                  <Link
-                                    href="/resources/tesbihat?vakit=sabah"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
-                                  >
-                                    Sabah Tesbihatı
-                                  </Link>
-                                  <Link
-                                    href="/resources/tesbihat?vakit=ogle"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
-                                  >
-                                    Öğle Tesbihatı
-                                  </Link>
-                                  <Link
-                                    href="/resources/tesbihat?vakit=ikindi"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
-                                  >
-                                    İkindi Tesbihatı
-                                  </Link>
-                                  <Link
-                                    href="/resources/tesbihat?vakit=aksam"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
-                                  >
-                                    Akşam Tesbihatı
-                                  </Link>
-                                  <Link
-                                    href="/resources/tesbihat?vakit=yatsi"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
-                                  >
-                                    Yatsı Tesbihatı
-                                  </Link>
+                                  {[
+                                    "sabah",
+                                    "ogle",
+                                    "ikindi",
+                                    "aksam",
+                                    "yatsi",
+                                  ].map((v) => (
+                                    <Link
+                                      key={v}
+                                      href={`/resources/tesbihat?vakit=${v}`}
+                                      onClick={closeMenu}
+                                      className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-md transition-colors"
+                                    >
+                                      {t(`prayer_${v}`) || v}{" "}
+                                      {t("tesbihatWord") || "Tesbihatı"}
+                                    </Link>
+                                  ))}
                                 </div>
                               )}
                             </div>
 
-                            {/* ALT AKORDEON: Dualar */}
+                            {/* Dualar */}
                             <div className="flex flex-col">
                               <button
                                 onClick={() => toggleSubAccordion("dualar")}
                                 className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                               >
-                                <span>Dualar ve Virdler</span>
+                                <span>
+                                  {t("dualarVirdler") || "Dualar ve Virdler"}
+                                </span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSubAccordion === "dualar" ? "rotate-180" : ""}`}
                                   fill="none"
@@ -712,82 +665,33 @@ export default function Header() {
                                     onClick={closeMenu}
                                     className="text-[13px] py-2 px-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors font-bold mb-1"
                                   >
-                                    Tüm Listeyi Gör
+                                    {t("seeAllList") || "Tüm Listeyi Gör"}
                                   </Link>
                                   <Link
                                     href="/resources/gunluk-dualar"
                                     onClick={closeMenu}
                                     className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
                                   >
-                                    Günlük Dualar
+                                    {t("dailyPrayers") || "Günlük Dualar"}
                                   </Link>
                                   <Link
                                     href="/resources/esmaulhusna"
                                     onClick={closeMenu}
                                     className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
                                   >
-                                    Esma-ül Hüsna
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=kurandualari"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Kur&apos;an&apos;dan Dualar
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=bedir"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Ashab-ı Bedir
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=uhud"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Şüheda-i Uhud
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=tevhidname"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Tevhidname
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=tefriciye"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Salât-ı Tefriciye
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=munciye"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Salât-ı Münciye
-                                  </Link>
-                                  <Link
-                                    href="/resources/dualar?dua=salavat"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    Özel Salavatlar
+                                    {t("esmaulHusna") || "Esma-ül Hüsna"}
                                   </Link>
                                 </div>
                               )}
                             </div>
 
-                            {/* ALT AKORDEON: Risale-i Nur */}
+                            {/* Risale */}
                             <div className="flex flex-col">
                               <button
                                 onClick={() => toggleSubAccordion("risale")}
                                 className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
                               >
-                                <span>Risale-i Nur</span>
+                                <span>{t("risale") || "Risale-i Nur"}</span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSubAccordion === "risale" ? "rotate-180" : ""}`}
                                   fill="none"
@@ -809,114 +713,33 @@ export default function Header() {
                                     onClick={closeMenu}
                                     className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
                                   >
-                                    Tüm Külliyat
+                                    {t("allCollection") || "Tüm Külliyat"}
                                   </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/01%20S%C3%B6zler"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Sözler
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/02%20Mektubat"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Mektubat
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/03%20Lem%27alar"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Lem&apos;alar
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/04%20Şuâlar"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Şualar
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/05%20Tarihçe-i%20Hayat"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Tarihçe-i Hayat
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/06%20Mesnevî-i%20Nuriye"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Mesnevî-i Nuriye
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/07%20İşaratü%27l-i%27caz"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    İşaratü&apos;l-i&apos;caz
-                                  </Link>
-                                  <Link
-                                    href="resources/risale?book=html/08%20Sikke-i%20Tasdik-i%20Gayb%C3%AE"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Sikke-i Tasdik-i Gaybî
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/09%20Barla%20Lâhikası"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Barla Lâhikası
-                                  </Link>
-
-                                  <Link
-                                    href="/resources/risale?book=html/10%20Kastamonu%20Lâhikası"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Kastamonu Lâhikası
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/11%20Emirdağ%20Lâhikası%201"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Emirdağ Lâhikası 1
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/12%20Emirdağ%20Lâhikası%202"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Emirdağ Lâhikası 2
-                                  </Link>
-                                  <Link
-                                    href="/resources/risale?book=html/14%20Küçük%20Kitaplar"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
-                                  >
-                                    Küçük Kitaplar
-                                  </Link>
+                                  {[
+                                    "SOZLER",
+                                    "MEKTUBAT",
+                                    "LEMALAR",
+                                    "SUALAR",
+                                  ].map((b) => (
+                                    <Link
+                                      key={b}
+                                      href={`/resources/risale?book=html/${t(`resource_${b}`) || b}`}
+                                      onClick={closeMenu}
+                                      className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
+                                    >
+                                      {t(`resource_${b}`) || b}
+                                    </Link>
+                                  ))}
                                 </div>
                               )}
                             </div>
                           </div>
                         )}
 
-                        {/* 3. MANEVİ AJANDAM (Akordeon) */}
+                        {/* 3. MANEVİ AJANDAM */}
                         <button
                           onClick={() => toggleAccordion("agenda")}
-                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${
-                            expandedAccordion === "agenda"
-                              ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${expandedAccordion === "agenda" ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
                         >
                           <div className="flex items-center gap-3">
                             <svg
@@ -932,7 +755,7 @@ export default function Header() {
                                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5M12 15h.008v.008H12V15z"
                               />
                             </svg>
-                            Manevi Ajandam
+                            {t("spiritualAgenda") || "Manevi Ajandam"}
                           </div>
                           <svg
                             className={`w-4 h-4 transition-transform duration-300 ${expandedAccordion === "agenda" ? "rotate-180" : "text-gray-400"}`}
@@ -950,34 +773,21 @@ export default function Header() {
                         </button>
                         {expandedAccordion === "agenda" && (
                           <div className="flex flex-col gap-1 px-2 py-2 mx-3 my-1 border-l-2 border-amber-100 dark:border-amber-800/50 animate-in fade-in slide-in-from-top-2">
-                            {/* Günlük Takip Linki */}
                             <Link
                               href="/prayers?tab=gunluk"
                               onClick={closeMenu}
                               className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
-                              Günlük Namaz Takibi
+                              {t("dailyPrayerTracker") || "Günlük Namaz Takibi"}
                             </Link>
-
-                            {/* Kaza Takibi Linki */}
                             <Link
                               href="/prayers?tab=kaza"
                               onClick={closeMenu}
                               className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                              Kaza Namazı Takibi
-                            </Link>
-
-                            {/* YENİ EKLENEN: Hatim Takibi Linki */}
-                            <Link
-                              href="/resources/quran"
-                              onClick={closeMenu}
-                              className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
-                            >
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                              Hatim Yolculuğum
+                              {t("missedPrayerTracker") || "Kaza Namazı Takibi"}
                             </Link>
                             <Link
                               href="/agenda/dhikr"
@@ -985,7 +795,7 @@ export default function Header() {
                               className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                              Günlük Zikir Takibi
+                              {t("dailyDhikrTracker") || "Günlük Zikir Takibi"}
                             </Link>
                             <Link
                               href="/agenda/dualarim"
@@ -993,19 +803,15 @@ export default function Header() {
                               className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
-                              Kişisel Dua Listem
+                              {t("personalPrayerList") || "Kişisel Dua Listem"}
                             </Link>
                           </div>
                         )}
 
-                        {/* 4. HESAP AYARLARI (Akordeon) */}
+                        {/* 4. HESAP AYARLARI */}
                         <button
                           onClick={() => toggleAccordion("settings")}
-                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${
-                            expandedAccordion === "settings"
-                              ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${expandedAccordion === "settings" ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
                         >
                           <div className="flex items-center gap-3">
                             <svg
@@ -1021,7 +827,7 @@ export default function Header() {
                                 d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                               />
                             </svg>
-                            Hesap Ayarları
+                            {t("accountSettings") || "Hesap Ayarları"}
                           </div>
                           <svg
                             className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${expandedAccordion === "settings" ? "rotate-180" : ""}`}
@@ -1059,14 +865,13 @@ export default function Header() {
                             </button>
                             <button
                               onClick={handleDeleteAccount}
-                              className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                              className="text-left px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                               {t("deleteAccountButton") || "Hesabı Sil"}
                             </button>
                           </div>
                         )}
 
-                        {/* HAKKIMIZDA BUTONU */}
                         <Link
                           href="/about"
                           onClick={closeMenu}
@@ -1085,10 +890,9 @@ export default function Header() {
                               d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                             />
                           </svg>
-                          Hakkımızda
+                          {t("aboutUs") || "Hakkımızda"}
                         </Link>
 
-                        {/* İLETİŞİME GEÇ BUTONU */}
                         <button
                           onClick={() => {
                             closeMenu();
@@ -1112,10 +916,9 @@ export default function Header() {
                               d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                             />
                           </svg>
-                          İletişime Geç
+                          {t("contactUs") || "İletişime Geç"}
                         </button>
 
-                        {/* ADMİN BUTONU */}
                         {role === "ROLE_ADMIN" && (
                           <Link
                             href="/superadmin"
@@ -1146,7 +949,6 @@ export default function Header() {
 
                         <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-2"></div>
 
-                        {/* 5. Çıkış Yap */}
                         <button
                           onClick={() => {
                             logout();
@@ -1171,7 +973,6 @@ export default function Header() {
                         </button>
                       </>
                     ) : (
-                      // ... Giriş Yapmamış Kullanıcı Kısmı (Aynı)
                       <div className="flex flex-col gap-2 p-1">
                         <Link
                           href="/about"
@@ -1191,9 +992,8 @@ export default function Header() {
                               d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                             />
                           </svg>
-                          Hakkımızda
+                          {t("aboutUs") || "Hakkımızda"}
                         </Link>
-                        {/* İLETİŞİME GEÇ BUTONU */}
                         <button
                           onClick={() => {
                             closeMenu();
@@ -1217,11 +1017,9 @@ export default function Header() {
                               d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                             />
                           </svg>
-                          İletişime Geç
+                          {t("contactUs") || "İletişime Geç"}
                         </button>
-
                         <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
-
                         <Link
                           href="/login"
                           onClick={closeMenu}
@@ -1272,7 +1070,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* --- ALT MODALLAR (İSİM VE ŞİFRE GÜNCELLEME) --- */}
       <NameUpdateModal
         isOpen={activeProfileModal === "name"}
         onClose={() => setActiveProfileModal(null)}
@@ -1282,7 +1079,6 @@ export default function Header() {
         nameUpdateSuccess={nameUpdateSuccess}
         t={t}
       />
-
       <PasswordUpdateModal
         isOpen={activeProfileModal === "password"}
         onClose={() => setActiveProfileModal(null)}

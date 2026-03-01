@@ -1,5 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
-"use client";
+ "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -85,7 +84,7 @@ function HomeContent() {
   const handleJoin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!code.trim()) {
-      alert(t("emptyCodeWarning"));
+      alert(t("emptyCodeWarning") || "Lütfen bir kod girin.");
       return;
     }
     let sessionCode = code.trim();
@@ -95,7 +94,7 @@ function HomeContent() {
   };
 
   const handleDeleteSession = async (sessionCode: string) => {
-    if (!confirm(t("confirmDelete"))) return;
+    if (!confirm(t("confirmDelete") || "Emin misiniz?")) return;
     try {
       const res = await fetch(
         `${apiUrl}/api/distribution/delete-session/${sessionCode}`,
@@ -108,14 +107,15 @@ function HomeContent() {
         setCreatedSessions((prev) =>
           prev.filter((s) => s.code !== sessionCode),
         );
-      else alert(t("errorOccurred") + " " + (await res.text()));
+      else alert((t("errorOccurred") || "Hata: ") + " " + (await res.text()));
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleResetSession = async (sessionCode: string) => {
-    if (!confirm(t("confirmReset"))) return;
+    if (!confirm(t("confirmReset") || "Sıfırlamak istediğinize emin misiniz?"))
+      return;
     try {
       const res = await fetch(
         `${apiUrl}/api/distribution/reset-session/${sessionCode}`,
@@ -124,15 +124,20 @@ function HomeContent() {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      if (res.ok) alert(t("successReset"));
-      else alert(t("errorOccurred") + " " + (await res.text()));
+      if (res.ok) alert(t("successReset") || "Başarıyla sıfırlandı.");
+      else alert((t("errorOccurred") || "Hata: ") + " " + (await res.text()));
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleLeaveSession = async (sessionCode: string) => {
-    if (!confirm(t("confirmLeaveSession"))) return;
+    if (
+      !confirm(
+        t("confirmLeaveSession") || "Ayrılmak istediğinize emin misiniz?",
+      )
+    )
+      return;
     try {
       const res = await fetch(
         `${apiUrl}/api/distribution/leave-session/${sessionCode}`,
@@ -143,8 +148,8 @@ function HomeContent() {
       );
       if (res.ok) {
         setMySessions((prev) => prev.filter((s) => s.code !== sessionCode));
-        alert(t("successLeave"));
-      } else alert(t("errorOccurred") + " " + (await res.text()));
+        alert(t("successLeave") || "Başarıyla ayrıldınız.");
+      } else alert((t("errorOccurred") || "Hata: ") + " " + (await res.text()));
     } catch (error) {
       console.error(error);
     }
@@ -170,14 +175,12 @@ function HomeContent() {
       className="min-h-screen bg-gray-50/50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 relative overflow-hidden"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      {/* Arka Plan Efektleri */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-400/10 dark:bg-blue-600/10 rounded-[100%] blur-3xl opacity-50" />
       </div>
-      {/* ÜST BÖLÜM: Hero, Ayet, Butonlar ve Katılım */}
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-12 lg:pt-16 lg:pb-12">
         <div className="text-center max-w-4xl mx-auto mb-8 md:mb-12">
-          {/* Başlık (Boşlukları kısıldı) */}
           <h1 className="text-3xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] md:leading-[1.15]">
             <span className="block mt-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 animate-gradient pb-2">
               {t("landingHeroTitlePart1") || "İslami Kaynaklar"}
@@ -185,25 +188,23 @@ function HomeContent() {
             <span className="block mt-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 animate-gradient pb-2">
               {t("landingHeroTitlePart2") || "Okuma ve Paylaşma"}
             </span>
-            {/* Hatalı text-1xl yerine geçerli ve çok daha küçük olan text-sm / text-base kullanıldı */}
             <span className="block text-sm md:text-base lg:text-lg text-gray-400 dark:text-gray-500 font-bold mt-1 tracking-[0.3em] uppercase">
               {t("landingHeroTitlePart3") || "Platformu"}
             </span>
           </h1>
 
-          {/* Ayet Kartı */}
           <div className="relative mx-auto max-w-2xl mt-4 mb-8">
             <HomeAyahSection />
           </div>
 
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-2xl mx-auto">
             {user
-              ? `${t("welcome")}, ${user}. ${t("dashboardIntro")}`
-              : t("landingHeroSubtitle")}
+              ? `${t("welcome") || "Hoş geldin"}, ${user}. ${t("dashboardIntro") || "Aşağıdan okuma halkalarınızı yönetebilirsiniz."}`
+              : t("landingHeroSubtitle") ||
+                "Manevi dünyanızı zenginleştirecek içerikler ve paylaşım platformu."}
           </p>
 
           <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto mb-10">
-            {/* Oturum Katıl / Oluştur Alanı */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000"></div>
               <div className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-5 md:p-6 rounded-[1.8rem] shadow-xl">
@@ -213,14 +214,14 @@ function HomeContent() {
                       href="/admin"
                       className="w-full md:w-auto px-6 py-3 bg-white/40 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white rounded-2xl font-bold border-2 border-blue-600/20 transition-all flex items-center justify-center gap-2"
                     >
-                      {t("createNewSession")}
+                      {t("createNewSession") || "Yeni Halka Kur"}
                     </Link>
                   ) : (
                     <Link
                       href="/login"
                       className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold transition-all transform hover:-translate-y-1 active:scale-95"
                     >
-                      {t("getStarted")}
+                      {t("getStarted") || "Hemen Başla"}
                     </Link>
                   )}
                   <form
@@ -231,48 +232,40 @@ function HomeContent() {
                       type="text"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      placeholder={t("pasteCodeOrLink")}
+                      placeholder={
+                        t("pasteCodeOrLink") || "Davet Kodu veya Link..."
+                      }
                       className="bg-transparent border-none focus:ring-0 w-full pl-3 text-sm md:text-base"
                     />
                     <button
                       type="submit"
                       className="px-5 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-emerald-500 hover:text-white rounded-xl font-bold transition-all"
                     >
-                      {t("join")}
+                      {t("join") || "Katıl"}
                     </button>
                   </form>
                 </div>
               </div>
             </div>
 
-            {/* Katıldığım / Yönettiğim Halkalar */}
             {user && (
               <div className="relative group mt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex items-center justify-center gap-4 mb-4 text-gray-400">
                   <div className="h-px w-12 bg-gray-200 dark:bg-gray-800"></div>
                   <span className="text-xs font-black uppercase tracking-[0.2em]">
-                    {t("myCirclesTitle")}
+                    {t("myCirclesTitle") || "Halkalarım"}
                   </span>
                   <div className="h-px w-12 bg-gray-200 dark:bg-gray-800"></div>
                 </div>
 
                 <div className="bg-gray-100/50 dark:bg-black/40 p-2 rounded-[1.8rem] md:rounded-[2.4rem] border border-gray-200 dark:border-gray-800 shadow-inner flex flex-row gap-2 relative max-w-2xl mx-auto backdrop-blur-sm">
-                  {/* Dağıttığım Halkalar */}
                   <button
                     onClick={() => toggleTab("managed")}
-                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
-                      activeTab === "managed"
-                        ? "bg-white dark:bg-gray-800 border-blue-500 shadow-xl shadow-blue-500/20 text-blue-700 dark:text-blue-400 scale-[1.02] z-10"
-                        : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-blue-200 dark:hover:border-blue-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
-                    }`}
+                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "managed" ? "bg-white dark:bg-gray-800 border-blue-500 shadow-xl shadow-blue-500/20 text-blue-700 dark:text-blue-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-blue-200 dark:hover:border-blue-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"}`}
                   >
                     <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
                       <div
-                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${
-                          activeTab === "managed"
-                            ? "bg-blue-600 text-white rotate-6 shadow-lg shadow-blue-500/40"
-                            : "bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/btn:bg-blue-100 dark:group-hover/btn:bg-blue-900/40 group-hover/btn:scale-110"
-                        }`}
+                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "managed" ? "bg-blue-600 text-white rotate-6 shadow-lg shadow-blue-500/40" : "bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/btn:bg-blue-100 dark:group-hover/btn:bg-blue-900/40 group-hover/btn:scale-110"}`}
                       >
                         <svg
                           className="h-6 w-6 md:h-7 md:w-7"
@@ -292,33 +285,24 @@ function HomeContent() {
                         <span
                           className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "managed" ? "text-blue-700 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
                         >
-                          {t("managedSessions")}
+                          {t("managedSessions") || "Yönettiğim"}
                         </span>
                         <span
                           className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "managed" ? "opacity-100 text-blue-500/70" : "opacity-50"}`}
                         >
-                          {createdSessions.length} {t("circle")}
+                          {createdSessions.length} {t("circle") || "Halka"}
                         </span>
                       </div>
                     </div>
                   </button>
 
-                  {/* Katıldığım Halkalar */}
                   <button
                     onClick={() => toggleTab("joined")}
-                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${
-                      activeTab === "joined"
-                        ? "bg-white dark:bg-gray-800 border-emerald-500 shadow-xl shadow-emerald-500/20 text-emerald-700 dark:text-emerald-400 scale-[1.02] z-10"
-                        : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"
-                    }`}
+                    className={`flex-1 group/btn relative px-2 py-3 md:py-4 rounded-[1.4rem] md:rounded-[1.8rem] transition-all duration-500 overflow-hidden border-2 shadow-sm ${activeTab === "joined" ? "bg-white dark:bg-gray-800 border-emerald-500 shadow-xl shadow-emerald-500/20 text-emerald-700 dark:text-emerald-400 scale-[1.02] z-10" : "bg-white/60 dark:bg-gray-900/60 border-gray-100 dark:border-gray-800 text-gray-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
                   >
                     <div className="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
                       <div
-                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${
-                          activeTab === "joined"
-                            ? "bg-emerald-600 text-white -rotate-6 shadow-lg shadow-emerald-500/40"
-                            : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 group-hover/btn:bg-emerald-100 dark:group-hover/btn:bg-emerald-900/40 group-hover/btn:scale-110"
-                        }`}
+                        className={`p-2 rounded-xl md:rounded-2xl transition-all duration-300 ${activeTab === "joined" ? "bg-emerald-600 text-white -rotate-6 shadow-lg shadow-emerald-500/40" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 group-hover/btn:bg-emerald-100 dark:group-hover/btn:bg-emerald-900/40 group-hover/btn:scale-110"}`}
                       >
                         <svg
                           className="h-6 w-6 md:h-7 md:w-7"
@@ -338,12 +322,12 @@ function HomeContent() {
                         <span
                           className={`block font-black text-sm md:text-lg tracking-tight transition-colors ${activeTab === "joined" ? "text-emerald-700 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}
                         >
-                          {t("joinedSessions")}
+                          {t("joinedSessions") || "Katıldığım"}
                         </span>
                         <span
                           className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 transition-opacity ${activeTab === "joined" ? "opacity-100 text-emerald-500/70" : "opacity-50"}`}
                         >
-                          {mySessions.length} {t("circle")}
+                          {mySessions.length} {t("circle") || "Halka"}
                         </span>
                       </div>
                     </div>
@@ -354,7 +338,6 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* Sekme İçerikleri */}
         {user && activeTab && (
           <div
             ref={sessionsRef}
@@ -385,7 +368,7 @@ function HomeContent() {
                   </div>
                 ) : (
                   <EmptyState
-                    title={t("noCreatedYet")}
+                    title={t("noCreatedYet") || "Henüz halka kurmadınız."}
                     actionLink="/admin"
                     actionText={t("createNewSession")}
                   />
@@ -416,7 +399,11 @@ function HomeContent() {
                     ))}
                   </div>
                 ) : (
-                  <EmptyState title={t("noCirclesYet")} />
+                  <EmptyState
+                    title={
+                      t("noCirclesYet") || "Henüz bir halkaya katılmadınız."
+                    }
+                  />
                 )}
               </DashboardColumn>
             )}
@@ -435,9 +422,7 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* --- PLATFORMDA NELER YAPABİLİRSİNİZ BÖLÜMÜ --- */}
       <section className="pt-2 pb-12 md:pt-3 md:pb-20 bg-white dark:bg-[#061612] transition-colors duration-500 relative overflow-hidden">
-        {/* Arka plan parlama efekti */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-1/2 bg-teal-500/5 dark:bg-teal-500/10 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -452,70 +437,60 @@ function HomeContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 md:gap-6">
-            {/* KART 4: Okuma Halkaları */}
             <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 hover:-translate-y-2 transition-all duration-300 group">
-            
               <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                Okuma Halkaları
+                {t("featCirclesTitle") || "Okuma Halkaları"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
-                Sevdiklerinizle dijital hatim grupları kurun. Cüzleri, Cevşen
-                bablarını veya özel duaları{" "}
-                <strong className="text-blue-600 dark:text-blue-400 font-bold">
-                  hızlıca paylaştırın
-                </strong>
-                . Grubunuzun okuma ilerlemesini anlık statiklerle takip edin.
-              </p>
+              <p
+                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    t("featCirclesDesc") ||
+                    "Sevdiklerinizle dijital hatim grupları kurun. Cüzleri, Cevşen bablarını veya özel duaları <strong class='text-blue-600 dark:text-blue-400 font-bold'>hızlıca paylaştırın</strong>. Grubunuzun okuma ilerlemesini anlık statiklerle takip edin.",
+                }}
+              />
             </div>
 
-            {/* KART 1: Zengin Kütüphane & Külliyat */}
             <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-amber-500/10 dark:hover:shadow-amber-900/20 hover:-translate-y-2 transition-all duration-300 group">
-             
               <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                Zengin Külliyat
+                {t("featLibraryTitle") || "Zengin Külliyat"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
-                Kur'an-ı Kerim, Risale-i Nur, Cevşen, Esma-ül Hüsna ve özel
-                dualara tek platformdan erişin.{" "}
-                <strong className="text-amber-600 dark:text-amber-400 font-bold">
-                  Akıllı hafıza
-                </strong>{" "}
-                özelliği ile her zaman tam kaldığınız sayfadan okumaya devam
-                edin.
-              </p>
+              <p
+                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    t("featLibraryDesc") ||
+                    "Kur'an-ı Kerim, Risale-i Nur, Cevşen, Esma-ül Hüsna ve özel dualara tek platformdan erişin. <strong class='text-amber-600 dark:text-amber-400 font-bold'>Akıllı hafıza</strong> özelliği ile her zaman tam kaldığınız sayfadan okumaya devam edin.",
+                }}
+              />
             </div>
 
-            {/* KART 2: Namaz Vakitleri & Rehber */}
             <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-teal-500/10 dark:hover:shadow-teal-900/20 hover:-translate-y-2 transition-all duration-300 group">
-       
               <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                İbadet Asistanı
+                {t("featAssistantTitle") || "İbadet Asistanı"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
-                Bulunduğunuz konuma özel{" "}
-                <strong className="text-teal-600 dark:text-teal-400 font-bold">
-                  Namaz Vakitleri
-                </strong>
-                , aylık imsakiye, canlı Kıble Pusulası ve dini günler takvimini
-                kullanın. Çevrenizdeki en yakın camileri tek tıkla haritada
-                bulun.
-              </p>
+              <p
+                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    t("featAssistantDesc") ||
+                    "Bulunduğunuz konuma özel <strong class='text-teal-600 dark:text-teal-400 font-bold'>Namaz Vakitleri</strong>, aylık imsakiye, canlı Kıble Pusulası ve dini günler takvimini kullanın. Çevrenizdeki en yakın camileri tek tıkla haritada bulun.",
+                }}
+              />
             </div>
 
-            {/* KART 3: Manevi Ajanda & Zikirmatik */}
             <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-[2rem] p-6 md:p-8 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:shadow-2xl hover:shadow-purple-500/10 dark:hover:shadow-purple-900/20 hover:-translate-y-2 transition-all duration-300 group">
-         
               <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                Manevi Ajanda
+                {t("featAgendaTitle") || "Manevi Ajanda"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
-                Günlük namaz ve vakit tesbihatlarınızı takip edin.{" "}
-                <strong className="text-purple-600 dark:text-purple-400 font-bold">
-                  Kaza Namazı
-                </strong>{" "}
-                çetelenizi tutarak geçmiş borçlarınızı planlayın. Ekrana entegre
-                zikirmatik ile virdlerinizi kolayca çekin.
-              </p>
+              <p
+                className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    t("featAgendaDesc") ||
+                    "Günlük namaz ve vakit tesbihatlarınızı takip edin. <strong class='text-purple-600 dark:text-purple-400 font-bold'>Kaza Namazı</strong> çetelenizi tutarak geçmiş borçlarınızı planlayın. Ekrana entegre zikirmatik ile virdlerinizi kolayca çekin.",
+                }}
+              />
             </div>
           </div>
         </div>

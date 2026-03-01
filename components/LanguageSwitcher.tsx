@@ -4,7 +4,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useState, useRef, useEffect } from "react";
 import { Language } from "@/types";
 
- const KurdistanFlag = () => (
+const KurdistanFlag = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 21 14"
@@ -21,7 +21,7 @@ import { Language } from "@/types";
   </svg>
 );
 
- const LANGUAGE_CONFIG: Record<
+const LANGUAGE_CONFIG: Record<
   Language,
   { label: string; icon: React.ReactNode; native: string }
 > = {
@@ -58,11 +58,11 @@ import { Language } from "@/types";
 };
 
 export default function LanguageSwitcher() {
-  const { language, setLanguage, t } = useLanguage(); 
-   const [isOpen, setIsOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -80,20 +80,21 @@ export default function LanguageSwitcher() {
     setIsOpen(false);
   };
 
-   const languagesList = Object.keys(LANGUAGE_CONFIG) as Language[];
+  const languagesList = Object.keys(LANGUAGE_CONFIG) as Language[];
 
   return (
     <div className="relative z-50" ref={dropdownRef}>
-       <button
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1 group focus:outline-none"
-        aria-label="Dil Seçimi / Select Language"
+        // Erişilebilirlik etiketini de çeviriye bağladık
+        aria-label={t("selectLanguage") || "Dil Seçimi / Select Language"}
       >
-         <span className="font-extrabold text-sm tracking-wide text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+        <span className="font-extrabold text-sm tracking-wide text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
           {language.toUpperCase()}
         </span>
 
-         <svg
+        <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -111,11 +112,12 @@ export default function LanguageSwitcher() {
         </svg>
       </button>
 
-       {isOpen && (
+      {isOpen && (
         <div className="absolute right-0 top-full mt-3 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-           <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              {t("menuLanguage")}
+              {/* Fallback eklendi */}
+              {t("menuLanguage") || "DİL SEÇİMİ"}
             </span>
           </div>
 

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { ayahs } from "@/constants/ayahs";
+
 function AyahIcon() {
   return (
     <svg
@@ -41,6 +42,7 @@ export default function HomeAyahSection() {
     setRandomData();
   }, []);
 
+  // Hydration hatasını önlemek için SSR sırasında boş yer tutucu (skeleton) gösteriyoruz
   if (!isMounted) return <div className="py-8 min-h-[150px]"></div>;
 
   return (
@@ -55,8 +57,10 @@ export default function HomeAyahSection() {
         <AyahIcon />
       </h2>
       <div className="flex flex-col items-center gap-2">
+        {/* Çeviri dosyasına ulaşılamazsa fallback olarak translationKey değerinin kendisi basılır */}
         <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 italic font-medium font-serif text-center max-w-lg mx-auto">
-          &quot;{t(currentAyah.translationKey)}&quot;
+          &quot;{t(currentAyah.translationKey) || currentAyah.translationKey}
+          &quot;
         </p>
         <span className="text-xs text-emerald-600 dark:text-emerald-500 font-bold tracking-widest uppercase opacity-80">
           {currentAyah.reference}

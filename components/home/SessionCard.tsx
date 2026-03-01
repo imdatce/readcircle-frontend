@@ -53,15 +53,19 @@ export default function SessionCard({
   const isManaged = type === "managed";
   const { user } = useAuth();
 
-  // WHATSAPP PAYLAŞIM FONKSİYONUNU EKLEYİN
   const handleWhatsappShare = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Karta tıklanıp detaya gitmesini engeller
+    e.stopPropagation();
     const link = `${window.location.origin}/join/${session.code}`;
     const sessionName =
       session.description || t("unnamedCircle") || "İsimsiz Halka";
-    const creator = user;
+    const creator = user || "SURA";
 
-    const text = t("whatsappShareText")
+    // Dinamik template. İlgili kısımlar değişiyor
+    const template =
+      t("whatsappShareText") ||
+      "{creator} sizi {name} halkasına davet ediyor.\n\nKatılmak için tıklayın: {link}\n\nVeya kod ile katılın: {code}";
+
+    const text = template
       .replace("{creator}", creator)
       .replace("{name}", sessionName ? `"${sessionName}" ` : "")
       .replace("{link}", link)
@@ -83,19 +87,13 @@ export default function SessionCard({
           : "border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700/50"
       } shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full`}
     >
-      {/* Dekoratif Arka Plan Parıltısı */}
       <div
         className={`absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none ${isManaged ? "bg-emerald-500" : "bg-blue-500"}`}
       ></div>
 
-      {/* Üst Kısım: İkon ve Bilgiler */}
       <div className="flex justify-between items-start gap-4 mb-4 relative z-10">
         <div
-          className={`p-3.5 rounded-2xl shrink-0 ${
-            isManaged
-              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
-              : "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-          }`}
+          className={`p-3.5 rounded-2xl shrink-0 ${isManaged ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400" : "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"}`}
         >
           <svg
             className="w-6 h-6"
@@ -127,7 +125,11 @@ export default function SessionCard({
           {session?.createdAt && (
             <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-wide uppercase">
               {new Date(session.createdAt).toLocaleDateString(
-                language === "tr" ? "tr-TR" : "en-US",
+                language === "tr"
+                  ? "tr-TR"
+                  : language === "ar"
+                    ? "ar-SA"
+                    : "en-US",
                 { day: "numeric", month: "short", year: "numeric" },
               )}
             </span>
@@ -135,18 +137,14 @@ export default function SessionCard({
         </div>
       </div>
 
-      {/* Başlık */}
       <div className="flex-1 relative z-10">
         <h3
-          className={`font-black text-xl text-gray-900 dark:text-white line-clamp-2 leading-tight transition-colors ${
-            isRTL ? "text-right" : "text-left"
-          }`}
+          className={`font-black text-xl text-gray-900 dark:text-white line-clamp-2 leading-tight transition-colors ${isRTL ? "text-right" : "text-left"}`}
         >
           {session.description || t("unnamedCircle") || "İsimsiz Halka"}
         </h3>
       </div>
 
-      {/* Alt Kısım: Aksiyonlar ve Kurucu Bilgisi */}
       <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 relative z-10">
         {!isManaged ? (
           <div className="flex items-center justify-between">
@@ -189,7 +187,6 @@ export default function SessionCard({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {/* Yönetilen Halkalar İçin İşlemler */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex bg-gray-50 dark:bg-gray-800/80 rounded-xl p-1 border border-gray-100 dark:border-gray-700/50 shadow-inner">
                 <button
@@ -200,6 +197,7 @@ export default function SessionCard({
                     alert(t("copied") || "Kopyalandı");
                   }}
                   className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-gray-500 hover:text-emerald-600 hover:bg-white dark:hover:bg-gray-700 transition-all"
+                  title={t("copyLink")}
                 >
                   Link
                 </button>
@@ -211,10 +209,10 @@ export default function SessionCard({
                     alert(t("copied") || "Kopyalandı");
                   }}
                   className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-gray-500 hover:text-emerald-600 hover:bg-white dark:hover:bg-gray-700 transition-all"
+                  title={t("copyCode")}
                 >
-                  Kod
+                  {t("code")}
                 </button>
-                {/* WHATSAPP BUTONU - BURAYI EKLEYİN */}
                 <div className="w-px bg-gray-200 dark:bg-gray-700 mx-0.5 my-1"></div>
                 <button
                   onClick={handleWhatsappShare}

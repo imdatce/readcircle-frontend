@@ -8,7 +8,7 @@ import Zikirmatik from "@/components/common/Zikirmatik";
 
 interface GunlukDua {
   id: number;
-  title: string; // <-- Yeni eklenen başlık alanı
+  title: string;
   arabic: string;
   latin: string;
   meaning: string;
@@ -17,7 +17,7 @@ interface GunlukDua {
 
 export default function GunlukDualarPage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [duaList, setDuaList] = useState<GunlukDua[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,35 +38,48 @@ export default function GunlukDualarPage() {
           const resource = data.find((r: any) => r.codeKey === "GUNLUKDUALAR");
 
           if (resource && resource.translations?.length > 0) {
-            const description = resource.translations[0].description;
-            const parts = description
-              .split("###")
-              .filter((p: string) => p.trim().length > 0);
+            // Dil kontrolü: Seçili dile uygun translation'ı bul
+            let translation = resource.translations.find(
+              (tr: any) => tr.langCode === language,
+            );
+            if (!translation) {
+              // Bulamazsa fallback olarak 'tr'yi veya ilk geleni kullan
+              translation =
+                resource.translations.find((tr: any) => tr.langCode === "tr") ||
+                resource.translations[0];
+            }
 
-            const parsedDualar = parts.map((raw: string, index: number) => {
-              const itemParts = raw.split("|||");
-              const fullMeaning = itemParts[2]?.trim() || "";
+            const description = translation.description;
+            if (description) {
+              const parts = description
+                .split("###")
+                .filter((p: string) => p.trim().length > 0);
 
-              let extractedTitle = "";
-              let extractedMeaning = fullMeaning;
+              const parsedDualar = parts.map((raw: string, index: number) => {
+                const itemParts = raw.split("|||");
+                const fullMeaning = itemParts[2]?.trim() || "";
 
-              // Parantez içindeki başlığı (Örn: "(Evden Çıkarken)") yakala ve anlamdan ayır
-              const match = fullMeaning.match(/^\((.*?)\)\s*(.*)/);
-              if (match) {
-                extractedTitle = match[1];
-                extractedMeaning = match[2];
-              }
+                let extractedTitle = "";
+                let extractedMeaning = fullMeaning;
 
-              return {
-                id: index + 1,
-                title: extractedTitle,
-                arabic: itemParts[0]?.trim() || "",
-                latin: itemParts[1]?.trim() || "",
-                meaning: extractedMeaning,
-                targetCount: parseInt(itemParts[3]?.trim() || "1", 10),
-              };
-            });
-            setDuaList(parsedDualar);
+                // Parantez içindeki başlığı (Örn: "(Evden Çıkarken)") yakala ve anlamdan ayır
+                const match = fullMeaning.match(/^\((.*?)\)\s*(.*)/);
+                if (match) {
+                  extractedTitle = match[1];
+                  extractedMeaning = match[2];
+                }
+
+                return {
+                  id: index + 1,
+                  title: extractedTitle,
+                  arabic: itemParts[0]?.trim() || "",
+                  latin: itemParts[1]?.trim() || "",
+                  meaning: extractedMeaning,
+                  targetCount: parseInt(itemParts[3]?.trim() || "1", 10),
+                };
+              });
+              setDuaList(parsedDualar);
+            }
           }
         }
       } catch (error) {
@@ -76,7 +89,7 @@ export default function GunlukDualarPage() {
       }
     };
     fetchDualar();
-  }, []);
+  }, [language]); // Dile bağımlı hale getirildi
 
   const openZikirmatik = (dua: GunlukDua) => {
     setSelectedDua(dua);
@@ -91,6 +104,7 @@ export default function GunlukDualarPage() {
           <button
             onClick={() => router.back()}
             className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all group"
+            title={t("back") || "Geri"}
           >
             <svg
               className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:-translate-x-1 transition-transform"
@@ -106,8 +120,8 @@ export default function GunlukDualarPage() {
               />
             </svg>
           </button>
-          <h1 className="text-sm md:text-base font-black text-blue-800 dark:text-blue-100 uppercase tracking-[0.2em]">
-            Günlük Dualar (Hisnul Müslim)
+          <h1 className="text-sm md:text-base font-black text-blue-800 dark:text-blue-100 uppercase tracking-[0.2em] text-center">
+            {t("dailyPrayersTitle") || "Günlük Dualar (Hisnul Müslim)"}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -123,9 +137,9 @@ export default function GunlukDualarPage() {
               <button
                 key={dua.id}
                 onClick={() => openZikirmatik(dua)}
-                className="group flex flex-col items-center text-center p-6 bg-white dark:bg-[#0a1f1a] rounded-3xl border border-blue-100 dark:border-blue-900/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                className="group flex flex-col items-center text-center p-6 bg-white dark:bg-[#0a1f1a] rounded-3xl border border-blue-100 dark:border-blue-900/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden w-full"
               >
-                <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 pointer-events-none"></div>
 
                 {/* Durum Başlığı */}
                 {dua.title && (
@@ -134,20 +148,21 @@ export default function GunlukDualarPage() {
                   </div>
                 )}
 
-                <span className="text-2xl font-arabic text-blue-600 dark:text-blue-400 mb-3 relative z-10 leading-loose">
+                <span className="text-2xl font-arabic text-blue-600 dark:text-blue-400 mb-3 relative z-10 leading-loose w-full">
                   {dua.arabic}
                 </span>
-                <span className="font-semibold text-gray-800 dark:text-gray-200 relative z-10 text-sm italic mb-2">
+                <span className="font-semibold text-gray-800 dark:text-gray-200 relative z-10 text-sm italic mb-2 w-full">
                   {dua.latin}
                 </span>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-2 relative z-10 line-clamp-3">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-2 relative z-10 line-clamp-3 w-full">
                   {dua.meaning}
                 </span>
 
                 {dua.targetCount > 1 && (
                   <div className="mt-4 flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-900/30 px-4 py-1.5 rounded-full relative z-10">
                     <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
-                      Hedef: {dua.targetCount} Tekrar
+                      {t("targetLabel") || "Hedef"}: {dua.targetCount}{" "}
+                      {t("repetition") || "Tekrar"}
                     </span>
                   </div>
                 )}
@@ -164,6 +179,7 @@ export default function GunlukDualarPage() {
             <button
               onClick={() => setSelectedDua(null)}
               className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
+              title={t("close") || "Kapat"}
             >
               <svg
                 className="w-5 h-5"
@@ -188,18 +204,18 @@ export default function GunlukDualarPage() {
                 </h4>
               )}
 
-              <h2 className="text-3xl md:text-4xl font-arabic leading-loose text-blue-600 dark:text-blue-400 mb-4">
+              <h2 className="text-3xl md:text-4xl font-arabic leading-loose text-blue-600 dark:text-blue-400 mb-4 w-full">
                 {selectedDua.arabic}
               </h2>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3 italic">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3 italic w-full">
                 {selectedDua.latin}
               </h3>
-              <p className="text-base text-gray-600 dark:text-gray-300 mb-6 font-medium">
+              <p className="text-base text-gray-600 dark:text-gray-300 mb-6 font-medium w-full">
                 {selectedDua.meaning}
               </p>
             </div>
 
-            <div className="w-full transform scale-110 mb-2 mt-4">
+            <div className="w-full transform scale-110 mb-2 mt-4 flex justify-center">
               <Zikirmatik
                 currentCount={currentCount}
                 onDecrement={() =>
@@ -210,8 +226,8 @@ export default function GunlukDualarPage() {
             </div>
 
             {currentCount === 0 && (
-              <div className="mt-4 px-6 py-2 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 font-bold rounded-full animate-pulse">
-                Okuma Tamamlandı! 🤲
+              <div className="mt-4 px-6 py-2 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 font-bold rounded-full animate-pulse text-center">
+                {t("readingCompleted") || "Okuma Tamamlandı! 🤲"}
               </div>
             )}
           </div>

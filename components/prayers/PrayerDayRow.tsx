@@ -59,7 +59,9 @@ export default function PrayerDayRow({
             onClick={() => toggleExpand(day, "farz")}
             className={`w-full py-2.5 md:py-3 px-1 md:px-4 rounded-xl md:rounded-2xl border-2 transition-all font-bold text-[11px] md:text-sm flex items-center justify-center gap-1 md:gap-2 active:scale-95 ${isFarzExpanded ? "bg-teal-50 border-teal-500 text-teal-700 dark:bg-teal-900/30 dark:border-teal-400 dark:text-teal-300" : "bg-white border-gray-100 text-gray-600 hover:border-teal-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:border-teal-800"}`}
           >
-            <span className="hidden sm:inline">{t("farzPrayers")}:</span>
+            <span className="hidden sm:inline">
+              {t("farzPrayers") || "Farzlar"}:
+            </span>
             <span
               className={
                 farzCompleted === 5 ? "text-teal-600 dark:text-teal-400" : ""
@@ -88,7 +90,9 @@ export default function PrayerDayRow({
             onClick={() => toggleExpand(day, "diger")}
             className={`w-full py-2.5 md:py-3 px-1 md:px-4 rounded-xl md:rounded-2xl border-2 transition-all font-bold text-[11px] md:text-sm flex items-center justify-center gap-1 md:gap-2 active:scale-95 ${isOtherExpanded ? "bg-purple-50 border-purple-500 text-purple-700 dark:bg-purple-900/30 dark:border-purple-400 dark:text-purple-300" : "bg-white border-gray-100 text-gray-600 hover:border-purple-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:border-purple-800"}`}
           >
-            <span className="hidden sm:inline">{t("otherPrayers")}:</span>
+            <span className="hidden sm:inline">
+              {t("otherPrayers") || "Diğer"}:
+            </span>
             <span
               className={
                 otherCompleted === 4
@@ -117,10 +121,10 @@ export default function PrayerDayRow({
         <td className="py-2 px-2 md:px-4 text-center">
           <div className="flex flex-col items-center justify-center gap-1">
             <span className="text-[10px] md:text-xs font-black text-teal-700 dark:text-teal-300 bg-teal-100/50 dark:bg-teal-900/30 px-1.5 md:px-2 py-0.5 rounded w-full max-w-[85px] truncate border border-teal-200/50 dark:border-teal-800/50">
-              {farzCompleted} {t("farzCompletedText")}
+              {farzCompleted} {t("farzCompletedText") || "Farz"}
             </span>
             <span className="text-[10px] md:text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-100/50 dark:bg-purple-900/30 px-1.5 md:px-2 py-0.5 rounded w-full max-w-[85px] truncate border border-purple-200/50 dark:border-purple-800/50">
-              {otherCompleted} {t("otherCompletedText")}
+              {otherCompleted} {t("otherCompletedText") || "Diğer"}
             </span>
           </div>
         </td>
@@ -147,12 +151,14 @@ export default function PrayerDayRow({
                     <span
                       className={`text-xs md:text-base font-bold z-10 ${isChecked ? "text-white" : ""}`}
                     >
-                      {t(key)}
+                      {t(key) || key}
                     </span>
                     <span
                       className={`text-[9px] md:text-xs font-medium z-10 mt-1 ${isChecked ? "text-white/80" : "text-gray-400"}`}
                     >
-                      {isChecked ? t("completed") : t("notCompleted")}
+                      {isChecked
+                        ? t("completed") || "Kılındı"
+                        : t("notCompleted") || "Kılınmadı"}
                     </span>
                     {isChecked && (
                       <svg

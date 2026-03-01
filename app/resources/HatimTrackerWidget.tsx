@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext"; // i18n hook eklendi
 
 interface HatimTrackerWidgetProps {
   lastReadPage?: number | null;
@@ -10,9 +11,8 @@ export default function HatimTrackerWidget({
   lastReadPage,
   onContinueReading,
 }: HatimTrackerWidgetProps) {
+  const { t } = useLanguage(); // i18n kullanımı eklendi
   const [dailyGoal, setDailyGoal] = useState<number>(20);
-
-  // 1. SABİT DEĞİL, STATE OLARAK DEĞİŞTİRİLDİ
   const [todayRead, setTodayRead] = useState<number>(0);
 
   const totalRead = lastReadPage || 0;
@@ -21,9 +21,8 @@ export default function HatimTrackerWidget({
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [customGoal, setCustomGoal] = useState("");
 
-  // 2. BUGÜNÜN OKUMA VERİSİNİ ÇEKEN VE GÜN DEĞİŞTİYSE SIFIRLAYAN FONKSİYON
   const loadTodayProgress = () => {
-    const todayStr = new Date().toISOString().split("T")[0]; // Örn: "2023-10-25"
+    const todayStr = new Date().toISOString().split("T")[0];
     const savedDataStr = localStorage.getItem("hatim_progress_today");
 
     if (savedDataStr) {
@@ -31,36 +30,38 @@ export default function HatimTrackerWidget({
       if (parsed.date === todayStr) {
         setTodayRead(parsed.count);
       } else {
-        // Gün değişmiş, sıfırdan başla
         setTodayRead(0);
       }
     }
   };
 
   useEffect(() => {
-    const savedGoal = localStorage.getItem("hatim_daily_goal");
-    if (savedGoal) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDailyGoal(parseInt(savedGoal, 10));
-    }
-    setCustomGoal(savedGoal || "20");
+    // ESLint (cascading renders) hatasını önlemek için işlemleri bir sonraki döngüye (asenkron) erteliyoruz
+    const timer = setTimeout(() => {
+      const savedGoal = localStorage.getItem("hatim_daily_goal");
+      if (savedGoal) {
+        setDailyGoal(parseInt(savedGoal, 10));
+      }
+      setCustomGoal(savedGoal || "20");
 
-    // Sayfa yüklendiğinde bugünün okuma sayısını getir
-    loadTodayProgress();
+      // Sayfa yüklendiğinde bugünün okuma sayısını getir
+      loadTodayProgress();
+    }, 0);
 
     // Diğer sayfalardan (Modal'dan) gelen anlık güncellemeleri dinle
     window.addEventListener("hatim_progress_updated", loadTodayProgress);
-    return () =>
+
+    return () => {
+      clearTimeout(timer); // Bileşen unmount olduğunda timer'ı temizle
       window.removeEventListener("hatim_progress_updated", loadTodayProgress);
+    };
   }, []);
 
-  // Hesaplamalar
   const currentJuz = Math.ceil(totalRead / 20) || 1;
   const dailyPercent = Math.min((todayRead / dailyGoal) * 100, 100);
   const hatimPercent =
     totalRead > 0 ? ((totalRead / totalPages) * 100).toFixed(1) : "0.0";
 
-  // EKLENEN SATIR: Hedefe ulaşıldı mı?
   const isGoalReached = todayRead >= dailyGoal && dailyGoal > 0;
 
   const handleSaveGoal = (newGoal: number) => {
@@ -71,8 +72,6 @@ export default function HatimTrackerWidget({
     }
   };
 
-  // ... (Aşağıdaki return bloğu (HTML/UI kısmı) tamamen AYNI kalacak, ona dokunmayın) ...
-
   return (
     <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-5 md:p-6 shadow-sm border border-emerald-100 dark:border-emerald-900/30 w-full relative overflow-hidden group">
       {/* Dekoratif Arka Plan */}
@@ -82,7 +81,7 @@ export default function HatimTrackerWidget({
       {isEditingGoal && (
         <div className="absolute inset-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-200">
           <h3 className="text-lg font-black text-gray-800 dark:text-white mb-4 text-center">
-            Günlük Hedefini Belirle!
+            {t("setDailyGoalTitle") || "Günlük Hedefini Belirle!"}
           </h3>
 
           <div className="grid grid-cols-3 gap-2 w-full mb-4 max-w-sm">
@@ -90,19 +89,19 @@ export default function HatimTrackerWidget({
               onClick={() => handleSaveGoal(5)}
               className="py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm transition-colors border border-emerald-200 dark:border-emerald-800"
             >
-              5 Sayfa
+              5 {t("pageWord") || "Sayfa"}
             </button>
             <button
               onClick={() => handleSaveGoal(10)}
               className="py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm transition-colors border border-emerald-200 dark:border-emerald-800"
             >
-              10 Sayfa
+              10 {t("pageWord") || "Sayfa"}
             </button>
             <button
               onClick={() => handleSaveGoal(20)}
               className="py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl font-bold text-sm transition-colors border border-emerald-200 dark:border-emerald-800"
             >
-              1 Cüz (20)
+              {t("oneJuzLabel") || "1 Cüz (20)"}
             </button>
           </div>
 
@@ -112,7 +111,7 @@ export default function HatimTrackerWidget({
               value={customGoal}
               onChange={(e) => setCustomGoal(e.target.value)}
               className="flex-1 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-center font-bold text-gray-800 dark:text-white focus:border-emerald-500 outline-none"
-              placeholder="Özel"
+              placeholder={t("customGoalPlaceholder") || "Özel"}
               min="1"
               max="604"
             />
@@ -120,7 +119,7 @@ export default function HatimTrackerWidget({
               onClick={() => handleSaveGoal(Number(customGoal))}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold transition-colors"
             >
-              Kaydet
+              {t("save") || "Kaydet"}
             </button>
           </div>
 
@@ -128,7 +127,7 @@ export default function HatimTrackerWidget({
             onClick={() => setIsEditingGoal(false)}
             className="text-sm font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline underline-offset-4"
           >
-            Vazgeç
+            {t("cancel") || "Vazgeç"}
           </button>
         </div>
       )}
@@ -137,16 +136,18 @@ export default function HatimTrackerWidget({
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
-            Hatim Yolculuğum{" "}
+            {t("myHatimJourney") || "Hatim Yolculuğum"}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">
             {totalRead === 0 ? (
-              <span>Henüz okumaya başlamadınız</span>
+              <span>
+                {t("notStartedReading") || "Henüz okumaya başlamadınız"}
+              </span>
             ) : (
               <span>
-                Şu an{" "}
+                {t("currentlyAtPrefix") || "Şu an "}
                 <strong className="text-emerald-600">
-                  {currentJuz}. Cüzdesiniz
+                  {currentJuz}. {t("juzWord") || "Cüz"}
                 </strong>
               </span>
             )}
@@ -154,20 +155,16 @@ export default function HatimTrackerWidget({
         </div>
         <button
           onClick={() => setIsEditingGoal(true)}
-          className="text-xs font-bold text-gray-400 hover:text-emerald-600 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-3 py-1.5 rounded-lg transition-all border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
+          className="text-xs font-bold text-gray-400 hover:text-emerald-600 bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-3 py-1.5 rounded-lg transition-all border border-transparent hover:border-emerald-200 dark:border-emerald-800"
         >
-          Hedefi Değiştir
+          {t("changeGoalBtn") || "Hedefi Değiştir"}
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         {/* GÜNLÜK HEDEF KARTI */}
         <div
-          className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-500 border ${
-            isGoalReached
-              ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 shadow-[0_0_15px_rgba(16,185,129,0.15)] scale-[1.02]"
-              : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800"
-          }`}
+          className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-500 border ${isGoalReached ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 shadow-[0_0_15px_rgba(16,185,129,0.15)] scale-[1.02]" : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800"}`}
         >
           <div className="relative w-16 h-16 mb-2 flex items-center justify-center">
             <svg
@@ -208,7 +205,6 @@ export default function HatimTrackerWidget({
             </div>
           </div>
 
-          {/* TEBRİKLER MESAJI VEYA NORMAL YAZI */}
           {isGoalReached ? (
             <div className="flex flex-col items-center animate-in zoom-in duration-300">
               <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
@@ -223,15 +219,15 @@ export default function HatimTrackerWidget({
                     clipRule="evenodd"
                   />
                 </svg>
-                Tebrikler!
+                {t("congratulationsLabel") || "Tebrikler!"}
               </span>
               <span className="text-[9px] font-bold text-emerald-500/80 dark:text-emerald-400/80 mt-0.5">
-                Hedefe Ulaştınız
+                {t("goalReachedLabel") || "Hedefe Ulaştınız"}
               </span>
             </div>
           ) : (
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              Günlük Hedef
+              {t("dailyGoalLabel") || "Günlük Hedef"}
             </p>
           )}
         </div>
@@ -239,13 +235,13 @@ export default function HatimTrackerWidget({
         {/* GENEL HATİM KARTI */}
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center text-center">
           <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-1">
-            %{hatimPercent}
+            % {hatimPercent}
           </div>
           <p className="text-xs font-bold text-gray-600 dark:text-gray-300">
-            {totalRead} / {totalPages} Sayfa
+            {totalRead} / {totalPages} {t("pageWord") || "Sayfa"}
           </p>
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2">
-            Hatim İlerlemesi
+            {t("hatimProgressLabel") || "Hatim İlerlemesi"}
           </p>
         </div>
       </div>
@@ -253,8 +249,10 @@ export default function HatimTrackerWidget({
       {/* Ana Progress Bar */}
       <div className="space-y-2 mb-6">
         <div className="flex justify-between text-xs font-bold">
-          <span className="text-emerald-600 dark:text-emerald-400">Fatiha</span>
-          <span className="text-gray-400">Nas</span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {t("fatihaLabel") || "Fatiha"}
+          </span>
+          <span className="text-gray-400">{t("nasLabel") || "Nas"}</span>
         </div>
         <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
           <div
@@ -287,15 +285,15 @@ export default function HatimTrackerWidget({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                ></path>
+                />
               </svg>
             </div>
             <div className="text-left">
               <h3 className="font-black text-sm md:text-lg uppercase tracking-wider text-emerald-50">
-                Kaldığım Yere Git
+                {t("goToLastReadLabel") || "Kaldığım Yere Git"}
               </h3>
               <p className="text-emerald-100/80 text-xs md:text-sm font-medium mt-0.5">
-                Sayfa {lastReadPage}
+                {t("pageWord") || "Sayfa"} {lastReadPage}
               </p>
             </div>
           </div>
@@ -311,24 +309,20 @@ export default function HatimTrackerWidget({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 d="M9 5l7 7-7 7"
-              ></path>
+              />
             </svg>
           </div>
         </button>
       ) : (
         <div className="w-full py-4 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-2xl font-bold text-center border border-gray-200 dark:border-gray-700 cursor-default">
-          Henüz okuma geçmişiniz yok. Cüz veya Sure seçerek başlayın.
+          {t("noReadingHistoryMsg") ||
+            "Henüz okuma geçmişiniz yok. Cüz veya Sure seçerek başlayın."}
         </div>
       )}
 
       <style
         dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes progress {
-          0% { background-position: 1rem 0; }
-          100% { background-position: 0 0; }
-        }
-      `,
+          __html: `@keyframes progress { 0% { background-position: 1rem 0; } 100% { background-position: 0 0; } }`,
         }}
       />
     </div>

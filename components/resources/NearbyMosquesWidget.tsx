@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
 
 // Mesafe Hesaplama Fonksiyonu (Kuş Uçuşu Metre)
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -21,6 +22,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 export default function NearbyMosquesWidget() {
+  const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
   const [mosques, setMosques] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +34,9 @@ export default function NearbyMosquesWidget() {
     setHasSearched(true);
 
     if (!navigator.geolocation) {
-      setError("Tarayıcınız konum özelliğini desteklemiyor.");
+      setError(
+        t("geoNotSupported") || "Tarayıcınız konum özelliğini desteklemiyor.",
+      );
       setLoading(false);
       return;
     }
@@ -50,6 +54,8 @@ export default function NearbyMosquesWidget() {
             (
               node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
               way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
+              node["amenity"="prayer_room"]["religion"="muslim"](around:${radius},${userLat},${userLon});
+              way["amenity"="prayer_room"]["religion"="muslim"](around:${radius},${userLat},${userLon});
             );
             out center;
           `;
@@ -75,7 +81,6 @@ export default function NearbyMosquesWidget() {
                 fetchSuccess = true;
                 break; // Başarılı olursa döngüden çık
               } else {
-                // 429, 504 vb. HERHANGİ BİR hatada diğer sunucuya geç
                 console.warn(
                   `${endpoint} başarısız (Hata Kodu: ${res.status}), diğerine geçiliyor...`,
                 );
@@ -93,7 +98,8 @@ export default function NearbyMosquesWidget() {
           const processedMosques = data.elements.map((el: any) => {
             const mLat = el.lat || el.center?.lat;
             const mLon = el.lon || el.center?.lon;
-            const name = el.tags?.name || "İsimsiz Cami / Mescit";
+            const name =
+              el.tags?.name || t("unnamedMosque") || "İsimsiz Cami / Mescit";
             const distance = getDistance(userLat, userLon, mLat, mLon);
 
             return { id: el.id, name, lat: mLat, lon: mLon, distance };
@@ -105,8 +111,14 @@ export default function NearbyMosquesWidget() {
             .slice(0, 5);
 
           if (sorted.length === 0) {
+            const fallbackMsg = `Çevrenizde (${radius / 1000} km) kayıtlı cami veya mescit bulunamadı.`;
             setError(
-              `Çevrenizde (${radius / 1000} km) kayıtlı cami bulunamadı.`,
+              t("noMosquesFound")
+                ? t("noMosquesFound").replace(
+                    "{radius}",
+                    (radius / 1000).toString(),
+                  )
+                : fallbackMsg,
             );
           } else {
             setMosques(sorted);
@@ -114,7 +126,8 @@ export default function NearbyMosquesWidget() {
         } catch (err: any) {
           console.error(err);
           setError(
-            "Harita sunucuları şu an çok yoğun. Lütfen 1-2 dakika bekleyip tekrar deneyin.",
+            t("mapServerBusy") ||
+              "Harita sunucuları şu an çok yoğun. Lütfen 1-2 dakika bekleyip tekrar deneyin.",
           );
         } finally {
           setLoading(false);
@@ -123,7 +136,8 @@ export default function NearbyMosquesWidget() {
       (err) => {
         console.error(err);
         setError(
-          "Konum izni reddedildi veya konum alınamadı. Lütfen tarayıcı ayarlarından izin verin.",
+          t("geoPermissionDenied") ||
+            "Konum izni reddedildi veya konum alınamadı. Lütfen tarayıcı ayarlarından izin verin.",
         );
         setLoading(false);
       },
@@ -138,11 +152,12 @@ export default function NearbyMosquesWidget() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div>
             <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
-              Yakındaki Camiler
+              {t("nearbyMosquesTitle") || "Yakındaki Cami & Mescitler"}
               <span className="text-emerald-500">🕌</span>
             </h3>
             <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-1">
-              Konumunuza en yakın ibadethaneleri bulun.
+              {t("nearbyMosquesDesc") ||
+                "Konumunuza en yakın ibadethaneleri bulun."}
             </p>
           </div>
 
@@ -154,7 +169,7 @@ export default function NearbyMosquesWidget() {
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Aranıyor...
+                {t("searching") || "Aranıyor..."}
               </>
             ) : (
               <>
@@ -176,7 +191,7 @@ export default function NearbyMosquesWidget() {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                Yakınımda Bul
+                {t("findNearby") || "Yakınımda Bul"}
               </>
             )}
           </button>
@@ -205,21 +220,33 @@ export default function NearbyMosquesWidget() {
                     </h4>
                     <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500 mt-0.5">
                       {mosque.distance < 1000
-                        ? `${Math.round(mosque.distance)} metre uzaklıkta`
-                        : `${(mosque.distance / 1000).toFixed(1)} km uzaklıkta`}
+                        ? t("metersAway")
+                          ? t("metersAway").replace(
+                              "{dist}",
+                              Math.round(mosque.distance).toString(),
+                            )
+                          : `${Math.round(mosque.distance)} metre uzaklıkta`
+                        : t("kmAway")
+                          ? t("kmAway").replace(
+                              "{dist}",
+                              (mosque.distance / 1000).toFixed(1).toString(),
+                            )
+                          : `${(mosque.distance / 1000).toFixed(1)} km uzaklıkta`}
                     </p>
                   </div>
                 </div>
 
-                {/* DOĞRU GOOGLE MAPS LİNKİ VE DÜZELTİLMİŞ SVG ETİKETİ */}
+                {/* DÜZELTİLMİŞ GOOGLE MAPS YOL TARİFİ LİNKİ */}
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 p-2.5 bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shrink-0"
-                  title="Yol Tarifi Al"
+                  title={t("getDirections") || "Yol Tarifi Al"}
                 >
-                  <span className="text-xs font-bold hidden sm:block">GİT</span>
+                  <span className="text-xs font-bold hidden sm:block">
+                    {t("goText") || "GİT"}
+                  </span>
                   <svg
                     className="w-5 h-5"
                     fill="none"

@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types";
 
-// Yeni ayırdığımız modüller ve bileşenler
+// Modüller ve bileşenler
 import {
   CATEGORY_ORDER,
   CATEGORY_MAPPING,
@@ -67,27 +67,21 @@ export default function AdminPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // i18n Refactor: Kategori başlıkları artık t() üzerinden geliyor
   const getCategoryTitle = useCallback(
     (catKey: string) => {
-      const titles: Record<string, Record<string, string>> = {
-        MAIN: {
-          tr: "Kuran-ı Kerim",
-          en: "The Holy Quran",
-          ar: "القرآن الكريم",
-        },
-        SURAHS: { tr: "Sureler", en: "Surahs", ar: "سور" },
-        PRAYERS: { tr: "Dualar", en: "Prayers", ar: "الأدعية" },
-        SALAWATS: { tr: "Salavatlar", en: "Salawats", ar: "الصلوات" },
-        NAMES: { tr: "İsimler", en: "Names", ar: "الأسماء" },
-        DHIKRS: { tr: "Zikirler", en: "Dhikrs", ar: "الأذكار" },
+      const keys: Record<string, string> = {
+        MAIN: "categoryMain",
+        SURAHS: "categorySurahs",
+        PRAYERS: "categoryPrayers",
+        SALAWATS: "categorySalawats",
+        NAMES: "categoryNames",
+        DHIKRS: "categoryDhikrs",
       };
-      const langKey =
-        language === "tr" || language === "en" || language === "ar"
-          ? language
-          : "en";
-      return titles[catKey]?.[langKey] || titles[catKey]?.["en"] || catKey;
+      const translationKey = keys[catKey];
+      return translationKey ? t(translationKey) : catKey;
     },
-    [language],
+    [t],
   );
 
   const isMultiplierResource = (codeKey: string) => {
@@ -122,7 +116,6 @@ export default function AdminPage() {
   const categorizedResources = useMemo(() => {
     if (!resources.length) return [];
 
-    // Dağıtım listesinde GÖSTERİLMEYECEK kaynakların kodları (Backend'den nasıl geliyorsa o şekilde yazılmalı)
     const EXCLUDED_RESOURCE_KEYS = [
       "ESMAULHUSNA",
       "GUNLUKDUALAR",
@@ -135,11 +128,7 @@ export default function AdminPage() {
 
     resources.forEach((resource) => {
       const upperCode = resource.codeKey?.toUpperCase() || "";
-
-      // Eğer kaynak dışlanmış listedeyse, döngünün bu adımını atla (kategoriye ekleme)
-      if (EXCLUDED_RESOURCE_KEYS.includes(upperCode)) {
-        return;
-      }
+      if (EXCLUDED_RESOURCE_KEYS.includes(upperCode)) return;
 
       const category = CATEGORY_MAPPING[upperCode] || "DHIKRS";
       if (categories[category]) categories[category].push(resource);
@@ -201,7 +190,7 @@ export default function AdminPage() {
         participants: parseInt(participants) || 10,
         customTotals: customTotals,
         description: finalDescription,
-        ownerDeviceId: user ? user : deviceId, // Giriş yapmışsa ismini, yapmamışsa cihaz kimliğini gönderir
+        ownerDeviceId: user || deviceId,
       };
 
       const res = await fetch(`${apiUrl}/api/distribution/create`, {
@@ -246,7 +235,6 @@ export default function AdminPage() {
       });
   }, [resources, selectedResources]);
 
-  // Ekran Yönetimi
   if (!isAuthChecked) return <AdminLoading />;
   if (!user || !token) return <UnauthorizedView />;
   if (isFetchingResources) return <AdminLoading />;
@@ -307,7 +295,7 @@ export default function AdminPage() {
                   placeholder="10"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[10px] md:text-xs pointer-events-none uppercase">
-                  {t("person")}
+                  {t("personLabel") || t("person")}
                 </div>
               </div>
             </div>
@@ -450,7 +438,7 @@ export default function AdminPage() {
             createdCode={createdCode}
             createdLink={createdLink}
             onReset={() => setCreatedLink("")}
-            creatorName={user || "Bir kullanıcı"}
+            creatorName={user || t("aUserLabel") || "Bir kullanıcı"}
           />
         )}
       </div>

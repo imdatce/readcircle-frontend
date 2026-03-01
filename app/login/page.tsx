@@ -1,22 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const { t } = useLanguage();
+  const { login, registerNotification } = useAuth();
+  const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { login } = useAuth();
-  const { registerNotification } = useAuth();
-  registerNotification();
-  const { t } = useLanguage();
-  const router = useRouter();
+  // Bildirim kaydını yan etki olarak useEffect içinde yapıyoruz
+  useEffect(() => {
+    if (registerNotification) {
+      registerNotification();
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,14 +40,20 @@ export default function LoginPage() {
         },
       );
 
-      if (!res.ok) throw new Error(t("loginFailed"));
+      if (!res.ok) {
+        // Hata durumunda backend'den gelen mesajı veya fallback mesajını göster
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || t("loginFailed") || "Giriş başarısız.",
+        );
+      }
 
       const data = await res.json();
       login(data.username, data.token);
       router.push("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(t("loginError"));
+      setError(err.message || t("loginError") || "Bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -48,6 +61,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50 dark:bg-black/90 p-4 transition-colors duration-500">
+      {/* Arka Plan Dekorasyonu */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div className="absolute top-[10%] left-[10%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-[10%] right-[10%] w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
@@ -72,10 +86,11 @@ export default function LoginPage() {
             </svg>
           </div>
           <h2 className="text-3xl font-black text-gray-800 dark:text-white mb-2">
-            {t("welcomeBack")}
+            {t("welcomeBack") || "Hoş Geldiniz"}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {t("loginIntro")}
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            {t("loginIntro") ||
+              "Hesabınıza giriş yaparak manevi yolculuğunuza devam edin."}
           </p>
         </div>
 
@@ -102,7 +117,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-              {t("usernameLabel")}
+              {t("usernameLabel") || "Kullanıcı Adı"}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -122,17 +137,18 @@ export default function LoginPage() {
                 </svg>
               </div>
               <input
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-blue-500 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
-                placeholder={t("placeholderUser")}
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                placeholder={t("placeholderUser") || "Kullanıcı adınızı girin"}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                required
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-              {t("passwordLabel")}
+              {t("passwordLabel") || "Şifre"}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
@@ -152,38 +168,39 @@ export default function LoginPage() {
                 </svg>
               </div>
               <input
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-blue-500 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                 type="password"
-                placeholder={t("placeholderPass")}
+                placeholder={t("placeholderPass") || "Şifrenizi girin"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
           </div>
 
           <button
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-2"
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
           >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                {t("loggingIn")}
+                {t("loggingIn") || "Giriş Yapılıyor..."}
               </>
             ) : (
-              t("loginButton")
+              t("loginButton") || "Giriş Yap"
             )}
           </button>
         </form>
 
         <div className="mt-8 text-center">
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            {t("noAccount")}{" "}
+            {t("noAccount") || "Henüz hesabınız yok mu?"}{" "}
             <Link
               href="/register"
               className="text-blue-600 dark:text-blue-400 font-bold hover:underline ml-1"
             >
-              {t("registerLink")}
+              {t("registerLink") || "Hemen Kaydol"}
             </Link>
           </p>
         </div>

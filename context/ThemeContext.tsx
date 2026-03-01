@@ -15,25 +15,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
+  // 1. Aşama: Sayfa yüklendiğinde kullanıcının tercihini bul
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true); // Hydration hatasını engellemek için
 
-      const storedTheme = localStorage.getItem("theme") as Theme;
-      const systemPrefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
+    const storedTheme = localStorage.getItem("theme") as Theme;
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
 
-      if (storedTheme) {
-        setTheme(storedTheme);
-      } else if (systemPrefersDark) {
-        setTheme("dark");
-      }
-    }, 0);
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else if (systemPrefersDark) {
+      setTheme("dark");
+    }
+  }, []); // setTimeout kaldırıldı, böylece anında çalışır
 
-    return () => clearTimeout(timer);
-  }, []);
-
+  // 2. Aşama: Tema state'i her değiştiğinde HTML'e class ekle/çıkar ve kaydet
   useEffect(() => {
     if (!mounted) return;
 
@@ -47,6 +46,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
+  // Sunucu tarafında (SSR) render edilirken görünmez yapıp hydration hatasını önlemek
+  // isterseniz return kısmını if(!mounted) return <div style={{visibility: 'hidden'}}>{children}</div> şeklinde de güncelleyebilirsiniz ama Next.js 14+ için genelde bu kadarı yeterlidir.
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}

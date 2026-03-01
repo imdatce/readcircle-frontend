@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -41,7 +40,7 @@ const fontSizes = {
 };
 
 const SUBHANEKE_RE =
-  /(s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|noksan|münezzeh|sübhânsın|seni her türlü|seni bütün|seni tenzih|sen aczden)/i;
+  /(s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh|sübhânsın|seni her türlü|seni bütün|seni tenzih|sen aczden)/i;
 
 // === 1. ARAPÇA PARSER ===
 function parseArabic(raw: string) {
@@ -89,9 +88,7 @@ function parseLatin(raw: string) {
     .filter((p) => p.length > 0);
 
   let header = "";
-  if (parts.length > 10) {
-    header = parts.shift() || "";
-  }
+  if (parts.length > 10) header = parts.shift() || "";
 
   return { header, items: parts, subhaneke };
 }
@@ -118,6 +115,30 @@ function parseMeaning(raw: string) {
     .filter((l) => l.length > 0);
 
   return { header: "", items, subhaneke };
+}
+
+// === 3. TÜRKÇE & MEAL PARSER ===
+function parseMeaningEn(raw: string) {
+  const lines = raw
+    .replace(/###\s*$/, "")
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "");
+  let Praise = "";
+
+  const subhIdx = lines.findIndex((l) => SUBHANEKE_RE.test(l));
+  if (subhIdx >= 0) {
+    Praise = lines.splice(subhIdx).join(" ");
+  }
+
+  const items = lines
+    .map((l) =>
+      l.replace(/^[\(\[\{]?[\d\u0660-\u0669]+[\)\]\}\.\-\s]+/, "").trim(),
+    )
+    .filter((l) => l.length > 0);
+
+  return { header: "", items, Praise };
 }
 
 // Arapça rakamlara dönüştürme
@@ -170,18 +191,9 @@ const GridRow = ({
   fontClass,
   isRtl,
   mode,
-}: {
-  right: string;
-  left: string | null;
-  rightNum: number;
-  leftNum: number;
-  fontClass: string;
-  isRtl: boolean;
-  mode: TabType;
-}) => {
+}: any) => {
   const cellClass =
-    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
-    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
     "flex-1 font-serif",
     mode === "ARABIC"
@@ -215,7 +227,7 @@ const GridRow = ({
 // ANA SAYFA BİLEŞENİ
 // ================================================================
 export default function CevsenPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>("ARABIC");
 
   const [texts, setTexts] = useState<Record<TabType, string>>({
@@ -233,22 +245,26 @@ export default function CevsenPage() {
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
   const [barVisible, setBarVisible] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const TABS: { id: TabType; label: string }[] = [
-    { id: "ARABIC", label: "Arapça" },
-    { id: "LATIN", label: "Okunuşu" },
-    { id: "MEANING", label: "Türkçe" },
-  ];
 
-  // Wake Lock API (Ekranın kapanmasını önler)
+  // Sekmeler dil değiştiğinde güncellenecek şekilde useMemo içine alındı
+  const TABS: { id: TabType; label: string }[] = useMemo(
+    () => [
+      { id: "ARABIC", label: t("tabArabic") || "Arapça" },
+      { id: "LATIN", label: t("tabLatin") || "Okunuşu" },
+      { id: "MEANING", label: t("tabMeaning") || "Türkçe" },
+    ],
+    [t],
+  );
+
+  // Wake Lock API
   const wakeLockRef = useRef<any>(null);
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
-        if ("wakeLock" in navigator) {
+        if ("wakeLock" in navigator)
           wakeLockRef.current = await (navigator as any).wakeLock.request(
             "screen",
           );
-        }
       } catch (err) {
         console.error(`Wake Lock hatası:`, err);
       }
@@ -269,10 +285,16 @@ export default function CevsenPage() {
       setLoading(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+      // Seçili dile göre meal dosyasının ismini belirliyoruz
+      let meaningFileName = "cevsen_tr.txt";
+      if (language === "en") {
+        meaningFileName = "cevsen_en.txt";
+      }
+
       const urls: Record<TabType, string> = {
         ARABIC: `${apiUrl}/cevsen.txt`,
         LATIN: `${apiUrl}/cevsen_latin.txt`,
-        MEANING: `${apiUrl}/cevsen_tr.txt`,
+        MEANING: `${apiUrl}/${meaningFileName}`, // Dinamik hale getirdik
       };
 
       try {
@@ -294,16 +316,14 @@ export default function CevsenPage() {
     };
     fetchCevsenData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [language]);
 
-  // === OTOMATİK KAYDIRMA MANTIĞI ===
+  // Oto-Kaydırma
   useEffect(() => {
     if (!isAutoScrolling) return;
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-
-    // Tam ekrandayken scroll hedefi "div", normalken "window" olmalıdır
     const scroller = isFullscreen ? scrollContainerRef.current : window;
     if (!scroller) return;
 
@@ -311,7 +331,6 @@ export default function CevsenPage() {
       isFullscreen && scrollContainerRef.current
         ? scrollContainerRef.current.scrollTop
         : window.scrollY;
-
     const baseSpeed = 40;
 
     const scrollStep = (timestamp: number) => {
@@ -329,58 +348,41 @@ export default function CevsenPage() {
               scrollContainerRef.current.clientHeight
             : document.documentElement.scrollHeight - window.innerHeight;
 
-        // Sayfa sonuna gelindiyse durdur
         if (exactScrollY >= maxScroll - 1) {
-          if (isFullscreen && scrollContainerRef.current) {
+          if (isFullscreen && scrollContainerRef.current)
             scrollContainerRef.current.scrollTo({
               top: maxScroll,
               behavior: "auto",
             });
-          } else {
-            window.scrollTo({ top: maxScroll, behavior: "auto" });
-          }
+          else window.scrollTo({ top: maxScroll, behavior: "auto" });
           setIsAutoScrolling(false);
           return;
         }
 
-        // Pozisyonu güncelle (CSS Smooth Scroll'u EZEREK)
-        if (isFullscreen && scrollContainerRef.current) {
+        if (isFullscreen && scrollContainerRef.current)
           scrollContainerRef.current.scrollTo({
             top: exactScrollY,
             behavior: "auto",
           });
-        } else {
-          window.scrollTo({ top: exactScrollY, behavior: "auto" });
-        }
+        else window.scrollTo({ top: exactScrollY, behavior: "auto" });
       }
-
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
+    return () => cancelAnimationFrame(animationFrameId);
   }, [isAutoScrolling, autoScrollSpeed, isFullscreen]);
 
   // Manuel kaydırmada oto-kaydırmayı durdur
   useEffect(() => {
     const handleInteraction = (e: Event) => {
       if (isAutoScrolling) {
-        // YENİ EKLENEN KISIM: Eğer dokunulan yer bir buton veya link ise müdahale etme!
-        if (
-          e.target instanceof Element &&
-          e.target.closest("button, a, input")
-        ) {
+        if (e.target instanceof Element && e.target.closest("button, a, input"))
           return;
-        }
-
-        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10) {
+        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10)
           setIsAutoScrolling(false);
-        } else if (e.type === "touchstart" || e.type === "touchmove") {
+        else if (e.type === "touchstart" || e.type === "touchmove")
           setIsAutoScrolling(false);
-        }
       }
     };
     window.addEventListener("wheel", handleInteraction, { passive: true });
@@ -404,22 +406,29 @@ export default function CevsenPage() {
   const getAllBabs = (fullText: string) => {
     if (!fullText) return [];
 
+    // Metin içinde ### varsa, doğrudan en temiz yöntem olarak ondan bölelim
+    if (fullText.includes("###")) {
+      return fullText
+        .split(/###/g)
+        .map((chunk) => chunk.trim())
+        .filter((chunk) => chunk !== "");
+    }
+
+    // Eğer ### yoksa eski yöntemle satır satır okuyup bölme
     const lines = fullText
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l !== "");
     const chunks: string[] = [];
     let currentChunk: string[] = [];
-
     for (const line of lines) {
       if (
         line.length <= 25 &&
         /^[\-\=\*\s]*((b[aâ]b|bölüm|chapter|الباب)?\s*[\d\u0660-\u0669]+)[\.\-\=\*\s]*$/i.test(
           line,
         )
-      ) {
+      )
         continue;
-      }
       currentChunk.push(line);
       if (SUBHANEKE_RE.test(line)) {
         chunks.push(currentChunk.join("\n"));
@@ -427,7 +436,6 @@ export default function CevsenPage() {
       }
     }
     if (currentChunk.length > 0) chunks.push(currentChunk.join("\n"));
-
     return chunks;
   };
 
@@ -447,9 +455,8 @@ export default function CevsenPage() {
           : fontSizes.MEANING[fontLevel];
 
     const rows: Array<[string, string | null]> = [];
-    for (let i = 0; i < items.length; i += 2) {
+    for (let i = 0; i < items.length; i += 2)
       rows.push([items[i], items[i + 1] ?? null]);
-    }
 
     return (
       <div
@@ -460,7 +467,7 @@ export default function CevsenPage() {
         <div className="flex items-center justify-center gap-4 mb-6">
           <div className="h-[2px] bg-gradient-to-r from-transparent to-amber-300 dark:to-amber-700 w-16 md:w-32 rounded-full"></div>
           <h2 className="font-serif text-xl md:text-3xl font-black text-amber-700 dark:text-amber-500 tracking-widest drop-shadow-sm">
-            BÂB {babNumber}
+            {t("babWord") || "BÂB"} {babNumber}
           </h2>
           <div className="h-[2px] bg-gradient-to-l from-transparent to-amber-300 dark:to-amber-700 w-16 md:w-32 rounded-full"></div>
         </div>
@@ -476,7 +483,6 @@ export default function CevsenPage() {
                 backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
               }}
             />
-
             <div className="relative z-10">
               {header && (
                 <div className="mb-6 text-center">
@@ -489,7 +495,6 @@ export default function CevsenPage() {
                   <div className="mx-auto mt-3 w-48 h-[2px] bg-gradient-to-r from-transparent via-amber-700/40 dark:via-amber-500/40 to-transparent rounded-full" />
                 </div>
               )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
                 {rows.map((row, i) => (
                   <GridRow
@@ -504,7 +509,6 @@ export default function CevsenPage() {
                   />
                 ))}
               </div>
-
               {subhaneke && (
                 <div className="mt-8 pt-6 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
                   <span
@@ -513,13 +517,7 @@ export default function CevsenPage() {
                     ۞
                   </span>
                   <p
-                    className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
-                      activeTab === "ARABIC"
-                        ? fontClass
-                        : activeTab === "LATIN"
-                          ? `italic ${fontSizes.LATIN[fontLevel]}`
-                          : fontSizes.MEANING[fontLevel]
-                    }`}
+                    className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${activeTab === "ARABIC" ? fontClass : activeTab === "LATIN" ? `italic ${fontSizes.LATIN[fontLevel]}` : fontSizes.MEANING[fontLevel]}`}
                     dir={isRtl ? "rtl" : "ltr"}
                   >
                     {subhaneke}
@@ -534,19 +532,14 @@ export default function CevsenPage() {
   };
 
   const allBabs = getAllBabs(texts[activeTab]);
-
   const lastScrollY = React.useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
-      if (currentY < 80) {
-        setBarVisible(true);
-      } else if (currentY > lastScrollY.current + 8) {
-        setBarVisible(false);
-      } else if (currentY < lastScrollY.current - 8) {
-        setBarVisible(true);
-      }
+      if (currentY < 80) setBarVisible(true);
+      else if (currentY > lastScrollY.current + 8) setBarVisible(false);
+      else if (currentY < lastScrollY.current - 8) setBarVisible(true);
       lastScrollY.current = currentY;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -555,30 +548,18 @@ export default function CevsenPage() {
 
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
-    if (isFullscreen) {
-      setIsFullscreen(false);
-    } else {
-      setIsFullscreen(true);
-    }
+    setIsFullscreen(!isFullscreen);
   };
 
-  // Tam ekrandayken bar gizli kalsın
   const isHeaderVisible = barVisible && !isFullscreen;
 
   return (
     <div
-      ref={scrollContainerRef} // <-- YENİ
+      ref={scrollContainerRef}
       onClick={handleContentClick}
-      className={`font-sans transition-colors duration-500 px-2 sm:px-6 lg:px-8 ${
-        !isAutoScrolling ? "scroll-smooth" : "scroll-auto" // <-- YENİ: Çatışmayı önler
-      } ${
-        isFullscreen
-          ? "fixed inset-0 z-[9999] overflow-y-auto py-8"
-          : "min-h-screen py-8"
-      } ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}
+      className={`font-sans transition-colors duration-500 px-2 sm:px-6 lg:px-8 ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isFullscreen ? "fixed inset-0 z-[9999] overflow-y-auto py-8" : "min-h-screen py-8"} ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}
     >
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Üst Bar */}
         <div
           className={`flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl p-4 sm:p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 sticky top-4 z-50 transition-all duration-300 ${isHeaderVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6 pointer-events-none"}`}
         >
@@ -586,6 +567,7 @@ export default function CevsenPage() {
             <Link
               href="/resources"
               className="p-3 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 shrink-0"
+              title={t("backToResources") || "Kütüphaneye Dön"}
             >
               <svg
                 className="w-6 h-6"
@@ -601,11 +583,9 @@ export default function CevsenPage() {
                 />
               </svg>
             </Link>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none flex items-center gap-3">
-                {t("cevsen") || "Cevşen-i Kebir"}
-              </h1>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none flex items-center gap-3">
+              {t("cevsenTitle") || "Cevşen-i Kebir"}
+            </h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -614,22 +594,18 @@ export default function CevsenPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                  }`}
+                  className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 ${activeTab === tab.id ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            {/* Yeni Kontroller (A-, A+, Sepya, Kaydırma, Tam Ekran) */}
             <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shrink-0">
               <button
                 onClick={() => setFontLevel((prev) => Math.max(0, prev - 1))}
                 disabled={fontLevel === 0}
+                title={t("decreaseFont") || "Yazıyı Küçült"}
                 className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
               >
                 A-
@@ -638,12 +614,11 @@ export default function CevsenPage() {
               <button
                 onClick={() => setFontLevel((prev) => Math.min(6, prev + 1))}
                 disabled={fontLevel === 6}
+                title={t("increaseFont") || "Yazıyı Büyüt"}
                 className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
               >
                 A+
               </button>
-
-              {/* Okuma (Sepya) Modu */}
               <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
               <button
                 onClick={() => {
@@ -651,11 +626,7 @@ export default function CevsenPage() {
                   if (typeof navigator !== "undefined" && navigator.vibrate)
                     navigator.vibrate(20);
                 }}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                  isSepia
-                    ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
-                    : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
                 title={t("eyeProtection") || "Okuma Modu (Sepya)"}
               >
                 <svg
@@ -672,8 +643,6 @@ export default function CevsenPage() {
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-
-              {/* Kaydırma Hızı */}
               <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
               <button
                 onClick={cycleSpeed}
@@ -682,19 +651,13 @@ export default function CevsenPage() {
               >
                 {autoScrollSpeed}x
               </button>
-
-              {/* Oto Kaydırma Başlat/Durdur */}
               <button
                 onClick={() => {
                   setIsAutoScrolling((prev) => !prev);
                   if (typeof navigator !== "undefined" && navigator.vibrate)
                     navigator.vibrate(20);
                 }}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                  isAutoScrolling
-                    ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                    : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
                 title={
                   isAutoScrolling
                     ? t("stopAutoScroll") || "Durdur"
@@ -721,8 +684,6 @@ export default function CevsenPage() {
                   </svg>
                 )}
               </button>
-
-              {/* Tam Ekran Butonu */}
               <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
               <button
                 onClick={() => {
@@ -730,11 +691,7 @@ export default function CevsenPage() {
                   if (typeof navigator !== "undefined" && navigator.vibrate)
                     navigator.vibrate(20);
                 }}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                  isFullscreen
-                    ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                    : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isFullscreen ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"}`}
                 title={t("fullscreen") || "Tam Ekran"}
               >
                 {isFullscreen ? (
@@ -769,13 +726,12 @@ export default function CevsenPage() {
           </div>
         </div>
 
-        {/* İçerik */}
         <div className="bg-transparent relative overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-amber-500 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
               <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="font-bold animate-pulse tracking-widest uppercase text-sm">
-                Metinler Derleniyor...
+                {t("compilingTexts") || "Metinler Derleniyor..."}
               </p>
             </div>
           ) : (
@@ -785,7 +741,7 @@ export default function CevsenPage() {
               )}
               <div className="mt-10 text-center opacity-50">
                 <p className="text-sm font-bold text-gray-400 tracking-[0.3em] uppercase">
-                  Cevşen-i Kebir'in Sonu
+                  {t("endOfCevsen") || "Cevşen-i Kebir'in Sonu"}
                 </p>
               </div>
             </div>

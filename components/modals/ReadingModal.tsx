@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 import React, {
@@ -31,7 +32,7 @@ export interface ReadingModalContent {
   endUnit?: number;
   currentUnit?: number;
   assignmentId?: number;
-  ignoreSavedProgress?: boolean; // <--- YENİ EKLENEN BAYRAK
+  ignoreSavedProgress?: boolean;
 }
 
 interface ReadingModalProps {
@@ -127,10 +128,7 @@ async function fetchQuranTranslationPage(
   }
 }
 
-// ================================================================
-// CEVSEN GRID DISPLAY
-// ================================================================
-const SUBHANEKE_RE = /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك/i;
+const SUBHANEKE_RE = /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh/i;
 
 const Medal = ({ number }: { number: number }) => (
   <span className="relative flex items-center justify-center shrink-0 w-9 h-9 md:w-11 md:h-11">
@@ -239,18 +237,9 @@ const GridRow = ({
   fontClass,
   isRtl,
   mode,
-}: {
-  right: string;
-  left: string | null;
-  rightNum: number;
-  leftNum: number;
-  fontClass: string;
-  isRtl: boolean;
-  mode: "ARABIC" | "LATIN" | "MEANING";
-}) => {
+}: any) => {
   const cellClass =
-    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
-    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
     "flex-1 font-serif",
     mode === "ARABIC"
@@ -279,16 +268,7 @@ const GridRow = ({
   );
 };
 
-// ── SURAH VERSES GRID ──────────────────────────────────────
-const SurahVerseGrid = ({
-  babs,
-  activeTab,
-  fontLevel,
-}: {
-  babs: CevsenBab[];
-  activeTab: "ARABIC" | "LATIN" | "MEANING";
-  fontLevel: number;
-}) => {
+const SurahVerseGrid = ({ babs, activeTab, fontLevel }: any) => {
   const isRtl = activeTab === "ARABIC";
   const fontClass =
     activeTab === "ARABIC"
@@ -296,33 +276,31 @@ const SurahVerseGrid = ({
       : activeTab === "LATIN"
         ? fontSizes.LATIN[fontLevel]
         : fontSizes.MEANING[fontLevel];
-
   const items = babs
-    .map((b) =>
+    .map((b: any) =>
       activeTab === "ARABIC"
         ? b.arabic
         : activeTab === "LATIN"
           ? b.transcript
           : b.meaning,
     )
-    .filter((t) => t?.trim().length > 0);
-
-  const parsed = items.map((item, idx) => {
+    .filter((t: any) => t?.trim().length > 0);
+  const parsed = items.map((item: any, idx: number) => {
     const cleaned = item.replace(/^"+|"+$/g, "").trim();
     const m = cleaned.match(/^(\d+)[-.:]\s*([\s\S]*)/);
     const rawText = m ? m[2].trim() : cleaned;
-    const finalText = rawText.replace(/^"+|"+$/g, "").trim();
-    return { num: m ? parseInt(m[1]) : idx + 1, text: finalText };
+    return {
+      num: m ? parseInt(m[1]) : idx + 1,
+      text: rawText.replace(/^"+|"+$/g, "").trim(),
+    };
   });
 
-  const rows: Array<[(typeof parsed)[0], (typeof parsed)[0] | null]> = [];
+  const rows: Array<any> = [];
   for (let i = 0; i < parsed.length; i += 2) {
     rows.push([parsed[i], parsed[i + 1] ?? null]);
   }
-
   const cellClass =
-    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 " +
-    "hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
+    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
     "flex-1 font-serif",
     activeTab === "ARABIC"
@@ -371,15 +349,7 @@ const SurahVerseGrid = ({
   );
 };
 
-const CevsenGridDisplay = ({
-  text,
-  fontLevel,
-  mode = "ARABIC",
-}: {
-  text: string;
-  fontLevel: number;
-  mode?: "ARABIC" | "LATIN" | "MEANING";
-}) => {
+const CevsenGridDisplay = ({ text, fontLevel, mode = "ARABIC" }: any) => {
   const parsed = useMemo(() => {
     if (mode === "ARABIC") return parseArabic(text);
     if (mode === "LATIN") return parseLatin(text);
@@ -407,9 +377,8 @@ const CevsenGridDisplay = ({
   }
 
   const rows: Array<[string, string | null]> = [];
-  for (let i = 0; i < items.length; i += 2) {
+  for (let i = 0; i < items.length; i += 2)
     rows.push([items[i], items[i + 1] ?? null]);
-  }
 
   return (
     <div
@@ -455,13 +424,7 @@ const CevsenGridDisplay = ({
                 ۞
               </span>
               <p
-                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${
-                  mode === "ARABIC"
-                    ? fontClass
-                    : mode === "LATIN"
-                      ? `italic ${fontSizes.LATIN[fontLevel]}`
-                      : fontSizes.MEANING[fontLevel]
-                }`}
+                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${mode === "ARABIC" ? fontClass : mode === "LATIN" ? `italic ${fontSizes.LATIN[fontLevel]}` : fontSizes.MEANING[fontLevel]}`}
                 dir={isRtl ? "rtl" : "ltr"}
               >
                 {subhaneke}
@@ -474,9 +437,6 @@ const CevsenGridDisplay = ({
   );
 };
 
-// ================================================================
-// MAIN MODAL
-// ================================================================
 const ReadingModal: React.FC<ReadingModalProps> = ({
   content,
   onClose,
@@ -498,23 +458,19 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [loadingMeal, setLoadingMeal] = useState(false);
   const [currentSurahName, setCurrentSurahName] = useState<string>("");
 
-  // Özellik Stateleri
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSepia, setIsSepia] = useState(false);
 
-  // Geri Yükleme ve Hafıza Stateleri
   const [isRestoring, setIsRestoring] = useState(true);
   const latestScrollY = useRef<number>(0);
 
-  // Teleprompter Stateleri
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
-  const [autoScrollSpeed, setAutoScrollSpeed] = useState(1); // 0.5, 1, 1.5, 2, 3
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
 
   const currentPage = content.currentUnit || content.startUnit || 1;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  // Hesaplamalar
   const safeStart = content.startUnit || currentPage;
   const safeEnd = content.endUnit || currentPage;
   const totalPages = safeEnd - safeStart + 1;
@@ -522,7 +478,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const initialProgress =
     totalPages > 1 ? (currentPageIdx * 100) / totalPages : 0;
 
-  // --- HAFIZA (LOCALSTORAGE) ANAHTARI OLUŞTURMA ---
   const storageKey = useMemo(() => {
     if (content.assignmentId)
       return `readcircle_progress_assign_${content.assignmentId}`;
@@ -533,12 +488,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   useEffect(() => {
     if (content.type === "QURAN") {
       let isMounted = true;
-      // Mevcut gerçek sayfanın metadata'sını çekiyoruz
       fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-uthmani`)
         .then((res) => res.json())
         .then((data) => {
           if (isMounted && data.code === 200 && data.data?.ayahs?.length > 0) {
-            // Sayfadaki benzersiz sure isimlerini bul (Bazen sayfa ortasında yeni sure başlar)
             const surahs = Array.from(
               new Set(data.data.ayahs.map((a: any) => a.surah.englishName)),
             );
@@ -546,26 +499,20 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           }
         })
         .catch((err) => console.error("Sure ismi alınamadı:", err));
-
       return () => {
         isMounted = false;
       };
     }
   }, [currentPage, content.type]);
 
-  // --- BAŞLANGIÇTA FONT VE KALDIĞI YERİ GERİ YÜKLEME ---
   useEffect(() => {
     const savedFont = localStorage.getItem("readcircle_font_level");
     if (savedFont) setFontLevel(Number(savedFont));
-
     setIsRestoring(true);
     try {
       const savedProgress = localStorage.getItem(storageKey);
-
-      // EĞER ignoreSavedProgress TRUE İSE (Fihristten tıklandıysa) HAFIZAYI SİL / YOK SAY
       if (savedProgress && !content.ignoreSavedProgress) {
         const { unit, scrollY } = JSON.parse(savedProgress);
-
         const validUnit = Math.max(
           content.startUnit || 1,
           Math.min(unit, content.endUnit || 604),
@@ -573,7 +520,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         if (validUnit !== (content.currentUnit || content.startUnit || 1)) {
           onUpdateContent({ ...content, currentUnit: validUnit });
         }
-
         setTimeout(() => {
           if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollTop = scrollY;
@@ -586,20 +532,17 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       } else {
         setIsRestoring(false);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       setIsRestoring(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
-  // ----------------------------------------------------
 
   const handleFontChange = (newLevel: number) => {
     setFontLevel(newLevel);
     localStorage.setItem("readcircle_font_level", newLevel.toString());
   };
 
-  // --- İLERLEME ÇUBUĞU (GPU ACCELERATED - RE-RENDER YOK) ---
   const updateProgressBar = useCallback(
     (scrollTop: number, maxScroll: number) => {
       if (!progressBarRef.current) return;
@@ -611,7 +554,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         totalPages > 1
           ? (currentPageIdx * 100 + scrollPct) / totalPages
           : scrollPct;
-
       progressBarRef.current.style.transform = `scaleX(${unifiedPct / 100})`;
     },
     [totalPages, currentPageIdx],
@@ -619,7 +561,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const handleScroll = () => {
     if (isAutoScrolling) return;
-
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         scrollContainerRef.current;
@@ -628,24 +569,19 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
-  // 1. SADECE Sayfa (İleri/Geri) değiştiğinde Scroll'u en başa (0'a) al
   useEffect(() => {
     if (isRestoring) return;
-
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
       latestScrollY.current = 0;
       const { scrollHeight, clientHeight } = scrollContainerRef.current;
       updateProgressBar(0, scrollHeight - clientHeight);
     }
-    // Sekme/Tam Ekran değişiminde başa sarmaması için sadece currentPage'i dinliyoruz
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
-  // 2. Sekme veya Tam Ekran (isFullscreen) değiştiğinde Scroll'u SIFIRLAMA, Çubuğu güncelle
   useEffect(() => {
     if (isRestoring) return;
-
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         scrollContainerRef.current;
@@ -653,10 +589,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   }, [activeTab, activeQuranTab, isFullscreen, updateProgressBar, isRestoring]);
 
-  // --- KALDIĞI YERİ KAYDETME (PERİYODİK VE UNMOUNT) ---
   useEffect(() => {
     if (isRestoring) return;
-
     const saveProgress = () => {
       const payload = JSON.stringify({
         unit: currentPage,
@@ -664,16 +598,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       });
       localStorage.setItem(storageKey, payload);
     };
-
     const interval = setInterval(saveProgress, 2000);
     return () => {
       clearInterval(interval);
       saveProgress();
     };
   }, [storageKey, currentPage, isRestoring]);
-  // ----------------------------------------------------
 
-  // --- LAYOUT THRASHING'SİZ YAĞ GİBİ AKAN OTOMATİK KAYDIRMA ---
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el || !isAutoScrolling) return;
@@ -681,11 +612,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     let animationFrameId: number;
     let lastTime: number | null = null;
     let exactScrollY = el.scrollTop;
-
-    const cachedScrollHeight = el.scrollHeight;
-    const cachedClientHeight = el.clientHeight;
-    const maxScroll = cachedScrollHeight - cachedClientHeight;
-
+    const maxScroll = el.scrollHeight - el.clientHeight;
     const baseSpeed = 40;
 
     const scrollStep = (timestamp: number) => {
@@ -696,7 +623,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       if (deltaTime > 0 && deltaTime < 100) {
         const moveBy = (baseSpeed * autoScrollSpeed * deltaTime) / 1000;
         exactScrollY += moveBy;
-
         if (exactScrollY >= maxScroll - 1) {
           el.scrollTop = maxScroll;
           latestScrollY.current = maxScroll;
@@ -704,20 +630,15 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           setIsAutoScrolling(false);
           return;
         }
-
         el.scrollTop = exactScrollY;
         latestScrollY.current = exactScrollY;
         updateProgressBar(exactScrollY, maxScroll);
       }
-
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
+    return () => cancelAnimationFrame(animationFrameId);
   }, [
     isAutoScrolling,
     autoScrollSpeed,
@@ -733,23 +654,17 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (typeof navigator !== "undefined" && navigator.vibrate)
       navigator.vibrate(15);
   };
-  // ------------------------------------------------
 
-  // --- WAKE LOCK API ---
   const wakeLockRef = useRef<any>(null);
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
-        if ("wakeLock" in navigator) {
+        if ("wakeLock" in navigator)
           wakeLockRef.current = await (navigator as any).wakeLock.request(
             "screen",
           );
-        }
-      } catch (err) {
-        console.error(`Wake Lock hatası:`, err);
-      }
+      } catch (err) {}
     };
-
     const releaseWakeLock = () => {
       if (wakeLockRef.current !== null) {
         wakeLockRef.current.release().then(() => {
@@ -757,7 +672,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         });
       }
     };
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") requestWakeLock();
     };
@@ -770,7 +684,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       releaseWakeLock();
     };
   }, []);
-  // -----------------------
 
   useEffect(() => {
     if (content.type === "QURAN" && activeQuranTab === "MEAL") {
@@ -819,7 +732,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (isBedirGroup) {
       const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
       const rawLatin = content.cevsenData.map((b) => b.transcript).join("\n");
-      const rawMeaning = content.cevsenData.map((b) => b.meaning).join("\n"); // MEAL EKLENDİ
+      const rawMeaning = content.cevsenData.map((b) => b.meaning).join("\n");
 
       const splitRegex = /###|\r\n|\r|\n/g;
       const arabicLines = rawArabic
@@ -847,7 +760,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           babNumber: i + 1,
           arabic: arabicLines[i] || "",
           transcript: latinLines[i] || "",
-          meaning: meaningLines[i] || "", // MEAL EKLENDİ
+          meaning: meaningLines[i] || "",
         });
       }
 
@@ -894,7 +807,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
 
     return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
-  }, [content]); // <-- SİLİNEN VE HATAYA SEBEP OLAN KISIM BURASIYDI
+  }, [content]);
 
   const changePage = async (offset: number) => {
     const current = content.currentUnit || content.startUnit || 1;
@@ -904,38 +817,24 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
     if (next !== current) {
       onUpdateContent({ ...content, currentUnit: next });
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
+      if (typeof navigator !== "undefined" && navigator.vibrate)
         navigator.vibrate(30);
-      }
 
-      // --- GÜNCELLENEN HATİM TAKİBİ ÇAĞRISI ---
       if (offset > 0 && content.type === "QURAN") {
         try {
-          // 1. Tarayıcı hafızasındaki GÜNLÜK sayacı artır (Frontend)
           const todayStr = new Date().toISOString().split("T")[0];
           const savedDataStr = localStorage.getItem("hatim_progress_today");
           let currentCount = 0;
-
           if (savedDataStr) {
             const parsed = JSON.parse(savedDataStr);
-            if (parsed.date === todayStr) {
-              currentCount = parsed.count;
-            }
+            if (parsed.date === todayStr) currentCount = parsed.count;
           }
-
-          // Yeni okuma sayısını kaydet
           localStorage.setItem(
             "hatim_progress_today",
-            JSON.stringify({
-              date: todayStr,
-              count: currentCount + 1,
-            }),
+            JSON.stringify({ date: todayStr, count: currentCount + 1 }),
           );
-
-          // HatimTrackerWidget'ın anında güncellenmesi için bir sinyal (event) gönder
           window.dispatchEvent(new Event("hatim_progress_updated"));
 
-          // 2. Backend'e isteği gönder (Eğer backend hazırsa)
           const token = localStorage.getItem("token");
           if (token) {
             await fetch(
@@ -953,7 +852,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           console.error("İlerleme kaydedilemedi:", err);
         }
       }
-      // -------------------------------------------------------------
     }
   };
 
@@ -973,7 +871,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
-
     if (content.assignmentId && isOwner) {
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
@@ -982,7 +879,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           onDecrementCount(content.assignmentId);
           if (typeof navigator !== "undefined" && navigator.vibrate)
             navigator.vibrate(50);
-
           if (safeCount === 1 && onCompleteAssignment) {
             onCompleteAssignment(content.assignmentId);
             onClose();
@@ -1014,10 +910,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       touchStartY.current === null
     )
       return;
-
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
-
     if (
       Math.abs(currentX - touchStartX.current) > 10 ||
       Math.abs(currentY - touchStartY.current) > 10
@@ -1061,19 +955,21 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           className="shrink-0 px-2.5 md:px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 md:gap-2 transition-all"
         >
           <span>←</span>{" "}
-          <span className="hidden sm:inline-block">{t("previous")}</span>
+          <span className="hidden sm:inline-block">
+            {t("previous") || "Önceki"}
+          </span>
         </button>
 
         <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
           {content.type === "QURAN" && (
             <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
-              {t("juz").toUpperCase()} {currentJuz}{" "}
+              {(t("juzWord") || "Cüz").toUpperCase()} {currentJuz}{" "}
               {currentSurahName && <span className="mx-1 opacity-50">•</span>}{" "}
               {currentSurahName}
             </span>
           )}
           <span className="truncate w-full">
-            {t("page")} {displayCurrentPage}
+            {t("pageWord") || "Sayfa"} {displayCurrentPage}
           </span>
         </span>
 
@@ -1082,7 +978,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           disabled={isLastPage}
           className="shrink-0 px-2.5 md:px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 transition-all"
         >
-          <span className="hidden sm:inline-block">{t("next")}</span>{" "}
+          <span className="hidden sm:inline-block">
+            {t("next") || "Sonraki"}
+          </span>{" "}
           <span>→</span>
         </button>
       </div>
@@ -1118,6 +1016,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         handleFontChange(Math.max(0, fontLevel - 1))
                       }
                       disabled={fontLevel === 0}
+                      title={t("decreaseFont")}
                       className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
                     >
                       A-
@@ -1128,11 +1027,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         handleFontChange(Math.min(8, fontLevel + 1))
                       }
                       disabled={fontLevel === 8}
+                      title={t("increaseFont")}
                       className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
                     >
                       A+
                     </button>
-
                     <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                     <button
                       onClick={() => {
@@ -1143,12 +1042,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         )
                           navigator.vibrate(20);
                       }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                        isSepia
-                          ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner"
-                          : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"
-                      }`}
-                      title={t("eyeProtection") || "Okuma Modu (Sepya)"}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
+                      title={t("eyeProtection") || "Okuma Modu"}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1164,8 +1059,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
-
-                    {/* Tam Ekran Butonu */}
                     <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                     <button
                       onClick={() => {
@@ -1177,7 +1070,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                           navigator.vibrate(20);
                       }}
                       className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-                      title={t("fullscreen") || "Tam Ekran"}
+                      title={t("fullscreen")}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1192,16 +1085,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                       </svg>
                     </button>
-
                     <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
                     <button
                       onClick={cycleSpeed}
                       className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      title={t("scrollSpeed") || "Kaydırma Hızı"}
+                      title={t("scrollSpeed")}
                     >
                       {autoScrollSpeed}x
                     </button>
-
                     <button
                       onClick={() => {
                         setIsAutoScrolling(!isAutoScrolling);
@@ -1211,15 +1102,11 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         )
                           navigator.vibrate(20);
                       }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                        isAutoScrolling
-                          ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner"
-                          : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
-                      }`}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
                       title={
                         isAutoScrolling
-                          ? t("stopAutoScroll") || "Durdur"
-                          : t("startAutoScroll") || "Oynat"
+                          ? t("stopAutoScroll")
+                          : t("startAutoScroll")
                       }
                     >
                       {isAutoScrolling ? (
@@ -1247,6 +1134,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 <button
                   onClick={onClose}
                   className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
+                  title={t("close") || "Kapat"}
                 >
                   <svg
                     className="w-5 h-5"
@@ -1271,7 +1159,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                   onClick={() => setActiveQuranTab("ORIGINAL")}
                   className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
                 >
-                  {t("Original") || "Original"}
+                  {t("tabOriginal") || "Original"}
                 </button>
                 <button
                   onClick={() => setActiveQuranTab("MEAL")}
@@ -1285,7 +1173,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             {content.type !== "SIMPLE" && content.type !== "QURAN" && (
               <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                 {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
-                  // BEDİR ve UHUD'da Meal gizlensin, TEVHİDNAME'de Okunuş gizlensin
                   if (
                     tab === "MEANING" &&
                     (content.codeKey === "BEDIR" || content.codeKey === "UHUD")
@@ -1301,7 +1188,8 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       onClick={() => setActiveTab(tab)}
                       className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${activeTab === tab ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}
                     >
-                      {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`)}
+                      {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`) ||
+                        tab}
                     </button>
                   );
                 })}
@@ -1310,7 +1198,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           </div>
         )}
 
-        {/* CONTENT */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -1630,14 +1517,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           )}
         </div>
 
-        {/* FOOTER */}
         {!isFullscreen && (
           <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20 animate-in slide-in-from-bottom-4">
             <button
               onClick={onClose}
               className="w-full py-4 bg-gray-900 dark:bg-gray-800 text-white rounded-2xl hover:bg-black dark:hover:bg-gray-700 transition-all font-black uppercase tracking-[0.2em] text-xs shadow-lg active:scale-[0.98]"
             >
-              {t("close")}
+              {t("close") || "Kapat"}
             </button>
           </div>
         )}

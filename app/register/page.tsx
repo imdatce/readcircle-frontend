@@ -34,16 +34,22 @@ export default function RegisterPage() {
       const text = await res.text();
 
       if (!res.ok) {
-        throw new Error(text);
+        throw new Error(
+          text || t("registerFailed") || "Kayıt işlemi başarısız.",
+        );
       }
 
-      setSuccess(t("registerSuccess"));
+      setSuccess(
+        t("registerSuccess") || "Kayıt başarılı! Yönlendiriliyorsunuz...",
+      );
       setTimeout(() => {
         router.push("/login");
       }, 1500);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || t("errorOccurred"));
+      setError(
+        err.message || t("errorOccurred") || "Beklenmeyen bir hata oluştu.",
+      );
     } finally {
       setLoading(false);
     }
@@ -75,10 +81,11 @@ export default function RegisterPage() {
             </svg>
           </div>
           <h2 className="text-3xl font-black text-gray-800 dark:text-white mb-2">
-            {t("registerTitle")}
+            {t("registerTitle") || "Kayıt Ol"}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {t("registerSubtitle")}
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            {t("registerSubtitle") ||
+              "Yeni bir hesap oluşturarak aramıza katılın."}
           </p>
         </div>
 
@@ -125,7 +132,7 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-              {t("usernameLabel")}
+              {t("usernameLabel") || "Kullanıcı Adı"}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
@@ -145,8 +152,8 @@ export default function RegisterPage() {
                 </svg>
               </div>
               <input
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
-                placeholder={t("placeholderUserExample")}
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-emerald-500 outline-none transition-all placeholder-gray-400"
+                placeholder={t("placeholderUserExample") || "Örn: ahmet123"}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -156,7 +163,7 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-              {t("passwordLabel")}
+              {t("passwordLabel") || "Şifre"}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
@@ -176,9 +183,9 @@ export default function RegisterPage() {
                 </svg>
               </div>
               <input
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-600"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-medium focus:border-emerald-500 outline-none transition-all placeholder-gray-400"
                 type="password"
-                placeholder={t("placeholderPass")}
+                placeholder={t("placeholderPass") || "Şifrenizi girin"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -188,27 +195,27 @@ export default function RegisterPage() {
 
           <button
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-2"
+            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
           >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                {t("registering")}
+                {t("registering") || "Kayıt Yapılıyor..."}
               </>
             ) : (
-              t("registerButton")
+              t("registerButton") || "Kayıt Ol"
             )}
           </button>
         </form>
 
         <div className="mt-8 text-center">
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            {t("haveAccount")}{" "}
+            {t("haveAccount") || "Zaten hesabınız var mı?"}{" "}
             <Link
               href="/login"
               className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline ml-1"
             >
-              {t("loginLink")}
+              {t("loginLink") || "Giriş Yap"}
             </Link>
           </p>
         </div>

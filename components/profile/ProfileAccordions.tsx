@@ -29,7 +29,7 @@ export function ManagedSessionsAccordion({
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth={2.5}
             >
               <path
                 strokeLinecap="round"
@@ -43,7 +43,7 @@ export function ManagedSessionsAccordion({
               {t("managedSessions") || "Yönettiğim Halkalar"}
             </h3>
             <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">
-              {sessions.length} Halka
+              {sessions.length} {t("circle") || "Halka"}
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ export function JoinedSessionsAccordion({
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth={2.5}
             >
               <path
                 strokeLinecap="round"
@@ -158,7 +158,7 @@ export function JoinedSessionsAccordion({
               {t("participatedCircles") || "Katıldığım Halkalar"}
             </h3>
             <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-1.5">
-              {sessions.length} Halka
+              {sessions.length} {t("circle") || "Halka"}
             </p>
           </div>
         </div>
