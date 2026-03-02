@@ -128,7 +128,34 @@ async function fetchQuranTranslationPage(
   }
 }
 
-const SUBHANEKE_RE = /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh/i;
+// Quran.com API'sinden kelime kelime sayfa verisini çeken fonksiyon
+async function fetchWordByWordPage(pageNumber: number, languageCode: string) {
+  try {
+    // SADECE Quran.com'un "kelime kelime" (word-by-word) DESTEKLEDİĞİ dilleri yazıyoruz:
+    const supportedLangs = [
+      "en", // İngilizce
+      "tr", // Türkçe
+    ];
+
+    // Eğer kullanıcının dili (örn. "fr", "nl", "ku") bu listede YOKSA, otomatik "tr" (Türkçe) kullan.
+    const lang = supportedLangs.includes(languageCode) ? languageCode : "en";
+
+    const res = await fetch(
+      `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,translation&language=${lang}`,
+    );
+    const data = await res.json();
+    if (data && data.verses) {
+      return data.verses;
+    }
+    return null;
+  } catch (error) {
+    console.error("Word by word verisi çekilemedi:", error);
+    return null;
+  }
+}
+
+const SUBHANEKE_RE =
+  /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh/i;
 
 const Medal = ({ number }: { number: number }) => (
   <span className="relative flex items-center justify-center shrink-0 w-9 h-9 md:w-11 md:h-11">
@@ -451,11 +478,21 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const { language } = useLanguage();
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
-  const [activeQuranTab, setActiveQuranTab] = useState<"ORIGINAL" | "MEAL">(
-    "ORIGINAL",
-  );
+
+  // Varsayılan sekmeyi INTERACTIVE yaptık
+  const [activeQuranTab, setActiveQuranTab] = useState<
+    "ORIGINAL" | "MEAL" | "INTERACTIVE"
+  >("ORIGINAL");
+
+  const [originalData, setOriginalData] = useState<any[]>([]);
+  const [loadingOriginal, setLoadingOriginal] = useState(true);
+
   const [mealData, setMealData] = useState<any[]>([]);
   const [loadingMeal, setLoadingMeal] = useState(false);
+
+  const [interactiveData, setInteractiveData] = useState<any[]>([]);
+  const [loadingInteractive, setLoadingInteractive] = useState(false);
+
   const [currentSurahName, setCurrentSurahName] = useState<string>("");
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -485,10 +522,12 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     return `readcircle_progress_type_${content.type}`;
   }, [content.assignmentId, content.codeKey, content.type]);
 
+  // ORIGINAL veri ve Surah ismini çekme useEffect'i
   useEffect(() => {
     if (content.type === "QURAN") {
       let isMounted = true;
-      fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-uthmani`)
+      setLoadingOriginal(true);
+      fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-simple`)
         .then((res) => res.json())
         .then((data) => {
           if (isMounted && data.code === 200 && data.data?.ayahs?.length > 0) {
@@ -496,9 +535,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               new Set(data.data.ayahs.map((a: any) => a.surah.englishName)),
             );
             setCurrentSurahName(surahs.join(" & "));
+            setOriginalData(data.data.ayahs); // Artık resim yerine bu saf metni render edeceğiz
           }
         })
-        .catch((err) => console.error("Sure ismi alınamadı:", err));
+        .catch((err) => console.error("Sure ismi alınamadı:", err))
+        .finally(() => {
+          if (isMounted) setLoadingOriginal(false);
+        });
       return () => {
         isMounted = false;
       };
@@ -685,17 +728,28 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     };
   }, []);
 
+  // Meal ve İnteraktif veriyi çekme
   useEffect(() => {
-    if (content.type === "QURAN" && activeQuranTab === "MEAL") {
-      setLoadingMeal(true);
-      setMealData([]);
-      const targetEdition =
-        EDITION_MAPPING[language] || EDITION_MAPPING["default"];
-      fetchQuranTranslationPage(currentPage, targetEdition)
-        .then((result) => {
-          if (result) setMealData(result.ayahs);
-        })
-        .finally(() => setLoadingMeal(false));
+    if (content.type === "QURAN") {
+      if (activeQuranTab === "MEAL") {
+        setLoadingMeal(true);
+        setMealData([]);
+        const targetEdition =
+          EDITION_MAPPING[language] || EDITION_MAPPING["default"];
+        fetchQuranTranslationPage(currentPage, targetEdition)
+          .then((result) => {
+            if (result) setMealData(result.ayahs);
+          })
+          .finally(() => setLoadingMeal(false));
+      } else if (activeQuranTab === "INTERACTIVE") {
+        setLoadingInteractive(true);
+        setInteractiveData([]);
+        fetchWordByWordPage(currentPage, language)
+          .then((verses) => {
+            if (verses) setInteractiveData(verses);
+          })
+          .finally(() => setLoadingInteractive(false));
+      }
     }
   }, [currentPage, activeQuranTab, content.type, language]);
 
@@ -1154,18 +1208,24 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
             </div>
 
             {content.type === "QURAN" && (
-              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto hide-scrollbar">
                 <button
                   onClick={() => setActiveQuranTab("ORIGINAL")}
-                  className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
                 >
-                  {t("tabOriginal") || "Original"}
+                  {t("tabOriginal") || "Orijinal Metin"}
+                </button>
+                <button
+                  onClick={() => setActiveQuranTab("INTERACTIVE")}
+                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "INTERACTIVE" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+                >
+                  {t("Interactive") || "İnteraktif"}
                 </button>
                 <button
                   onClick={() => setActiveQuranTab("MEAL")}
-                  className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-lg transition-all ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
+                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
                 >
-                  {t("tabMeaning") || "Meaning"}
+                  {t("Meaning") || "Meal"}
                 </button>
               </div>
             )}
@@ -1239,16 +1299,87 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               <div
                 className={`flex-1 w-full rounded-[2rem] p-2 md:p-4 border shadow-sm min-h-[50vh] relative transition-colors ${isSepia ? "bg-[#F4ECD8] border-[#E6D5B8]" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"}`}
               >
+                {/* YENİ Orijinal Metin (Text-Based) GÖRÜNÜMÜ */}
                 {activeQuranTab === "ORIGINAL" ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <img
-                      src={`https://quran.islam-db.com/data/pages/quranpages_1024/images/page${String(currentPage).padStart(3, "0")}.png`}
-                      alt={`Page ${currentPage}`}
-                      className={`max-w-full h-auto object-contain rounded-xl dark:invert dark:opacity-90 transition-all ${isSepia ? "mix-blend-multiply contrast-125" : ""}`}
-                      loading="lazy"
-                    />
+                  <div className="w-full h-full p-4 md:p-8 flex flex-col items-center">
+                    {loadingOriginal ? (
+                      <div className="flex flex-col items-center justify-center h-40">
+                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <div
+                        className="text-justify text-center w-full max-w-4xl mx-auto leading-[4.5rem] md:leading-[6rem]"
+                        dir="rtl"
+                      >
+                        {originalData.map((ayah: any) => (
+                          <React.Fragment key={ayah.number}>
+                            <span
+                              className={`font-serif text-gray-900 dark:text-gray-100 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
+                            >
+                              {ayah.text}
+                            </span>
+                            <span className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-amber-500/30 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs md:text-sm font-black shadow-sm mx-2 align-middle">
+                              {ayah.numberInSurah}
+                            </span>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : // INTERAKTİF (KELİME KELİME) GÖRÜNÜM
+                activeQuranTab === "INTERACTIVE" ? (
+                  <div className="w-full h-full p-2 md:p-4">
+                    {loadingInteractive ? (
+                      <div className="flex flex-col items-center justify-center h-40">
+                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col space-y-6 md:space-y-8">
+                        {interactiveData.map((verse: any) => (
+                          <div
+                            key={verse.id}
+                            className="flex flex-col bg-white/50 dark:bg-gray-800/30 rounded-[1.5rem] p-4 md:p-6 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
+                          >
+                            <div
+                              className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-10 md:gap-y-12 leading-[4rem]"
+                              dir="rtl"
+                            >
+                              {verse.words.map((word: any) => (
+                                <div
+                                  key={word.id}
+                                  className={`relative group cursor-pointer flex flex-col items-center justify-center ${word.char_type_name === "end" ? "mx-2" : ""}`}
+                                >
+                                  {word.char_type_name === "end" ? (
+                                    <span className="flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-full border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm md:text-base font-black shadow-sm mx-1">
+                                      {word.text_uthmani}
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className={`font-serif text-gray-800 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
+                                    >
+                                      {word.text_uthmani}
+                                    </span>
+                                  )}
+
+                                  {word.char_type_name !== "end" &&
+                                    word.translation?.text && (
+                                      <div className="absolute -top-10 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10 scale-95 group-hover:scale-100">
+                                        <div className="bg-gray-800 dark:bg-gray-700 text-white text-[10px] md:text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap font-sans font-medium">
+                                          {word.translation.text}
+                                        </div>
+                                        <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-800 dark:border-t-gray-700"></div>
+                                      </div>
+                                    )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
+                  // MEAL GÖRÜNÜMÜ
                   <div className="w-full h-full p-2 md:p-4">
                     {loadingMeal ? (
                       <div className="flex flex-col items-center justify-center h-40 space-y-4">

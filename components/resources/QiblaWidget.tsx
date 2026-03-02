@@ -135,16 +135,6 @@ export default function QiblaWidget() {
     }
   }, [isAligned]);
 
-  // Akıllı Yönlendirici Metin
-  const getDirectionText = () => {
-    if (isAligned) return t("qiblaAligned") || "Tam Kıbledesiniz!";
-    if (normalizedRotation > 5 && normalizedRotation <= 180)
-      return (t("turnRight") || "Sağa doğru dönün") + " ➔";
-    if (normalizedRotation > 180 && normalizedRotation < 355)
-      return "⬅ " + (t("turnLeft") || "Sola doğru dönün");
-    return "";
-  };
-
   return (
     <div
       className={`bg-white/80 dark:bg-[#0a1f1a] backdrop-blur-md rounded-[2.5rem] p-5 md:p-6 shadow-sm border transition-colors duration-500 relative overflow-hidden mt-6 flex flex-col ${isAligned ? "border-emerald-500/50 shadow-emerald-500/20" : "border-emerald-100 dark:border-emerald-900/30"}`}
@@ -206,11 +196,27 @@ export default function QiblaWidget() {
 
         {qiblaAngle !== null && (
           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700 w-full mt-2">
-            <div
-              className={`mb-4 px-4 py-1.5 rounded-full text-sm font-black transition-colors duration-500 ${isAligned ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"}`}
-            >
-              {getDirectionText()}
-            </div>
+            {!isCompassActive && (
+              <button
+                onClick={startCompass}
+                className="mt-6 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:opacity-90 active:scale-95"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {t("startLiveCompass") || "Canlı Pusulayı Aç"}
+              </button>
+            )}
 
             <div className="relative w-64 h-64 md:w-72 md:h-72 rounded-full border-4 border-gray-100 dark:border-gray-800 shadow-inner bg-gray-50/50 dark:bg-gray-800/20 flex items-center justify-center my-4">
               {/* SABİT SECCADE (Kullanıcının Telefonu) */}
@@ -249,28 +255,6 @@ export default function QiblaWidget() {
                 </div>
               </div>
             </div>
-
-            {!isCompassActive && (
-              <button
-                onClick={startCompass}
-                className="mt-6 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:opacity-90 active:scale-95"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                {t("startLiveCompass") || "Canlı Pusulayı Aç"}
-              </button>
-            )}
 
             {isCompassActive && (
               <p className="mt-6 text-xs text-gray-500 font-medium max-w-xs text-center">
