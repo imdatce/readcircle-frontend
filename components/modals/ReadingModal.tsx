@@ -492,7 +492,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const [interactiveData, setInteractiveData] = useState<any[]>([]);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
-
+  const [activeWordId, setActiveWordId] = useState<number | null>(null);
   const [currentSurahName, setCurrentSurahName] = useState<string>("");
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -925,6 +925,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
   const handleContentClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a, input")) return;
+    if (activeWordId) setActiveWordId(null);
     if (content.assignmentId && isOwner) {
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
@@ -1348,6 +1349,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                 <div
                                   key={word.id}
                                   className={`relative group cursor-pointer flex flex-col items-center justify-center ${word.char_type_name === "end" ? "mx-2" : ""}`}
+                                  // YENİ EKLENEN ONCLICK EVENTİ:
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Boşluğa tıklanmış gibi algılayıp tam ekrana geçmesini engeller
+                                    setActiveWordId(
+                                      activeWordId === word.id ? null : word.id,
+                                    );
+                                  }}
                                 >
                                   {word.char_type_name === "end" ? (
                                     <span className="flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-full border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm md:text-base font-black shadow-sm mx-1">
@@ -1355,7 +1363,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                     </span>
                                   ) : (
                                     <span
-                                      className={`font-serif text-gray-800 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
+                                      className={`font-serif text-gray-800 dark:text-gray-100 transition-colors ${activeWordId === word.id ? "text-emerald-600 dark:text-emerald-400" : "lg:group-hover:text-emerald-600 dark:lg:group-hover:text-emerald-400"} ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
                                     >
                                       {word.text_uthmani}
                                     </span>
@@ -1363,7 +1371,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
                                   {word.char_type_name !== "end" &&
                                     word.translation?.text && (
-                                      <div className="absolute -top-10 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10 scale-95 group-hover:scale-100">
+                                      // YENİ TOOLTİP MANTIĞI (Hem mobilde tıklama hem pc'de hover)
+                                      <div
+                                        className={`absolute -top-10 flex flex-col items-center transition-all duration-300 pointer-events-none z-10 ${activeWordId === word.id ? "opacity-100 scale-100" : "opacity-0 scale-95 lg:group-hover:opacity-100 lg:group-hover:scale-100"}`}
+                                      >
                                         <div className="bg-gray-800 dark:bg-gray-700 text-white text-[10px] md:text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap font-sans font-medium">
                                           {word.translation.text}
                                         </div>
