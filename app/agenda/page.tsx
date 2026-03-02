@@ -138,7 +138,7 @@ export default function AgendaPage() {
         title: t("personalDuaList") || "Kişisel Dua Listem",
         description:
           t("personalDuaDesc") ||
-          "Sevdiklerini ekle, niyet et ve onlara dua et.",
+          "Sevdiklerini ekle, niyet et ve onlara dua et. [Bu liste sadece sizin cihazınızda saklıdır.]",
         href: "/agenda/dualarim",
         icon: (
           <svg

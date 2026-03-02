@@ -96,7 +96,7 @@ export const tr = {
   dhikrAllahuEkber: "Allahu Ekber",
   dhikrHasbunallah: "Hasbunallahu ve ni'mel vekil",
   myDuasTitle: "Kişisel Dua Listem",
-  myDuasSubtitle: "Sevdikleriniz için niyet edin ve dua edin.",
+  myDuasSubtitle: "Sevdikleriniz için niyet edin ve dua edin.  [Bu liste sadece sizin cihazınızda saklıdır.]",
   addNewDuaPerson: "Yeni Kişi Ekle",
   duaNameLabel: "Kimin için dua edeceksiniz?",
   duaNamePlaceholder: "Örn: Annem, Ahmet, Hastalar...",
@@ -178,7 +178,7 @@ export const tr = {
   dailyDhikrDesc: "Dilini ve kalbini zikirle diri tut, virdini tamamla.",
 
   personalDuaList: "Kişisel Dua Listem",
-  personalDuaDesc: "Sevdiklerini ekle, niyet et ve onlara dua et.",
+  personalDuaDesc: "Sevdiklerini ekle, niyet et ve onlara dua et. [Bu liste sadece sizin cihazınızda saklıdır.]",
 
   loginRequiredTitle: "Giriş Yapmanız Gerekiyor",
   loginRequiredAgendaDesc:

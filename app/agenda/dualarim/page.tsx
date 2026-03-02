@@ -122,7 +122,7 @@ export default function MyDuasPage() {
               </h1>
               <p className="text-gray-500 dark:text-gray-400 font-medium text-xs mt-0.5">
                 {t("myDuasSubtitle") ||
-                  "Sevdikleriniz için niyet edin ve dua edin."}
+                  "Sevdikleriniz için niyet edin ve dua edin. [Bu liste sadece sizin cihazınızda saklıdır.]"}
               </p>
             </div>
           </div>
