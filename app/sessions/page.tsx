@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,7 @@ export default function SessionsPage() {
 
     const code = joinCode.split("/").pop()?.trim();
     if (code) {
-      router.push(`/join/${code}`);
+      router.push(`/join?code=${code}`);
     }
   };
 

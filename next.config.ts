@@ -4,7 +4,10 @@ import withPWAInit from "@ducanh2912/next-pwa";
 // 1. Önce Next.js ayarlarını (nextConfig) tanımlıyoruz
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Eğer başka next.js ayarların varsa buraya ekleyebilirsin
+  output: 'export', // ZORUNLU: Capacitor'ın HTML/CSS/JS okuyabilmesi için
+  images: {
+    unoptimized: true, // ZORUNLU: Statik export'ta resimlerin bozulmaması için
+  },
 };
 
 // 2. Sonra PWA ayarlarını tanımlıyoruz
@@ -13,35 +16,33 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development", // Geliştirme aşamasında (npm run dev) kapalı
+  // DÜZELTME: Normalde veya mobil için (CAPACITOR_BUILD) derlenirken PWA'yı kapatıyoruz
+  disable: process.env.NODE_ENV === "development" || process.env.CAPACITOR_BUILD === "true",
   workboxOptions: {
     disableDevLogs: true,
     runtimeCaching: [
-      // Kuran Orijinal Metin API'sini Cihaza Kaydet
       {
         urlPattern: /^https:\/\/api\.alquran\.cloud\/.*/i,
         handler: 'CacheFirst',
         options: {
           cacheName: 'quran-api-cache',
-          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 Gün
+          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
         },
       },
-      // Kuran Kürtçe/Meal API'sini Cihaza Kaydet
       {
         urlPattern: /^https:\/\/quranenc\.com\/.*/i,
         handler: 'CacheFirst',
         options: {
           cacheName: 'quranenc-api-cache',
-          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 Gün
+          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
         },
       },
-      // Kuran Sayfa Resimlerini (Images) Cihaza Kaydet
       {
         urlPattern: /^https:\/\/quran\.islam-db\.com\/.*/i,
         handler: 'CacheFirst',
         options: {
           cacheName: 'quran-images-cache',
-          expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 Gün
+          expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
         },
       }
     ],

@@ -1,19 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider, Language } from "@/context/LanguageContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "@/context/ThemeContext";
 import SubNavigation from "@/components/SubNavigation";
-import { cookies } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -26,23 +24,46 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export const viewport = {
+// 1. GÜNCELLEME: Viewport ayarları ile zoom kapatıldı ve ekrana tam oturtuldu
+export const viewport: Viewport = {
   themeColor: "#10B981",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const localeCookie = cookieStore.get("NEXT_LOCALE");
-  const initialLang = (localeCookie?.value as Language) || "tr";
-
   return (
-    <html lang={initialLang} suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        {/* iOS Capacitor ServiceWorker Çökme Koruması (Polyfill) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof navigator !== 'undefined' && typeof navigator.serviceWorker === 'undefined') {
+                Object.defineProperty(navigator, 'serviceWorker', {
+                  value: {
+                    register: function() { return Promise.resolve(); },
+                    addEventListener: function() {},
+                    removeEventListener: function() {},
+                    ready: new Promise(function() { })
+                  },
+                  configurable: true
+                });
+              }
+            `,
+          }}
+        />
+      </head>
+      {/* 2. GÜNCELLEME: body'e "overflow-x-hidden" ve "w-full" eklendi */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-gray-100 relative`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-gray-100 relative overflow-x-hidden w-full`}
       >
         <div className="fixed inset-0 -z-50 h-full w-full bg-[#f0f4f8] dark:bg-[#020617] transition-colors duration-300">
           <div
@@ -56,12 +77,19 @@ export default async function RootLayout({
           <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-amber-400/20 dark:bg-amber-600/15 rounded-full blur-[100px] opacity-40 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-emerald-100/30 dark:to-emerald-950/40 pointer-events-none"></div>
         </div>
-
-        {/* DİKKAT: En dışta LanguageProvider var */}
-        <LanguageProvider initialLanguage={initialLang}>
+        <LanguageProvider initialLanguage="tr">
           <AuthProvider>
             <ThemeProvider>
-              <div className="flex flex-col min-h-screen relative z-10">
+              {/* 3. GÜNCELLEME: Safe Area boşlukları eklendi ve taşkınlık engellendi */}
+              <div
+                className="flex flex-col min-h-screen relative z-10 w-full overflow-x-hidden"
+                style={{
+                  paddingTop: "env(safe-area-inset-top)",
+                  paddingBottom: "env(safe-area-inset-bottom)",
+                  paddingLeft: "env(safe-area-inset-left)",
+                  paddingRight: "env(safe-area-inset-right)",
+                }}
+              >
                 <Header />
                 <SubNavigation />
                 <main className="flex-grow w-full">{children}</main>

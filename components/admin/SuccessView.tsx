@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import QRCode from "react-qr-code";
+import { useRouter } from "next/navigation"; // EKLENDİ
 import { useLanguage } from "@/context/LanguageContext";
 
 interface SuccessViewProps {
@@ -19,7 +20,7 @@ export default function SuccessView({
   onReset,
 }: SuccessViewProps) {
   const { t } = useLanguage();
-
+const router = useRouter();
   const handleCopyCode = () => {
     navigator.clipboard.writeText(createdCode);
     alert(t("copied") || "Kopyalandı!");
@@ -114,12 +115,13 @@ export default function SuccessView({
           </svg>
           <span>{t("shareWhatsapp") || "WhatsApp ile Gönder"}</span>
         </a>
-        <Link
-          href={`/join/${createdCode}`}
+       <button
+          onClick={() => router.push(`/join?code=${createdCode}`)}
+          
           className="sm:col-span-2 block w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl md:rounded-2xl font-black text-base md:text-lg shadow-lg active:scale-95 transition-all"
         >
           {t("startReading") || "Okumaya Başla"}
-        </Link>
+        </button>
       </div>
       <button
         onClick={onReset}

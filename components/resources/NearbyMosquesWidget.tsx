@@ -141,6 +141,12 @@ export default function NearbyMosquesWidget() {
         );
         setLoading(false);
       },
+      // HATA 2: Mobil cihazlarda GPS'in daha hızlı ve doğru yanıt vermesi için bu ayarlar kritiktir.
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
     );
   };
 

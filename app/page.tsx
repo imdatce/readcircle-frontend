@@ -88,7 +88,7 @@ function HomeContent() {
     let sessionCode = code.trim();
     if (sessionCode.includes("/join/"))
       sessionCode = sessionCode.split("/join/")[1].split("?")[0];
-    router.push(`/join/${sessionCode}`);
+    router.push(`/join?code=${sessionCode}`);
   };
 
   const handleDeleteSession = async (sessionCode: string) => {

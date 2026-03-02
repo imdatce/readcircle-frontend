@@ -55,7 +55,7 @@ export default function SessionCard({
 
   const handleWhatsappShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const link = `${window.location.origin}/join/${session.code}`;
+const link = `${window.location.origin}/join?code=${session.code}`;
     const sessionName =
       session.description || t("unnamedCircle") || "İsimsiz Halka";
     const creator = user || "SURA";
@@ -80,7 +80,7 @@ export default function SessionCard({
 
   return (
     <div
-      onClick={() => router.push(`/join/${session.code}`)}
+      onClick={() => router.push(`/join?code=${session.code}`)}
       className={`group relative bg-white dark:bg-gray-900/80 backdrop-blur-sm p-6 rounded-[2rem] border ${
         isManaged
           ? "border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700/50"
@@ -192,7 +192,7 @@ export default function SessionCard({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const link = `${window.location.origin}/join/${session.code}`;
+                    const link = `${window.location.origin}/join?code=${session.code}`;
                     navigator.clipboard.writeText(link);
                     alert(t("copied") || "Kopyalandı");
                   }}

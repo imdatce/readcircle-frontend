@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { use, useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useDistributionSession } from "@/hooks/useDistributionSession";
 import ReadingModal from "@/components/modals/ReadingModal";
@@ -20,14 +20,9 @@ import {
 } from "@/components/join/JoinWidgets";
 import AssignmentCard from "@/components/join/AssignmentCard";
 
-export default function JoinPage({
-  params,
-}: {
-  params: Promise<{ code: string }>;
-}) {
+export default function JoinPageClient({ code }: { code: string }) {
   const router = useRouter();
   const { t, language } = useLanguage();
-  const { code } = use(params);
 
   const {
     session,

@@ -77,8 +77,9 @@ function RisaleContent() {
     setView("chapters");
     try {
       const res = await fetch(
-        `/api/risale/files?folder=${encodeURIComponent(book.folder)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/risale/files?folder=${encodeURIComponent(book.folder)}`,
       );
+
       if (res.ok) {
         const data = await res.json();
         const htmlFiles = data.filter((f: any) => f.name.endsWith(".html"));
@@ -92,9 +93,17 @@ function RisaleContent() {
           );
           if (targetFile) handleSelectChapter(targetFile, book);
         }
+      } else {
+        // DÜZELTME: Backend'den hata gelirse artık boş ekran yerine uyarı göreceğiz
+        const errText = await res.text();
+        console.error("Backend Error:", errText);
+        alert("Bölümler yüklenemedi: " + errText);
+        setView("books"); // Hata olunca ana listeye geri dön
       }
     } catch (e) {
       console.error(e);
+      alert("Sunucuya bağlanılamadı.");
+      setView("books");
     } finally {
       if (!autoFile) setLoading(false);
     }
@@ -111,16 +120,32 @@ function RisaleContent() {
     );
 
     try {
-      const res = await fetch(
-        `${GITHUB_RAW_BASE}/${encodeURIComponent(bookObj.folder)}/${encodeURIComponent(file.name)}`,
-      );
+      // DÜZELTME: Klasör yolundaki '/' işaretinin bozulmasını engelliyoruz
+      const folderPath = bookObj.folder
+        .split("/")
+        .map((part: string) => encodeURIComponent(part))
+        .join("/");
+
+      // Tam adresi oluşturuyoruz
+      const fileUrl = `${GITHUB_RAW_BASE}/${folderPath}/${encodeURIComponent(file.name)}`;
+
+      const res = await fetch(fileUrl);
+
       if (res.ok) {
         const html = await res.text();
         setContent(html);
         window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        console.error("GitHub'dan içerik çekilemedi. Hata kodu:", res.status);
+        setContent(
+          `<div class="p-8 text-center text-red-500 font-bold">İçerik yüklenemedi (Hata: ${res.status}). Lütfen daha sonra tekrar deneyin.</div>`,
+        );
       }
     } catch (e) {
-      console.error(e);
+      console.error("Risale fetch hatası:", e);
+      setContent(
+        `<div class="p-8 text-center text-red-500 font-bold">Bağlantı hatası oluştu. İnternetinizi kontrol edin.</div>`,
+      );
     } finally {
       setLoading(false);
     }
