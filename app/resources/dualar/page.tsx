@@ -33,32 +33,20 @@ function DualarContent() {
 
   const duaParam = searchParams.get("dua");
 
-  // DUALAR_LIST'i useMemo içine alıyoruz ki dil değiştiğinde anında tetiklensin.
+  // İstenen Sıralama ve Renk Kategorizasyonu:
+  // Renk 1: Emerald (Esmaül Hüsna)
+  // Renk 2: Indigo (Salavatlar)
+  // Renk 3: Blue (Dualar ve Tevhidname)
+  // Renk 4: Amber (Şehit İsimleri)
   const DUALAR_LIST = useMemo(
     () => [
       {
-        id: "bedir",
-        title: t("duaBedirTitle") || "Ashab-ı Bedir",
-        codeKey: "BEDIR",
-        type: "LIST_BASED",
-        desc: t("duaBedirDesc") || "Bedir ehlinin mübarek isimleri",
-        color: "emerald",
-      },
-      {
-        id: "uhud",
-        title: t("duaUhudTitle") || "Şüheda-i Uhud",
-        codeKey: "UHUD",
-        type: "LIST_BASED",
-        desc: t("duaUhudDesc") || "Uhud şehitlerinin mübarek isimleri",
-        color: "emerald",
-      },
-      {
-        id: "tevhidname",
-        title: t("duaTevhidnameTitle") || "Tevhidname",
-        codeKey: "TEVHIDNAME",
-        type: "LIST_BASED",
-        desc: t("duaTevhidnameDesc") || "Tevhid hakikatleri ve zikirleri",
-        color: "blue",
+        id: "esmaulhusna",
+        title: t("duaEsmaTitle") || "Esma-ül Hüsna",
+        codeKey: "ESMAULHUSNA",
+        type: "CUSTOM_PAGE",
+        desc: t("duaEsmaDesc") || "Allah'ın 99 İsmi, faziletleri ve zikirleri",
+        color: "emerald", // Renk 1
       },
       {
         id: "tefriciye",
@@ -66,7 +54,7 @@ function DualarContent() {
         codeKey: "TEFRICIYE",
         type: "COUNTABLE",
         desc: t("duaTefriciyeDesc") || "Sıkıntıların def'i için okunan salavat",
-        color: "amber",
+        color: "indigo", // Renk 2
       },
       {
         id: "munciye",
@@ -74,7 +62,7 @@ function DualarContent() {
         codeKey: "MUNCIYE",
         type: "COUNTABLE",
         desc: t("duaMunciyeDesc") || "Tüncînâ Duası ve Salavatı",
-        color: "amber",
+        color: "indigo", // Renk 2
       },
       {
         id: "salavat",
@@ -82,7 +70,7 @@ function DualarContent() {
         codeKey: "OZELSALAVAT",
         type: "COUNTABLE",
         desc: t("duaSalavatDesc") || "Peygamber Efendimiz'e (asm) salavatlar",
-        color: "indigo",
+        color: "indigo", // Renk 2
       },
       {
         id: "kurandualari",
@@ -90,15 +78,7 @@ function DualarContent() {
         codeKey: "KURANDUALARI",
         type: "LIST_BASED",
         desc: t("duaKuranDesc") || "Kur'an'da geçen Peygamber duaları",
-        color: "amber",
-      },
-      {
-        id: "esmaulhusna",
-        title: t("duaEsmaTitle") || "Esma-ül Hüsna",
-        codeKey: "ESMAULHUSNA",
-        type: "CUSTOM_PAGE",
-        desc: t("duaEsmaDesc") || "Allah'ın 99 İsmi, faziletleri ve zikirleri",
-        color: "emerald",
+        color: "blue", // Renk 3
       },
       {
         id: "gunluk-dualar",
@@ -108,7 +88,31 @@ function DualarContent() {
         desc:
           t("duaDailyDesc") ||
           "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
-        color: "indigo",
+        color: "blue", // Renk 3
+      },
+      {
+        id: "tevhidname",
+        title: t("duaTevhidnameTitle") || "Tevhidname",
+        codeKey: "TEVHIDNAME",
+        type: "LIST_BASED",
+        desc: t("duaTevhidnameDesc") || "Tevhid hakikatleri ve zikirleri",
+        color: "blue", // Renk 3
+      },
+      {
+        id: "bedir",
+        title: t("duaBedirTitle") || "Ashab-ı Bedir",
+        codeKey: "BEDIR",
+        type: "LIST_BASED",
+        desc: t("duaBedirDesc") || "Bedir ehlinin mübarek isimleri",
+        color: "amber", // Renk 4
+      },
+      {
+        id: "uhud",
+        title: t("duaUhudTitle") || "Şüheda-i Uhud",
+        codeKey: "UHUD",
+        type: "LIST_BASED",
+        desc: t("duaUhudDesc") || "Uhud şehitlerinin mübarek isimleri",
+        color: "amber", // Renk 4
       },
     ],
     [t],
@@ -249,7 +253,7 @@ function DualarContent() {
         <div className="flex items-center justify-between bg-white/50 dark:bg-[#0a1f1a] backdrop-blur-md p-4 rounded-[2rem] border border-blue-100/20 dark:border-blue-900/30 shadow-sm">
           <button
             onClick={() => router.push("/resources")}
-            className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all group"
+            className="p-2 hover:bg-blue-50 dark:bg-transparent dark:hover:bg-blue-900/30 rounded-full transition-all group"
             title={t("backToResources") || "Geri"}
           >
             <svg
@@ -294,13 +298,6 @@ function DualarContent() {
                       {dua.desc}
                     </p>
                   </div>
-                  <svg
-                    className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10 group-hover:scale-110 transition-transform duration-500"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                  </svg>
                 </button>
               ))}
             </div>
