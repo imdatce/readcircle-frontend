@@ -1373,7 +1373,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                     word.translation?.text && (
                                       // YENİ TOOLTİP MANTIĞI (Hem mobilde tıklama hem pc'de hover)
                                       <div
-                                        className={`absolute -top-10 flex flex-col items-center transition-all duration-300 pointer-events-none z-10 ${activeWordId === word.id ? "opacity-100 scale-100" : "opacity-0 scale-95 lg:group-hover:opacity-100 lg:group-hover:scale-100"}`}
+                                        className={`absolute bottom-full mb-2 flex flex-col items-center transition-all duration-300 pointer-events-none z-10 ${activeWordId === word.id ? "opacity-100 scale-100" : "opacity-0 scale-95 lg:group-hover:opacity-100 lg:group-hover:scale-100"}`}
                                       >
                                         <div className="bg-gray-800 dark:bg-gray-700 text-white text-[10px] md:text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap font-sans font-medium">
                                           {word.translation.text}
