@@ -429,7 +429,7 @@ export const ar = {
     landingHeroTitlePart3: "للمصادر الإسلامية",
     welcome: "مرحباً بك",
     dashboardIntro: "يمكنك إدارة حلقات القراءة الخاصة بك من الأسفل.",
-    landingHeroSubtitle: "محتوى يثري عالمك الروحي ومنصة للمشاركة.",
+    landingHeroSubtitle: "محتوى يثري عالمك الروحي ومنصة للمشاركة",
     getStarted: "ابدأ الآن",
     pasteCodeOrLink: "كود الدعوة أو الرابط...",
     join: "انضمام",

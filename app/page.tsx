@@ -199,7 +199,7 @@ function HomeContent() {
             {user
               ? `${t("welcome") || "Hoş geldin"}, ${user}. ${t("dashboardIntro") || "Aşağıdan okuma halkalarınızı yönetebilirsiniz."}`
               : t("landingHeroSubtitle") ||
-                "Manevi dünyanızı zenginleştirecek içerikler ve paylaşım platformu."}
+                "Manevi dünyanızı zenginleştirecek içerikler ve paylaşım platformu"}
           </p>
 
           <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto mb-10">

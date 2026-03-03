@@ -2,26 +2,34 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function PrayerTimesWidget() {
-  const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
+  const { t } = useLanguage();
   const [timings, setTimings] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // YENİ EKLENEN STATE: Lokasyonun hafızadan okunup okunmadığını takip eder
   const [isLocationLoaded, setIsLocationLoaded] = useState(false);
 
-  // Vakit İsimleri (İngilizce -> Dil Karşılığı)
-  const PRAYER_NAMES: Record<string, string> = {
-    Fajr: t("prayerFajr") || "İmsak",
-    Sunrise: t("prayerSunrise") || "Güneş",
-    Dhuhr: t("prayerDhuhr") || "Öğle",
-    Asr: t("prayerAsr") || "İkindi",
-    Maghrib: t("prayerMaghrib") || "Akşam",
-    Isha: t("prayerIsha") || "Yatsı",
-  };
+  const [nextPrayerInfo, setNextPrayerInfo] = useState<{
+    key: string;
+    name: string;
+    remaining: string;
+  } | null>(null);
+
+  // useMemo ile gereksiz render'lar önlendi
+  const PRAYER_NAMES: Record<string, string> = useMemo(
+    () => ({
+      Fajr: t("prayerFajr") || "İmsak",
+      Sunrise: t("prayerSunrise") || "Güneş",
+      Dhuhr: t("prayerDhuhr") || "Öğle",
+      Asr: t("prayerAsr") || "İkindi",
+      Maghrib: t("prayerMaghrib") || "Akşam",
+      Isha: t("prayerIsha") || "Yatsı",
+    }),
+    [t],
+  );
 
   const [showMonthly, setShowMonthly] = useState(false);
   const [monthlyTimings, setMonthlyTimings] = useState<any[]>([]);
@@ -62,19 +70,15 @@ export default function PrayerTimesWidget() {
           console.error("Hafıza okuma hatası", e);
         }
       }
-
-      // EKLENDİ: Hafıza kontrolü bitti, artık API çağrısı yapılabilir
       setIsLocationLoaded(true);
     };
 
     loadLocation();
-
     window.addEventListener("locationUpdated", loadLocation);
     return () => window.removeEventListener("locationUpdated", loadLocation);
   }, []);
 
   useEffect(() => {
-    // EKLENDİ: Lokasyon henüz okunmadıysa fonksiyonu durdur (API'ye gitme)
     if (!isLocationLoaded) return;
 
     async function fetchPrayerTimes() {
@@ -110,9 +114,66 @@ export default function PrayerTimesWidget() {
     }
 
     fetchPrayerTimes();
-
-    // EKLENDİ: isLocationLoaded state'i dependency dizisine eklendi
   }, [city, country, district, isLocationLoaded]);
+
+  useEffect(() => {
+    if (!timings) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const prayerKeys = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+      const timeObjects: { key: string; date: Date }[] = [];
+
+      prayerKeys.forEach((key) => {
+        const timeStr = timings[key].split(" ")[0];
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const date = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          hours,
+          minutes,
+          0,
+        );
+        timeObjects.push({ key, date });
+      });
+
+      let next = timeObjects.find((t) => t.date > now);
+
+      if (!next) {
+        const fajrTimeStr = timings["Fajr"].split(" ")[0];
+        const [fajrHours, fajrMinutes] = fajrTimeStr.split(":").map(Number);
+        const tomorrowFajr = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1,
+          fajrHours,
+          fajrMinutes,
+          0,
+        );
+        next = { key: "Fajr", date: tomorrowFajr };
+      }
+
+      const diffMs = next.date.getTime() - now.getTime();
+      if (diffMs > 0) {
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+        const formattedTime = `${String(hours).padStart(2, "0")}:${String(
+          minutes,
+        ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        setNextPrayerInfo({
+          key: next.key,
+          name: PRAYER_NAMES[next.key],
+          remaining: formattedTime,
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timings, PRAYER_NAMES]);
 
   const handleToggleMonthly = async () => {
     if (showMonthly) {
@@ -156,6 +217,7 @@ export default function PrayerTimesWidget() {
     setFilteredDistricts([]);
     setShowDistrictList(false);
 
+    // 1. Ülke listesini getir (yoksa)
     if (countryList.length === 0) {
       try {
         const res = await fetch(
@@ -167,11 +229,62 @@ export default function PrayerTimesWidget() {
         console.error("Ülkeler yüklenemedi", err);
       }
     }
+
+    // 2. Halihazırda seçili bir ülke varsa, o ülkenin şehirlerini arka planda hemen getir
+    // Böylece kullanıcı ülkeyi değiştirmeden sadece şehri sildiğinde liste anında çalışır.
+    if (country) {
+      try {
+        const res = await fetch(
+          "https://countriesnow.space/api/v0.1/countries/cities",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country: country }),
+          },
+        );
+        const data = await res.json();
+        if (!data.error) setCityList(data.data);
+      } catch (err) {
+        console.error("Şehirler yüklenemedi", err);
+      }
+    }
+
+    // 3. Eğer seçili ülke Türkiye ise ve şehir varsa ilçeleri de arka planda getir
+    if (
+      country.toLowerCase() === "turkey" ||
+      country.toLowerCase() === "türkiye"
+    ) {
+      if (city) {
+        try {
+          const res = await fetch("https://turkiyeapi.dev/api/v1/provinces");
+          const data = await res.json();
+          const norm = (s: string) =>
+            s.replace(/İ/g, "I").replace(/ı/g, "i").toLowerCase();
+          const province = data.data.find(
+            (p: any) => norm(p.name) === norm(city),
+          );
+          if (province) {
+            setTurkeyDistricts(province.districts.map((d: any) => d.name));
+          }
+        } catch (err) {
+          console.error("Türkiye ilçeleri çekilemedi", err);
+        }
+      }
+    }
   };
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEditCountry(val);
+
+    // Ülke silinirse altındaki şehir ve ilçeleri de sıfırla
+    if (val === "") {
+      setEditCity("");
+      setEditDistrict("");
+      setCityList([]);
+      setTurkeyDistricts([]);
+    }
+
     setFilteredCountries(
       val.length > 0
         ? countryList.filter((c) =>
@@ -208,6 +321,14 @@ export default function PrayerTimesWidget() {
   const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEditCity(val);
+
+    // Şehir silinirse altındaki ilçeleri de sıfırla
+    if (val === "") {
+      setEditDistrict("");
+      setTurkeyDistricts([]);
+      setFilteredDistricts([]);
+    }
+
     setFilteredCities(
       val.length > 0
         ? cityList.filter((c) => c.toLowerCase().startsWith(val.toLowerCase()))
@@ -353,158 +474,156 @@ export default function PrayerTimesWidget() {
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
 
       <div className="flex flex-col mb-6 relative z-50">
-        <div className="w-full">
-          <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
-            {t("prayerTimesTitle") || "Namaz Vakitleri"}
-            <span className="text-emerald-500 text-2xl leading-none">۞</span>
-          </h3>
+        <div className="w-full flex justify-between items-start">
+          <div>
+            <h3 className="text-xl md:text-2xl font-black text-gray-800 dark:text-white flex items-center gap-2">
+              {t("prayerTimesTitle") || "Namaz Vakitleri"}
+              <span className="text-emerald-500 text-2xl leading-none">۞</span>
+            </h3>
 
-          {isEditing ? (
-            <div className="flex flex-col gap-3 mt-4 w-full animate-in fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={editCountry}
-                    onChange={handleCountryChange}
-                    placeholder={
-                      t("countryPlaceholder") || "Ülke (Örn: Turkey)"
-                    }
-                    className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
-                  />
-                  {filteredCountries.length > 0 && (
-                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
-                      {filteredCountries.map((c) => (
-                        <li
-                          key={c}
-                          onClick={() => handleCountrySelect(c)}
-                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
-                        >
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={editCity}
-                    onChange={handleCityChange}
-                    placeholder={
-                      t("cityPlaceholder") || "Şehir (Örn: İstanbul)"
-                    }
-                    className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm disabled:opacity-50"
-                  />
-                  {filteredCities.length > 0 && (
-                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
-                      {filteredCities.map((c) => (
-                        <li
-                          key={c}
-                          onClick={() => handleCitySelect(c)}
-                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
-                        >
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={editDistrict}
-                    onChange={handleDistrictChange}
-                    onFocus={() => {
-                      setShowDistrictList(true);
-                      if (turkeyDistricts.length > 0 && !editDistrict)
-                        setFilteredDistricts(turkeyDistricts);
-                    }}
-                    placeholder={
-                      t("districtPlaceholder") || "İlçe (Örn: Fatih)"
-                    }
-                    className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 pr-10 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
-                  />
-                  <button
-                    onClick={toggleDistrictDropdown}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 transition-colors"
+            {!isEditing && (
+              <div className="flex items-center gap-2 mt-1 md:mt-2">
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest capitalize">
+                  {district ? `${district}, ` : ""}
+                  {city}, {country}
+                </p>
+                <button
+                  onClick={handleEditOpen}
+                  className="bg-gray-100 dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors border border-gray-200 dark:border-gray-700"
+                  title={t("changeLocation") || "Lokasyonu Değiştir"}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
                   >
-                    <svg
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {showDistrictList && (
-                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
-                      {filteredDistricts.length > 0 ? (
-                        filteredDistricts.map((d, i) => (
-                          <li
-                            key={i}
-                            onClick={() => handleDistrictSelect(d)}
-                            className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
-                          >
-                            {d}
-                          </li>
-                        ))
-                      ) : (
-                        <li className="px-3 py-2 text-gray-400 italic">
-                          {t("noResultFound") || "Sonuç bulunamadı."}
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
               </div>
-              <div className="flex gap-2 mt-1">
+            )}
+          </div>
+        </div>
+
+        {isEditing && (
+          <div className="flex flex-col gap-3 mt-4 w-full animate-in fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={editCountry}
+                  onChange={handleCountryChange}
+                  placeholder={t("countryPlaceholder") || "Ülke (Örn: Turkey)"}
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
+                />
+                {filteredCountries.length > 0 && (
+                  <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
+                    {filteredCountries.map((c) => (
+                      <li
+                        key={c}
+                        onClick={() => handleCountrySelect(c)}
+                        className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
+                      >
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={editCity}
+                  onChange={handleCityChange}
+                  placeholder={t("cityPlaceholder") || "Şehir (Örn: İstanbul)"}
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                />
+                {filteredCities.length > 0 && (
+                  <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
+                    {filteredCities.map((c) => (
+                      <li
+                        key={c}
+                        onClick={() => handleCitySelect(c)}
+                        className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
+                      >
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={editDistrict}
+                  onChange={handleDistrictChange}
+                  onFocus={() => {
+                    setShowDistrictList(true);
+                    if (turkeyDistricts.length > 0 && !editDistrict)
+                      setFilteredDistricts(turkeyDistricts);
+                  }}
+                  placeholder={t("districtPlaceholder") || "İlçe (Örn: Fatih)"}
+                  className="w-full bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl px-3 py-2 pr-10 text-sm font-bold text-gray-800 dark:text-white outline-none focus:border-emerald-500 shadow-sm"
+                />
                 <button
-                  onClick={handleSaveLocation}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-sm font-bold shadow-sm transition-colors"
+                  onClick={toggleDistrictDropdown}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 transition-colors"
                 >
-                  {t("save") || "Kaydet"}
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-6 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-300 transition-colors"
-                >
-                  {t("cancel") || "İptal"}
-                </button>
+                {showDistrictList && (
+                  <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-40 overflow-y-auto hide-scrollbar text-sm">
+                    {filteredDistricts.length > 0 ? (
+                      filteredDistricts.map((d, i) => (
+                        <li
+                          key={i}
+                          onClick={() => handleDistrictSelect(d)}
+                          className="px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer"
+                        >
+                          {d}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-3 py-2 text-gray-400 italic">
+                        {t("noResultFound") || "Sonuç bulunamadı."}
+                      </li>
+                    )}
+                  </ul>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 mt-2">
-              <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest capitalize">
-                {district ? `${district}, ` : ""}
-                {city}, {country}
-              </p>
+            <div className="flex gap-2 mt-1">
               <button
-                onClick={handleEditOpen}
-                className="bg-gray-100 dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors border border-gray-200 dark:border-gray-700"
-                title={t("changeLocation") || "Lokasyonu Değiştir"}
+                onClick={handleSaveLocation}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-sm font-bold shadow-sm transition-colors"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
+                {t("save") || "Kaydet"}
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-6 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-300 transition-colors"
+              >
+                {t("cancel") || "İptal"}
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -513,20 +632,52 @@ export default function PrayerTimesWidget() {
         </div>
       ) : timings ? (
         <>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 relative z-10">
+          {nextPrayerInfo && (
+            <div className="flex flex-col items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/30 dark:to-emerald-800/10 rounded-[1.5rem] p-4 md:p-5 mb-6 border border-emerald-200/60 dark:border-emerald-800/60 shadow-inner relative z-10 animate-in fade-in zoom-in-95 duration-500">
+              <span className="text-[10px] md:text-xs font-black text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                {nextPrayerInfo.name}{" "}
+                {t("timeRemaining") || "vaktine kalan süre"}
+              </span>
+              <span className="text-3xl md:text-4xl font-black text-emerald-700 dark:text-emerald-400 font-mono tracking-widest drop-shadow-sm">
+                {nextPrayerInfo.remaining}
+              </span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 relative z-10">
             {Object.keys(PRAYER_NAMES).map((key) => {
               const trName = PRAYER_NAMES[key];
               const time = timings[key];
+              const isNext = nextPrayerInfo?.key === key;
 
               return (
                 <div
                   key={key}
-                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-300 cursor-default"
+                  className={`flex flex-col items-center justify-center p-3 md:p-4 rounded-[1.2rem] transition-all duration-300 cursor-default
+                    ${
+                      isNext
+                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105 ring-2 ring-emerald-400 ring-offset-2 dark:ring-offset-gray-900"
+                        : "bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 hover:border-emerald-300"
+                    }
+                  `}
                 >
-                  <span className="text-[10px] md:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">
+                  <span
+                    className={`text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 ${
+                      isNext
+                        ? "text-emerald-100"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
                     {trName}
                   </span>
-                  <span className="text-lg md:text-xl font-black text-emerald-700 dark:text-emerald-400">
+                  <span
+                    className={`text-lg md:text-xl font-black ${
+                      isNext
+                        ? "text-white"
+                        : "text-emerald-700 dark:text-emerald-400"
+                    }`}
+                  >
                     {time}
                   </span>
                 </div>

@@ -93,7 +93,6 @@ function parseLatin(raw: string) {
   return { header, items: parts, subhaneke };
 }
 
-
 // === 3. TÜRKÇE & MEAL PARSER ===
 function parseMeaning(raw: string) {
   const lines = raw
@@ -257,17 +256,24 @@ export default function CevsenPage() {
 
   // Wake Lock API
   const wakeLockRef = useRef<any>(null);
+
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
-        if ("wakeLock" in navigator)
+        // SADECE sayfa aktif/görünür ise ekranı uyanık tutmayı iste
+        if ("wakeLock" in navigator && document.visibilityState === "visible") {
           wakeLockRef.current = await (navigator as any).wakeLock.request(
             "screen",
           );
-      } catch (err) {
-        console.error(`Wake Lock hatası:`, err);
+        }
+      } catch (err: any) {
+        // NotAllowedError hatasını konsola basmayı engelleyebilir veya gizleyebilirsiniz
+        if (err.name !== "NotAllowedError") {
+          console.error(`Wake Lock hatası:`, err);
+        }
       }
     };
+
     const releaseWakeLock = () => {
       if (wakeLockRef.current !== null) {
         wakeLockRef.current.release().then(() => {
@@ -275,9 +281,26 @@ export default function CevsenPage() {
         });
       }
     };
+
+    // Sayfa okuma moduna geçtiğinde iste
     requestWakeLock();
-    return () => releaseWakeLock();
-  }, []);
+
+    // Kullanıcı sekmeyi değiştirirse kilidi bırak, geri gelirse tekrar iste
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, []); // Buradaki bağımlılık dizisi sizin dosyanıza göre (view, isReading vb.) değişebilir
 
   useEffect(() => {
     const fetchCevsenData = async () => {
@@ -404,7 +427,6 @@ export default function CevsenPage() {
 
   const getAllBabs = (fullText: string) => {
     if (!fullText) return [];
-
 
     // Metin içinde ### varsa, doğrudan en temiz yöntem olarak ondan bölelim
     if (fullText.includes("###")) {

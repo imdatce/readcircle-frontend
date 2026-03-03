@@ -445,7 +445,7 @@ export const en = {
     welcome: "Welcome",
     dashboardIntro: "You can manage your reading circles below.",
     landingHeroSubtitle:
-        "Content to enrich your spiritual world and a platform for sharing.",
+        "Content to enrich your spiritual world and a platform for sharing",
     getStarted: "Get Started",
     pasteCodeOrLink: "Invitation Code or Link...",
     join: "Join",

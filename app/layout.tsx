@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-// 1. GÜNCELLEME: Viewport ayarları ile zoom kapatıldı ve ekrana tam oturtuldu
 export const viewport: Viewport = {
   themeColor: "#10B981",
   width: "device-width",
@@ -40,9 +39,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning ekleyerek tarayıcı eklentilerinin html'e müdahale uyarılarını susturuyoruz
     <html lang="tr" suppressHydrationWarning>
       <head>
-        {/* iOS Capacitor ServiceWorker Çökme Koruması (Polyfill) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -61,7 +60,6 @@ export default function RootLayout({
           }}
         />
       </head>
-      {/* 2. GÜNCELLEME: body'e "overflow-x-hidden" ve "w-full" eklendi */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-gray-100 relative overflow-x-hidden w-full`}
       >
@@ -77,10 +75,11 @@ export default function RootLayout({
           <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-amber-400/20 dark:bg-amber-600/15 rounded-full blur-[100px] opacity-40 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-emerald-100/30 dark:to-emerald-950/40 pointer-events-none"></div>
         </div>
-        <LanguageProvider initialLanguage="tr">
+
+        {/* DÜZELTME: initialLanguage parametresi tamamen silindi */}
+        <LanguageProvider>
           <AuthProvider>
             <ThemeProvider>
-              {/* 3. GÜNCELLEME: Safe Area boşlukları eklendi ve taşkınlık engellendi */}
               <div
                 className="flex flex-col min-h-screen relative z-10 w-full overflow-x-hidden"
                 style={{

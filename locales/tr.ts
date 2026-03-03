@@ -449,7 +449,7 @@ export const tr = {
   welcome: "Hoş geldin",
   dashboardIntro: "Aşağıdan okuma halkalarınızı yönetebilirsiniz.",
   landingHeroSubtitle:
-    "Manevi dünyanızı zenginleştirecek içerikler ve paylaşım platformu.",
+    "Manevi dünyanızı zenginleştirecek içerikler ve paylaşım platformu",
   getStarted: "Hemen Başla",
   pasteCodeOrLink: "Davet Kodu veya Link...",
   join: "Katıl",

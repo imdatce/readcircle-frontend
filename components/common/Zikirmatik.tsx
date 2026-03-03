@@ -251,8 +251,6 @@ const Zikirmatik = ({
     100,
     Math.max(0, ((safeMax - currentCount) / safeMax) * 100),
   );
-  const ropeBeadTotal = Math.min(safeMax, 33);
-  const passedCount = Math.round((progressCompleted / 100) * ropeBeadTotal);
 
   // Native (non-passive) touch listener — React'ın passive default'unu bypass eder
   useEffect(() => {
@@ -374,18 +372,16 @@ const Zikirmatik = ({
       onMouseLeave={mode === "tesbih" ? onMouseUp : undefined}
     >
       {/* ── MOD SEÇİCİ ── */}
-      <div
-        className="flex items-center gap-1 p-1 rounded-2xl mb-4"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      <div className="flex items-center gap-1 p-1 rounded-2xl mb-4 bg-gray-100/80 dark:bg-white/5 border border-gray-200/80 dark:border-white/10">
         {(["tesbih", "digital"] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+              mode !== m
+                ? "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                : ""
+            }`}
             style={{
               background:
                 mode === m
@@ -398,7 +394,7 @@ const Zikirmatik = ({
                   ? m === "tesbih"
                     ? "#fde68a"
                     : "#6ee7b7"
-                  : "rgba(255,255,255,0.3)",
+                  : undefined,
               boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
             }}
           >

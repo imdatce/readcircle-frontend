@@ -9,7 +9,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { JUZ_DATA, SURAH_DATA } from "@/constants/quranData";
-
+import { RISALE_BOOKS } from "@/constants/risaleConfig";
 import {
   NameUpdateModal,
   PasswordUpdateModal,
@@ -663,24 +663,77 @@ export default function Header() {
                                   <Link
                                     href="/resources/dualar"
                                     onClick={closeMenu}
-                                    className="text-[13px] py-2 px-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors font-bold mb-1"
+                                    className="text-[13px] py-2 px-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors font-bold mb-1 border-b border-blue-100 dark:border-blue-900/50"
                                   >
                                     {t("seeAllList") || "Tüm Listeyi Gör"}
                                   </Link>
-                                  <Link
-                                    href="/resources/gunluk-dualar"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    {t("dailyPrayers") || "Günlük Dualar"}
-                                  </Link>
-                                  <Link
-                                    href="/resources/esmaulhusna"
-                                    onClick={closeMenu}
-                                    className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors"
-                                  >
-                                    {t("esmaulHusna") || "Esma-ül Hüsna"}
-                                  </Link>
+                                  {[
+                                    {
+                                      id: "esmaulhusna",
+                                      title:
+                                        t("duaEsmaTitle") || "Esma-ül Hüsna",
+                                    },
+                                    {
+                                      id: "tefriciye",
+                                      title:
+                                        t("duaTefriciyeTitle") ||
+                                        "Salât-ı Tefriciye",
+                                    },
+                                    {
+                                      id: "munciye",
+                                      title:
+                                        t("duaMunciyeTitle") ||
+                                        "Salât-ı Münciye",
+                                    },
+                                    {
+                                      id: "salavat",
+                                      title:
+                                        t("duaSalavatTitle") ||
+                                        "Özel Salavatlar",
+                                    },
+                                    {
+                                      id: "kurandualari",
+                                      title:
+                                        t("duaKuranTitle") ||
+                                        "Kur'an'dan Dualar",
+                                    },
+                                    {
+                                      id: "gunluk-dualar",
+                                      title:
+                                        t("duaDailyTitle") || "Günlük Dualar",
+                                    },
+                                    {
+                                      id: "tevhidname",
+                                      title:
+                                        t("duaTevhidnameTitle") || "Tevhidname",
+                                    },
+                                    {
+                                      id: "bedir",
+                                      title:
+                                        t("duaBedirTitle") || "Ashab-ı Bedir",
+                                    },
+                                    {
+                                      id: "uhud",
+                                      title:
+                                        t("duaUhudTitle") || "Şüheda-i Uhud",
+                                    },
+                                  ].map((dua) => (
+                                    <Link
+                                      key={dua.id}
+                                      // Eğer custom page ise direkt id'ye, değilse parametre ile dua sayfasındaki modala yönlendiriyoruz
+                                      href={
+                                        dua.id === "esmaulhusna" ||
+                                        dua.id === "gunluk-dualar"
+                                          ? `/resources/${dua.id}`
+                                          : `/resources/dualar?dua=${dua.id}`
+                                      }
+                                      onClick={closeMenu}
+                                      className="text-[13px] py-1.5 px-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 rounded-md transition-colors truncate"
+                                      title={dua.title}
+                                    >
+                                      {dua.title}
+                                    </Link>
+                                  ))}
                                 </div>
                               )}
                             </div>
@@ -715,19 +768,15 @@ export default function Header() {
                                   >
                                     {t("allCollection") || "Tüm Külliyat"}
                                   </Link>
-                                  {[
-                                    "SOZLER",
-                                    "MEKTUBAT",
-                                    "LEMALAR",
-                                    "SUALAR",
-                                  ].map((b) => (
+                                  {RISALE_BOOKS.map((book) => (
                                     <Link
-                                      key={b}
-                                      href={`/resources/risale?book=html/${t(`resource_${b}`) || b}`}
+                                      key={book.id}
+                                      href={`/resources/risale?book=${encodeURIComponent(book.folder)}`}
                                       onClick={closeMenu}
-                                      className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors"
+                                      className="text-[13px] py-1.5 px-2 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 rounded-md transition-colors truncate"
+                                      title={book.name}
                                     >
-                                      {t(`resource_${b}`) || b}
+                                      {book.name}
                                     </Link>
                                   ))}
                                 </div>

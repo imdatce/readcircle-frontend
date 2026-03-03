@@ -451,7 +451,7 @@ export const ku = {
     dashboardIntro:
         "Hûn dikarin ji jêr ve xelekên xwe yên xwendinê birêve bibin.",
     landingHeroSubtitle:
-        "Naverok ji bo dewlemendkirina cîhana we ya manewî û platformek ji bo parvekirinê.",
+        "Naverok ji bo dewlemendkirina cîhana we ya manewî û platformek ji bo parvekirinê",
     getStarted: "Dest Pê Bike",
     pasteCodeOrLink: "Koda Vexwendinê an Lînk...",
     join: "Beşdar Bibe",

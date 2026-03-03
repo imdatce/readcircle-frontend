@@ -449,7 +449,7 @@ export const nl = {
     welcome: "Welkom",
     dashboardIntro: "Hieronder kun je je leeskringen beheren.",
     landingHeroSubtitle:
-        "Content om je spirituele wereld te verrijken en een platform om te delen.",
+        "Content om je spirituele wereld te verrijken en een platform om te delen",
     getStarted: "Aan de Slag",
     pasteCodeOrLink: "Uitnodigingscode of Link...",
     join: "Deelnemen",
