@@ -104,6 +104,7 @@ export default function ResourcesPage() {
         color: "blue",
         image: "/background/library/dualar-card.jpg",
       },
+      
     ],
     [t],
   );

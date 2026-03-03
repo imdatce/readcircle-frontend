@@ -17,6 +17,9 @@ const colorStyles: Record<string, string> = {
     "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800/50 hover:border-amber-300",
   indigo:
     "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/50 hover:border-indigo-300",
+  // Sabah duaları için mor rengini ekledik
+  violet:
+    "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-100 dark:border-violet-800/50 hover:border-violet-300",
 };
 
 // --- ANA İÇERİK BİLEŞENİ ---
@@ -33,11 +36,6 @@ function DualarContent() {
 
   const duaParam = searchParams.get("dua");
 
-  // İstenen Sıralama ve Renk Kategorizasyonu:
-  // Renk 1: Emerald (Esmaül Hüsna)
-  // Renk 2: Indigo (Salavatlar)
-  // Renk 3: Blue (Dualar ve Tevhidname)
-  // Renk 4: Amber (Şehit İsimleri)
   const DUALAR_LIST = useMemo(
     () => [
       {
@@ -46,7 +44,7 @@ function DualarContent() {
         codeKey: "ESMAULHUSNA",
         type: "CUSTOM_PAGE",
         desc: t("duaEsmaDesc") || "Allah'ın 99 İsmi, faziletleri ve zikirleri",
-        color: "emerald", // Renk 1
+        color: "emerald",
       },
       {
         id: "tefriciye",
@@ -54,7 +52,7 @@ function DualarContent() {
         codeKey: "TEFRICIYE",
         type: "COUNTABLE",
         desc: t("duaTefriciyeDesc") || "Sıkıntıların def'i için okunan salavat",
-        color: "indigo", // Renk 2
+        color: "indigo",
       },
       {
         id: "munciye",
@@ -62,7 +60,7 @@ function DualarContent() {
         codeKey: "MUNCIYE",
         type: "COUNTABLE",
         desc: t("duaMunciyeDesc") || "Tüncînâ Duası ve Salavatı",
-        color: "indigo", // Renk 2
+        color: "indigo",
       },
       {
         id: "salavat",
@@ -70,7 +68,7 @@ function DualarContent() {
         codeKey: "OZELSALAVAT",
         type: "COUNTABLE",
         desc: t("duaSalavatDesc") || "Peygamber Efendimiz'e (asm) salavatlar",
-        color: "indigo", // Renk 2
+        color: "indigo",
       },
       {
         id: "kurandualari",
@@ -78,7 +76,7 @@ function DualarContent() {
         codeKey: "KURANDUALARI",
         type: "LIST_BASED",
         desc: t("duaKuranDesc") || "Kur'an'da geçen Peygamber duaları",
-        color: "blue", // Renk 3
+        color: "blue",
       },
       {
         id: "gunluk-dualar",
@@ -88,7 +86,27 @@ function DualarContent() {
         desc:
           t("duaDailyDesc") ||
           "Hisnul Müslim'den sabah/akşam zikirleri ve günlük dualar",
-        color: "blue", // Renk 3
+        color: "blue",
+      },
+      // YENİ KARTLAR BURAYA EKLENDİ
+      {
+        id: "sabah-dualari",
+        title: t("sabahDualariTitle") || "Sabah Duaları",
+        codeKey: "SABAHDUALARI",
+        type: "CUSTOM_PAGE", // Tıklanınca /resources/sabah-dualari sayfasına gider
+        desc:
+          t("sabahDualariDesc") ||
+          "Güne bereketle başlamak için okunacak dualar",
+        color: "violet",
+      },
+      {
+        id: "aksam-dualari",
+        title: t("aksamDualariTitle") || "Akşam Duaları",
+        codeKey: "AKSAMDUALARI",
+        type: "CUSTOM_PAGE", // Tıklanınca /resources/aksam-dualari sayfasına gider
+        desc:
+          t("aksamDualariDesc") || "Geceye huzurla girmek için okunacak dualar",
+        color: "indigo",
       },
       {
         id: "tevhidname",
@@ -96,7 +114,7 @@ function DualarContent() {
         codeKey: "TEVHIDNAME",
         type: "LIST_BASED",
         desc: t("duaTevhidnameDesc") || "Tevhid hakikatleri ve zikirleri",
-        color: "blue", // Renk 3
+        color: "blue",
       },
       {
         id: "bedir",
@@ -104,7 +122,7 @@ function DualarContent() {
         codeKey: "BEDIR",
         type: "LIST_BASED",
         desc: t("duaBedirDesc") || "Bedir ehlinin mübarek isimleri",
-        color: "amber", // Renk 4
+        color: "amber",
       },
       {
         id: "uhud",
@@ -112,7 +130,7 @@ function DualarContent() {
         codeKey: "UHUD",
         type: "LIST_BASED",
         desc: t("duaUhudDesc") || "Uhud şehitlerinin mübarek isimleri",
-        color: "amber", // Renk 4
+        color: "amber",
       },
     ],
     [t],

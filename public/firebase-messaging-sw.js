@@ -12,16 +12,50 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Arka planda bildirim geldiğinde yapılacak işlem
+
+// 1. Gelen mesajın içindeki URL verisini bildirime ekliyoruz
 messaging.onBackgroundMessage((payload) => {
     console.log('Arka planda mesaj alındı: ', payload);
 
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        icon: '/logo/sura-lgo.png', // Sizin logonuza giden yol
+        icon: '/logo/sura-lgo.png',
         badge: '/logo/sura-lgo.png',
+        data: {
+            // Backend'den gönderdiğimiz URL'yi bildirimin içine saklıyoruz
+            click_url: payload.data ? payload.data.click_url : '/' 
+        }
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// 2. BİLDİRİME TIKLANMA OLAYINI DİNLİYORUZ
+self.addEventListener('notificationclick', function(event) {
+    console.log('Bildirime tıklandı.');
+    
+    // Bildirimi ekrandan kaldır (kapat)
+    event.notification.close();
+
+    // Sakladığımız URL'yi al (Yoksa anasayfaya git)
+    const urlToOpen = event.notification.data.click_url;
+
+    // Tıklanınca URL'yi tarayıcıda aç
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            // Eğer sitemizin sekmesi zaten açıksa o sekmeye odaklan ve sayfayı değiştir
+            for (let i = 0; i < windowClients.length; i++) {
+                const client = windowClients[i];
+                if (client.url.includes(self.location.origin) && 'focus' in client) {
+                    client.navigate(urlToOpen);
+                    return client.focus();
+                }
+            }
+            // Sekme açık değilse yeni bir sekme/pencere aç
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
 });
