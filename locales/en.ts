@@ -37,6 +37,8 @@ export const en = {
     nameCopiedAlert: "Name Copied!",
     copyButtonTooltip: "Copy",
     ibanCopiedAlert: "IBAN Copied!",
+    receiverNameValue: "Umit Celik",
+    ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Holy Quran",
     categorySurahs: "Surahs",
     categoryPrayers: "Prayers",

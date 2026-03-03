@@ -90,7 +90,7 @@ export default function ResourcesPage() {
       },
       {
         id: "tesbihat",
-        title: t("tesbihatlar") || "Tesbihatlar",
+        title: t("tesbihatlarTitle") || "Tesbihatlar",
         desc: t("tesbihatlarDesc") || "Namaz sonrası tesbihatlar",
         href: "/resources/tesbihat",
         color: "emerald",
@@ -98,7 +98,7 @@ export default function ResourcesPage() {
       },
       {
         id: "dualar",
-        title: t("dualar") || "Dualar ve Virdler",
+        title: t("dualarTitle") || "Dualar ve Virdler",
         desc: t("dualarDesc") || "Çeşitli dua ve zikirler",
         href: "/resources/dualar",
         color: "blue",
@@ -182,7 +182,6 @@ export default function ResourcesPage() {
                   <p className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 mt-1 leading-tight line-clamp-2">
                     {resource.desc}
                   </p>
-
                 </div>
               </Link>
             );

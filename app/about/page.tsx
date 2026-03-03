@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React, { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -362,7 +362,7 @@ function AboutContent() {
                 </p>
                 <div className="flex items-center justify-between gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    İmdat Çelik
+                    {t("receiverNameValue") || "İmdat Çelik"}{" "}
                   </span>
                   <button
                     onClick={() => {
@@ -394,12 +394,12 @@ function AboutContent() {
                 </p>
                 <div className="flex items-center justify-between gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                   <code className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    TR00 0000 0000 0000 0000 0000 00
+                    {t("ibanValue") || "TR00 0000 0000 0000 0000 0000 00"}
                   </code>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        "TR00 0000 0000 0000 0000 0000 00",
+                        t("ibanValue") || "TR00 0000 0000 0000 0000 0000 00",
                       );
                       alert(t("ibanCopiedAlert") || "IBAN Kopyalandı!");
                     }}

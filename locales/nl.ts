@@ -37,6 +37,8 @@ export const nl = {
     nameCopiedAlert: "Naam Gekopieerd!",
     copyButtonTooltip: "Kopiëren",
     ibanCopiedAlert: "IBAN Gekopieerd!",
+    receiverNameValue: "Umit Celik", 
+  ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Heilige Koran",
     categorySurahs: "Soera's",
     categoryPrayers: "Smeekbeden (Dua)",
