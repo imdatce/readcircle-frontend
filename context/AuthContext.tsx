@@ -15,7 +15,8 @@ import { getToken, onMessage } from "firebase/messaging";
 import { fetchMessaging, messaging } from "@/utils/firebase";
 import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
 import { Capacitor } from "@capacitor/core";
-import { FirebaseMessaging } from '@capacitor-firebase/messaging';const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
@@ -243,15 +244,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== "undefined" && messaging) {
+      console.log("✅ Firebase Ön Plan (Foreground) Dinleyicisi Başlatıldı!");
+
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log("Mesaj geldi:", payload);
-        // Bildirim başlığı ve içeriğini gösterme
-        alert(`${payload.notification?.title}: ${payload.notification?.body}`);
+        // BİLDİRİM GELDİĞİNDE KONSOLDA DEVASA BİR ŞEKİLDE GÖSTER:
+        console.log(
+          "%c🔔 [BİLDİRİM GELDİ] (Uygulama Açıkken)!!!",
+          "color: #10b981; font-size: 20px; font-weight: bold;",
+        );
+        console.log("Bildirim Detayı:", payload);
+
+        // Ekrana da pop-up olarak çıkar
+        alert(
+          `BİLDİRİM: ${payload.notification?.title}\n${payload.notification?.body}`,
+        );
       });
       return () => unsubscribe();
+    } else {
+      console.log(
+        "⚠️ Firebase Messaging başlatılamadığı için dinleyici kurulamadı.",
+      );
     }
   }, []);
-
   return (
     <AuthContext.Provider
       value={{
