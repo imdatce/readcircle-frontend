@@ -204,7 +204,7 @@ export const ku = {
     part: "Beş / Cuz",
     otherResource: "Çavkaniya Din",
     // --- LOGIN PAGE ---
-    welcomeBack: "Hûn Bi Xêr Hatin",
+    welcomeBack: "Bi Xêr Hatî",
     loginIntro: "Têkevin hesabê xwe da ku rêwîtiya xwe ya manewî bidomînin.",
     usernameLabel: "Navê Bikarhêner",
     placeholderUser: "Navê bikarhênerê xwe binivîse",
@@ -449,9 +449,9 @@ export const ku = {
     landingHeroTitlePart1: "Platforma",
     landingHeroTitlePart2: "Xwendin û Parvekirina",
     landingHeroTitlePart3: "Çavkaniyên Îslamî",
-    welcome: "Hûn Bi Xêr Hatin",
+    welcome: "Bi Xêr Hatî",
     dashboardIntro:
-        "Hûn dikarin ji jêr ve xelekên xwe yên xwendinê birêve bibin.",
+        "Tu dikarî ji jêr ve xelekên xwe yên xwendinê birêve bibî.",
     landingHeroSubtitle:
         "Naverok ji bo dewlemendkirina cîhana we ya manewî û platformek ji bo parvekirinê",
     getStarted: "Dest Pê Bike",
@@ -460,7 +460,7 @@ export const ku = {
     myCirclesTitle: "Xelekên Min",
     emptyCodeWarning: "Ji kerema xwe kodek binivîsin.",
     noCreatedYet: "We hê xelekek çênekiriye.",
-    noCirclesYet: "Hûn hê tevlî tu xelekê nebûne.",
+    noCirclesYet: "Tu hê tevlî tu xelekê nebûyî.",
 
     howItWorksTitle: "Sîstem Çawa Dixebite?",
     step1Title: "1. Xelekek Çêbike",

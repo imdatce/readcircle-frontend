@@ -975,16 +975,25 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+ const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null || touchStartY.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
+    
+    // deltaX > 0 ise sola kaydırıldı, deltaX < 0 ise sağa kaydırıldı demektir
     const deltaX = touchStartX.current - touchEndX;
     const deltaY = touchStartY.current - touchEndY;
 
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 0) changePage(1);
-      else changePage(-1);
+      if (deltaX > 0) {
+        // PARMAK SOLA KAYDIRILDI
+        // Normalde ileri gidilir ama Kur'an mantığında GERİ (önceki sayfa) gidilir
+        changePage(-1); 
+      } else {
+        // PARMAK SAĞA KAYDIRILDI
+        // Normalde geri gidilir ama Kur'an mantığında İLERİ (sonraki sayfa) gidilir
+        changePage(1); 
+      }
     }
     touchStartX.current = null;
     touchStartY.current = null;

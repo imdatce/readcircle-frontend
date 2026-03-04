@@ -4,8 +4,9 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-
+import { useAuth } from "@/context/AuthContext";
 export default function PrayerTimesWidget() {
+  const { registerNotification } = useAuth(); // BUNU EKLEYİN
   const { t } = useLanguage();
   const [timings, setTimings] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -464,9 +465,10 @@ export default function PrayerTimesWidget() {
         }),
       );
       setIsEditing(false);
+      await registerNotification();
     }
   };
-
+  
   const cleanTime = (timeString: string) => timeString.split(" ")[0];
 
   return (
