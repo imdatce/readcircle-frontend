@@ -18,12 +18,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Bildirim kaydını yan etki olarak useEffect içinde yapıyoruz
-  useEffect(() => {
-    if (registerNotification) {
-      registerNotification();
-    }
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +35,6 @@ export default function LoginPage() {
       );
 
       if (!res.ok) {
-        // Hata durumunda backend'den gelen mesajı veya fallback mesajını göster
         const errorData = await res.json().catch(() => ({}));
         throw new Error(
           errorData.message || t("loginFailed") || "Giriş başarısız.",
@@ -50,6 +43,12 @@ export default function LoginPage() {
 
       const data = await res.json();
       login(data.username, data.token);
+
+      // KULLANICI GİRİŞ YAPTIKTAN SONRA BİLDİRİM İZNİ İSTE
+      if (registerNotification) {
+        registerNotification();
+      }
+
       router.push("/");
     } catch (err: any) {
       console.error(err);

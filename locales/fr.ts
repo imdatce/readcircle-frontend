@@ -40,6 +40,7 @@ export const fr = {
     receiverNameValue: "Umit Celik",
     ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Saint Coran",
+    timeRemaining: "temps restant",
     categorySurahs: "Sourates",
     categoryPrayers: "Prières",
     categorySalawats: "Salawat",

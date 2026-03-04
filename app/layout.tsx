@@ -7,6 +7,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "@/context/ThemeContext";
 import SubNavigation from "@/components/SubNavigation";
+// YENİ EKLENEN IMPORT
+import FirebaseForeground from "@/components/FirebaseForeground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,23 +44,6 @@ export default function RootLayout({
     // suppressHydrationWarning ekleyerek tarayıcı eklentilerinin html'e müdahale uyarılarını susturuyoruz
     <html lang="tr" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof navigator !== 'undefined' && typeof navigator.serviceWorker === 'undefined') {
-                Object.defineProperty(navigator, 'serviceWorker', {
-                  value: {
-                    register: function() { return Promise.resolve(); },
-                    addEventListener: function() {},
-                    removeEventListener: function() {},
-                    ready: new Promise(function() { })
-                  },
-                  configurable: true
-                });
-              }
-            `,
-          }}
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased text-gray-900 dark:text-gray-100 relative overflow-x-hidden w-full`}
@@ -76,10 +61,12 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-gradient-to-t from-white/0 via-white/0 to-emerald-100/30 dark:to-emerald-950/40 pointer-events-none"></div>
         </div>
 
-        {/* DÜZELTME: initialLanguage parametresi tamamen silindi */}
         <LanguageProvider>
           <AuthProvider>
             <ThemeProvider>
+              {/* YENİ EKLENEN DİNLEYİCİ BİLEŞEN: Arayüzde yer kaplamaz, arkada çalışır */}
+              <FirebaseForeground />
+
               <div
                 className="flex flex-col min-h-screen relative z-10 w-full overflow-x-hidden"
                 style={{

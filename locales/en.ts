@@ -387,6 +387,7 @@ export const en = {
     risaleDesc: "The works of Bediuzzaman Said Nursi",
     tesbihatlarDesc: "Post-prayer glorifications",
     dualarDesc: "Various prayers and dhikrs",
+    timeRemaining: "time remaining",
     // --- CIRCLES (SESSIONS) PAGE ---
     circlesTitle: "Circles",
     managedTab: "Managed by Me",

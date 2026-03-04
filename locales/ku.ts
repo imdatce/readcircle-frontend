@@ -458,6 +458,7 @@ export const ku = {
     pasteCodeOrLink: "Koda Vexwendinê an Lînk...",
     join: "Beşdar Bibe",
     myCirclesTitle: "Xelekên Min",
+    timeRemaining: "dema mayî",
     emptyCodeWarning: "Ji kerema xwe kodek binivîsin.",
     noCreatedYet: "We hê xelekek çênekiriye.",
     noCirclesYet: "Tu hê tevlî tu xelekê nebûyî.",

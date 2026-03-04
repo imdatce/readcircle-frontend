@@ -41,6 +41,7 @@ export const nl = {
   ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Heilige Koran",
     categorySurahs: "Soera's",
+    timeRemaining: "resterende tijd",
     categoryPrayers: "Smeekbeden (Dua)",
     categorySalawats: "Salawat",
     categoryNames: "Namen",
