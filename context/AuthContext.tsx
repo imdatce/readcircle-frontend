@@ -14,8 +14,8 @@ import { useRouter } from "next/navigation";
 import { getToken, onMessage } from "firebase/messaging";
 import { fetchMessaging, messaging } from "@/utils/firebase";
 import { useLanguage } from "@/context/LanguageContext"; // i18n EKLENDİ
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { Capacitor } from "@capacitor/core";
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage(); // ÇEVİRİ FONKSİYONU
@@ -181,20 +181,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerNotification = async () => {
     try {
-      const messagingInstance = await fetchMessaging();
-      if (!messagingInstance) return;
+      let fcmToken: string | null = null;
 
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
+      // 1. Cihazın NATIVE (iPhone/Android Uygulaması) mi yoksa WEB (Tarayıcı) mi olduğunu kontrol et
+      if (Capacitor.isNativePlatform()) {
+        console.log("Cihaz: NATIVE (iPhone/Android). Yerel izin isteniyor...");
+        const { receive } = await FirebaseMessaging.requestPermissions();
 
-      const currentToken = await getToken(messagingInstance, {
-        vapidKey:
-          "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
-      });
+        if (receive === "granted") {
+          const { token } = await FirebaseMessaging.getToken();
+          fcmToken = token;
+          console.log("Native FCM Token Alındı:", fcmToken);
+        }
+      } else {
+        console.log("Cihaz: WEB (Tarayıcı). Web izni isteniyor...");
+        const messagingInstance = await fetchMessaging();
+        if (messagingInstance) {
+          const permission = await Notification.requestPermission();
+          if (permission === "granted") {
+            fcmToken = await getToken(messagingInstance, {
+              vapidKey:
+                "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
+            });
+            console.log("Web FCM Token Alındı:", fcmToken);
+          }
+        }
+      }
 
-      if (currentToken) {
+      // 2. EĞER TOKEN ALINDIYSA VERİTABANINA KAYDET
+      if (fcmToken) {
         const authToken = localStorage.getItem("token");
-        await fetch(
+
+        const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/fcm-token`,
           {
             method: "PUT",
@@ -202,15 +220,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               "Content-Type": "application/json",
               Authorization: `Bearer ${authToken}`,
             },
-            body: JSON.stringify({ token: currentToken }),
+            body: JSON.stringify({ token: fcmToken }),
           },
         );
+
+        if (response.ok) {
+          console.log("BAŞARILI: Token veritabanına kaydedildi!");
+        } else {
+          const errorText = await response.text();
+          console.error(
+            "HATA: Token veritabanına yazılamadı! Sunucu cevabı:",
+            errorText,
+          );
+        }
       } else {
-        alert(t("errorFcmToken") || "HATA: Token alınamadı!");
+        console.log("Kullanıcı izin vermedi veya Token üretilemedi.");
       }
     } catch (error: any) {
-      alert((t("unexpectedError") || "BEKLENMEYEN HATA: ") + error.message);
-      console.error("Bildirim kaydı sırasında hata:", error);
+      console.error("Bildirim kaydı sırasında hata oluştu:", error);
     }
   };
 
