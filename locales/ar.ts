@@ -42,6 +42,37 @@ export const ar = {
     categoryMain: "القرآن الكريم",
     timeRemaining: "الوقت المتبقي",
     categorySurahs: "السور",
+    sabahDualariTitle: "أذكار الصباح",
+    aksamDualariTitle: "أذكار المساء",
+    notifications: "الإشعارات",
+    aksamDualariPageDesc: "أدعية تُقرأ لشكر الله والدخول في الليل بطمأنينة مع التخلص من تعب اليوم.",
+    arabicReading: "القراءة بالعربية",
+    translationMeaning: "الترجمة",
+    clearAll: "مسح الكل",
+
+    sabahDualariDesc: "أدعية تُقرأ لبدء اليوم بالبركة",
+    sabahDualariPageDesc: "أدعية تُقرأ لبدء اليوم بالبركة، بذكر الله واللجوء إليه.",
+
+    // --- ÖĞLE DUALARI ---
+    ogleDualariTitle: "أدعية الظهر",
+    ogleDualariPageDesc: "أدعية تُقرأ في خضم زحام اليوم لذكر الله ومباركة وقت الظهيرة.",
+
+    // --- İKİNDİ DUALARI ---
+    ikindiDualariTitle: "أدعية العصر",
+    ikindiDualariPageDesc: "أدعية لشكر الله والدخول في فترة العصر بطمأنينة.",
+
+    // --- AKŞAM DUALARI ---
+    aksamDualariDesc: "أدعية تُقرأ للدخول في الليل بطمأنينة",
+    categoryTimePrayers: "أدعية أوقات الصلاة",
+    categorySalavats: "الصلوات على النبي",
+    categoryKuran: "أدعية من القرآن والحديث",
+    categoryEsma: "أسماء الله الحسنى والشهداء",
+
+    // --- YATSI DUALARI ---
+    yatsiDualariTitle: "أدعية العشاء",
+    yatsiDualariPageDesc: "أدعية للتوجه إلى الله وطلب الرزق والمغفرة في نهاية اليوم.",
+    show: "عرض",
+    noNotifications: "لا توجد إشعارات بعد.",
     categoryPrayers: "الأدعية",
     categorySalawats: "الصلوات",
     categoryNames: "الأسماء الحسنى",

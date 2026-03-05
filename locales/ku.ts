@@ -36,7 +36,7 @@ export const ku = {
     ibanLabel: "IBAN",
     nameCopiedAlert: "Nav Hat Kopîkirin!",
     copyButtonTooltip: "Kopî Bike",
-    ibanCopiedAlert: "IBAN Hat Kopîkirin!", 
+    ibanCopiedAlert: "IBAN Hat Kopîkirin!",
     receiverNameValue: "Umit Celik",
     ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Qur'ana Pîroz",
@@ -462,6 +462,41 @@ export const ku = {
     emptyCodeWarning: "Ji kerema xwe kodek binivîsin.",
     noCreatedYet: "We hê xelekek çênekiriye.",
     noCirclesYet: "Tu hê tevlî tu xelekê nebûyî.",
+    // --- VAKİT DUALARI ORTAK ---
+    arabicReading: "Xwendina Erebî",
+    translationMeaning: "Wateya Wê",
+
+    // --- SABAH DUALARI ---
+    sabahDualariTitle: "Diayên Sibehê",
+    sabahDualariDesc: "Diayên ku ji bo destpêkirina rojek bi bereket tên xwendin",
+    sabahDualariPageDesc: "Diayên ku ji bo destpêkirina rojek bi bereket, bibîranîna Xwedê û xwe spartina Wî tên xwendin.",
+
+    // --- ÖĞLE DUALARI ---
+    ogleDualariTitle: "Diayên Nîvroyê",
+    ogleDualariPageDesc: "Diayên ku di nav lez û beza rojê de ji bo bîranîna Xwedê û bereketkirina dema nîvroyê tên xwendin.",
+
+    // --- İKİNDİ DUALARI ---
+    ikindiDualariTitle: "Diayên Esrê",
+    ikindiDualariPageDesc: "Diayên ji bo şikirandina Xwedê û bi aramî derbasbûna dema esrê.",
+
+    // --- AKŞAM DUALARI ---
+    aksamDualariTitle: "Diayên Êvarê",
+    aksamDualariDesc: "Diayên ku ji bo bi aramî derbasbûna şevê tên xwendin",
+    aksamDualariPageDesc: "Diayên ku dema mirov westayiya rojê davêje, ji bo şikirandina Xwedê û bi aramî derbasbûna şevê tên xwendin.",
+
+    // --- YATSI DUALARI ---
+    yatsiDualariTitle: "Diayên Xeftanê",
+    categoryTimePrayers: "Diayên Demên Nimêjê",
+    categorySalavats: "Selewat",
+    categoryKuran: "Diayên Quran û Hedîsê",
+    categoryEsma: "Navên Xwedê û Şehîd",
+    yatsiDualariPageDesc: "Diayên ku di dawiya rojê de ji bo berê xwe dana Xwedê, xwestina rizq û lêborînê tên xwendin.",
+
+    notifications: "Agahdarî",
+
+    clearAll: "Hemûyan Paqij Bike",
+    show: "Nîşan Bide",
+    noNotifications: "Hêj tu agahdariya we tune.",
 
     howItWorksTitle: "Sîstem Çawa Dixebite?",
     step1Title: "1. Xelekek Çêbike",

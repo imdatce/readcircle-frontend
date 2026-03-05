@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { sabahDualariData, DuaType } from "@/constants/sabahDualari";
-import { useLanguage } from "@/context/LanguageContext"; // i18n eklendi
+import { ikindiDualariData, DuaType } from "@/constants/ikindiDualari"
+import { useLanguage } from "@/context/LanguageContext"; // i18n context eklendi
 
-export default function SabahDualariPage() {
-  const { t } = useLanguage(); // Çeviri fonksiyonu eklendi
+export default function IkindiDualariPage() {
+  const { t } = useLanguage(); // Çeviri fonksiyonunu çağırdık
   const [activeTab, setActiveTab] = useState<"arabic" | "turkish">("arabic");
   const [randomDualar, setRandomDualar] = useState<DuaType[]>([]);
 
   useEffect(() => {
     // Listeyi karıştır ve ilk 5 tanesini al
-    const shuffled = [...sabahDualariData].sort(() => 0.5 - Math.random());
+    const shuffled = [...ikindiDualariData].sort(() => 0.5 - Math.random());
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRandomDualar(shuffled.slice(0, 5));
   }, []);
@@ -20,11 +20,11 @@ export default function SabahDualariPage() {
     <div className="container mx-auto p-4 md:p-8 mt-16 max-w-4xl">
       <div className="text-center mb-10">
         <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white mb-3">
-          {t("sabahDualariTitle") || "Sabah Duaları"} 🌅
+          {t("IkindiDualariTitle") || "Ikindi Duaları"} 🌙
         </h1>
         <p className="text-slate-600 dark:text-slate-300">
-          {t("sabahDualariPageDesc") ||
-            "Güne bereketle, Allah'ı anarak ve O'na sığınarak başlamak için okunacak dualar."}
+          {t("ikindiDualariPageDesc") ||
+            "Allah'a şükretmek ve ikindiye huzurla girmek için okunacak dualar."}
         </p>
       </div>
 
@@ -79,6 +79,7 @@ export default function SabahDualariPage() {
             {activeTab === "turkish" && (
               <div className="p-6">
                 <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-200">
+                  {/* Verinizdeki 'turkish' objesini render ediyoruz. İleride datayı çok dilli yaparsanız dua[lang] gibi kullanabilirsiniz */}
                   {dua.turkish}
                 </p>
               </div>

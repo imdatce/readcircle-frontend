@@ -37,10 +37,43 @@ export const nl = {
     nameCopiedAlert: "Naam Gekopieerd!",
     copyButtonTooltip: "Kopiëren",
     ibanCopiedAlert: "IBAN Gekopieerd!",
-    receiverNameValue: "Umit Celik", 
-  ibanValue: "TR00 0000 0000 0000 0000 0000 00",
+    sabahDualariDesc: "Gebeden om de dag met zegeningen te beginnen",
+    aksamDualariDesc: "Gebeden om de nacht vredig in te gaan",
+    receiverNameValue: "Umit Celik",
+    ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Heilige Koran",
     categorySurahs: "Soera's",
+    // --- VAKİT DUALARI ORTAK ---
+    arabicReading: "Arabische Lezing",
+    translationMeaning: "Vertaling",
+
+    // --- SABAH DUALARI ---
+    sabahDualariTitle: "Ochtendgebeden",
+    sabahDualariPageDesc: "Gebeden om de dag met zegeningen te beginnen, door Allah te gedenken en toevlucht tot Hem te zoeken.",
+
+    // --- ÖĞLE DUALARI ---
+    ogleDualariTitle: "Dhuhr Gebeden",
+    ogleDualariPageDesc: "Gebeden om te lezen te midden van de drukte van de dag om Allah te gedenken en de middag te zegenen.",
+
+    // --- İKİNDİ DUALARI ---
+    ikindiDualariTitle: "Asr Gebeden",
+    ikindiDualariPageDesc: "Gebeden om Allah te bedanken en de namiddag vredig in te gaan.",
+    categoryTimePrayers: "Gebedstijd Smeekbeden",
+    categorySalavats: "Salawats (Zegeningen)",
+    categoryKuran: "Koran & Hadith Gebeden",
+    categoryEsma: "Goddelijke Namen & Martelaren",
+
+    // --- AKŞAM DUALARI ---
+    aksamDualariTitle: "Avondgebeden",
+    aksamDualariPageDesc: "Gebeden om Allah te bedanken en de nacht vredig in te gaan terwijl je de vermoeidheid van de dag loslaat.",
+
+    // --- YATSI DUALARI ---
+    yatsiDualariTitle: "Isha Gebeden",
+    yatsiDualariPageDesc: "Gebeden om je tot Allah te wenden, voorziening en vergeving te zoeken aan het einde van de dag.",
+    notifications: "Meldingen",
+    clearAll: "Alles Wissen",
+    show: "Bekijk",
+    noNotifications: "Je hebt nog geen meldingen.",
     timeRemaining: "resterende tijd",
     categoryPrayers: "Smeekbeden (Dua)",
     categorySalawats: "Salawat",
@@ -368,7 +401,7 @@ export const nl = {
     cancel: "Annuleren",
     notStartedReading: "Je bent nog niet begonnen met lezen",
     currentlyAtPrefix: "Momenteel bij juz ",
-     changeGoalBtn: "Doel Wijzigen",
+    changeGoalBtn: "Doel Wijzigen",
     congratulationsLabel: "Gefeliciteerd!",
     goalReachedLabel: "Doel Bereikt",
     dailyGoalLabel: "Dagelijks Doel",
@@ -376,9 +409,9 @@ export const nl = {
     fatihaLabel: "Fatiha",
     nasLabel: "Nas",
     createNewSession: "Nieuwe Kring Maken",
-  joinedSessions: "Bijgewoonde Kringen",
-  code: "Code",
-  alertTakenSuccess: "Taak succesvol aangenomen!",
+    joinedSessions: "Bijgewoonde Kringen",
+    code: "Code",
+    alertTakenSuccess: "Taak succesvol aangenomen!",
     goToLastReadLabel: "Ga naar Laatst Gelezen",
     noReadingHistoryMsg:
         "Nog geen leesgeschiedenis. Begin door een Juz of Soera te selecteren.",

@@ -37,13 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   }, [router]);
 
- // --- PROFİL GETİRME VE İLK YÜKLEME ---
+  // --- PROFİL GETİRME VE İLK YÜKLEME ---
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem("token");
       const storedUsername = localStorage.getItem("username");
 
-      // 1. Önce LocalStorage'daki bilgileri state'e yaz 
+      // 1. Önce LocalStorage'daki bilgileri state'e yaz
       // (Linter hatasını aşmak için async bir fonksiyonun içinde yapıyoruz)
       if (storedToken && storedUsername) {
         setUser(storedUsername);
@@ -57,9 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/auth/me`,
             {
               headers: { Authorization: `Bearer ${storedToken}` },
-            }
+            },
           );
-          
+
           if (res.ok) {
             const data = await res.json();
             setUser(data.username);
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   country: data.country,
                   city: data.city,
                   district: data.district || "",
-                })
+                }),
               );
               window.dispatchEvent(new Event("locationUpdated"));
             }
@@ -267,28 +267,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // --- ÖN PLAN (FOREGROUND) BİLDİRİM DİNLEYİCİSİ ---
+  // context/AuthContext.tsx dosyanızdaki useEffect içinde bulunan onMessage kısmı:
+
   useEffect(() => {
     if (typeof window !== "undefined" && messaging) {
       console.log("✅ Firebase Ön Plan (Foreground) Dinleyicisi Başlatıldı!");
 
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log(
-          "%c🔔 [BİLDİRİM GELDİ] (Uygulama Açıkken)!!!",
-          "color: #10b981; font-size: 20px; font-weight: bold;",
-        );
-        console.log("Bildirim Detayı:", payload);
+        console.log("🔔 Bildirim Geldi: ", payload);
 
-        // Gelecekte Alert yerine React-Hot-Toast gibi daha şık bir kütüphane kullanabilirsiniz.
-        alert(
-          `🔔 ${payload.notification?.title}\n${payload.notification?.body}`,
+        // 1. Yeni bildirimi oluştur
+        const newNotification = {
+          title: payload.notification?.title || "Yeni Bildirim",
+          body: payload.notification?.body || "",
+          url: payload.data?.click_url || null,
+          time: new Date().toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        // 2. LocalStorage'dan eskileri al ve yeniyi ekle
+        const existing = JSON.parse(
+          localStorage.getItem("app_notifications") || "[]",
         );
+        existing.push(newNotification);
+
+        // Sınır koyalım ki hafıza dolmasın (Sadece son 20 bildirimi tut)
+        if (existing.length > 20) existing.shift();
+
+        localStorage.setItem("app_notifications", JSON.stringify(existing));
+
+        // 3. Header'ın anında haberdar olması için Event fırlat
+        window.dispatchEvent(new Event("new_notification"));
+
+        // Ekrana da pop-up olarak çıkar (Mevcut kodunuz)
+        alert(`🔔 ${newNotification.title}\n${newNotification.body}`);
       });
 
-      return () => {
-        unsubscribe();
-        console.log("🛑 Firebase Ön Plan Dinleyicisi Kapatıldı.");
-      };
+      return () => unsubscribe();
     }
   }, []);
 

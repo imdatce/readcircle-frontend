@@ -37,7 +37,7 @@ export const tr = {
   nameCopiedAlert: "İsim Kopyalandı!",
   copyButtonTooltip: "Kopyala",
   ibanCopiedAlert: "IBAN Kopyalandı!",
-  receiverNameValue: "Ümit Çelik", 
+  receiverNameValue: "Ümit Çelik",
   ibanValue: "TR00 0000 0000 0000 0000 0000 00",
   footerCopyright: "SURA App © {year}",
   categoryMain: "Kur'an-ı Kerim",
@@ -831,11 +831,37 @@ export const tr = {
   rel_day_ramadanEve: "Ramazan Bayramı Arefesi",
   rel_day_ramadanDay1: "Ramazan Bayramı (1. Gün)",
   rel_day_eidEve: "Kurban Bayramı Arefesi",
+  aksamDualariPageDesc: "Günün yorgunluğunu atarken, Allah'a şükretmek ve geceye huzurla girmek için okunacak dualar.",
+  arabicReading: "Arapça Okunuş",
+  translationMeaning: "Türkçe Anlamı",
   rel_day_eidDay1: "Kurban Bayramı (1. Gün)",
   rel_day_hijriNewYear: "Hicri Yılbaşı",
+  sabahDualariPageDesc: "Güne bereketle, Allah'ı anarak ve O'na sığınarak başlamak için okunacak dualar.",
   rel_day_ashura: "Aşure Günü",
   rel_day_mawlid: "Mevlid Kandili",
   rel_day_threeMonthsStart: "Üç Ayların Başlangıcı",
+
+  // --- VAKİT DUALARI ORTAK ---
+
+  // --- SABAH DUALARI ---
+  sabahDualariTitle: "Sabah Duaları",
+  sabahDualariDesc: "Güne bereketle başlamak için okunacak dualar",
+
+  // --- ÖĞLE DUALARI ---
+  ogleDualariTitle: "Öğle Duaları",
+  ogleDualariPageDesc: "Günün koşturmacası arasında Allah'ı anmak ve öğle vaktini bereketlendirmek için okunacak dualar.",
+
+  // --- İKİNDİ DUALARI ---
+  ikindiDualariTitle: "İkindi Duaları",
+  ikindiDualariPageDesc: "Allah'a şükretmek ve ikindi vaktine huzurla girmek için okunacak dualar.",
+
+  // --- AKŞAM DUALARI ---
+  aksamDualariTitle: "Akşam Duaları",
+  aksamDualariDesc: "Geceye huzurla girmek için okunacak dualar",
+
+  // --- YATSI DUALARI ---
+  yatsiDualariTitle: "Yatsı Duaları",
+  yatsiDualariPageDesc: "Günü bitirirken Allah'a yönelmek, rızık ve mağfiret dilemek için okunacak dualar.",
   rel_day_regaib: "Regaib Kandili",
   // --- RİSALE-İ NUR KİTAP İSİMLERİ ---
   resource_SOZLER: "Sözler",
@@ -865,12 +891,20 @@ export const tr = {
   dualarVirdler: "Dualar ve Virdler",
   seeAllList: "Tüm Listeyi Gör",
   dailyPrayers: "Günlük Dualar",
-  esmaulHusna: "Esma-ül Hüsna",  
+  esmaulHusna: "Esma-ül Hüsna",
   timeRemaining: "vaktine kalan süre",
   allCollection: "Tüm Külliyat",
   spiritualAgenda: "Manevi Ajandam",
   dailyPrayerTracker: "Günlük Namaz Takibi",
   missedPrayerTracker: "Kaza Namazı Takibi",
+  categoryTimePrayers: "Vakit Duaları",
+  categorySalavats: "Salavat-ı Şerifeler",
+  categoryKuran: "Kur'an & Hadis Duaları",
+  categoryEsma: "Esma & Şüheda",
+  notifications: "Bildirimler",
+  clearAll: "Tümünü Temizle",
+  show: "Görüntüle",
+  noNotifications: "Henüz bildiriminiz yok.",
   dailyDhikrTracker: "Günlük Zikir Takibi",
   personalPrayerList: "Kişisel Dua Listem",
   accountSettings: "Hesap Ayarları",

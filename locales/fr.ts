@@ -41,8 +41,38 @@ export const fr = {
     ibanValue: "TR00 0000 0000 0000 0000 0000 00",
     categoryMain: "Saint Coran",
     timeRemaining: "temps restant",
+    aksamDualariPageDesc: "Prières à lire pour remercier Allah et entrer dans la nuit paisiblement en se libérant de la fatigue de la journée.",
+    arabicReading: "Lecture en Arabe",
+    translationMeaning: "Traduction",
     categorySurahs: "Sourates",
     categoryPrayers: "Prières",
+    sabahDualariTitle: "Prières du Matin",
+    sabahDualariDesc: "Prières à lire pour commencer la journée avec bénédiction",
+    sabahDualariPageDesc: "Prières à lire pour commencer la journée avec bénédiction, en se souvenant d'Allah et en cherchant Son refuge.",
+
+    // --- ÖĞLE DUALARI ---
+    ogleDualariTitle: "Prières de Dhuhr",
+    ogleDualariPageDesc: "Prières à lire au milieu de l'agitation de la journée pour se souvenir d'Allah et bénir l'heure de midi.",
+
+    // --- İKİNDİ DUALARI ---
+    ikindiDualariTitle: "Prières d'Asr",
+    ikindiDualariPageDesc: "Prières pour remercier Allah et entrer dans l'après-midi paisiblement.",
+
+    // --- AKŞAM DUALARI ---
+    aksamDualariTitle: "Prières du Soir",
+    aksamDualariDesc: "Prières à lire pour entrer dans la nuit paisiblement",
+    categoryTimePrayers: "Invocations des Heures de Prière",
+    categorySalavats: "Salawats (Bénédictions)",
+    categoryKuran: "Prières du Coran & Hadith",
+    categoryEsma: "Noms Divins & Martyrs",
+
+    // --- YATSI DUALARI ---
+    yatsiDualariTitle: "Prières d'Isha",
+    yatsiDualariPageDesc: "Prières pour se tourner vers Allah, demander subsistance et pardon à la fin de la journée.",
+    notifications: "Notifications",
+    clearAll: "Tout Effacer",
+    show: "Voir",
+    noNotifications: "Vous n'avez pas encore de notifications.",
     categorySalawats: "Salawat",
     categoryNames: "Noms",
     categoryDhikrs: "Dhikr",

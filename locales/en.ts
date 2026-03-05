@@ -380,13 +380,48 @@ export const en = {
     // --- RESOURCES HOME PAGE ---
     myResources: "My Library",
     myResourcesDesc: "Your library to support your spiritual development.",
+    // --- VAKİT DUALARI ORTAK ---
+    arabicReading: "Arabic Reading",
+    translationMeaning: "Translation",
 
+    // --- SABAH DUALARI ---
+    sabahDualariTitle: "Morning Prayers",
+    sabahDualariDesc: "Prayers to read for starting the day with blessings",
+    sabahDualariPageDesc: "Prayers to read to start the day with blessings, remembering Allah, and seeking His refuge.",
+
+    // --- ÖĞLE DUALARI ---
+    ogleDualariTitle: "Dhuhr Prayers",
+    ogleDualariPageDesc: "Prayers to read in the midst of the day's hustle to remember Allah and bless the noon time.",
+
+    // --- İKİNDİ DUALARI ---
+    ikindiDualariTitle: "Asr Prayers",
+    ikindiDualariPageDesc: "Prayers to thank Allah and enter the afternoon peacefully.",
+
+    // --- AKŞAM DUALARI ---
+    aksamDualariTitle: "Evening Prayers",
+    aksamDualariDesc: "Prayers to read for entering the night peacefully",
+    aksamDualariPageDesc: "Prayers to read for thanking Allah and entering the night peacefully while shedding the day's fatigue.",
+
+    // --- YATSI DUALARI ---
+    yatsiDualariTitle: "Isha Prayers",
+    yatsiDualariPageDesc: "Prayers to turn to Allah, seek sustenance and forgiveness as the day ends.",
     quranDesc: "Our Holy Book",
     cevsenDesc: "The Prayer of our Prophet",
     risale: "Risale-i Nur",
     risaleDesc: "The works of Bediuzzaman Said Nursi",
     tesbihatlarDesc: "Post-prayer glorifications",
     dualarDesc: "Various prayers and dhikrs",
+    categoryTimePrayers: "Prayer Time Supplications",
+    categorySalavats: "Salawats",
+    categoryKuran: "Quranic & Hadith Prayers",
+    categoryEsma: "Divine Names & Martyrs",
+
+
+
+    notifications: "Notifications",
+    clearAll: "Clear All",
+    show: "View",
+    noNotifications: "You have no notifications yet.",
     timeRemaining: "time remaining",
     // --- CIRCLES (SESSIONS) PAGE ---
     circlesTitle: "Circles",

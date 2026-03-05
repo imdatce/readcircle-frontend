@@ -20,6 +20,10 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
 
+  const [notifications, setNotifications] = useState<
+    { title: string; body: string; time: string; url?: string }[]
+  >([]);
+
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(
     null,
   );
@@ -58,6 +62,32 @@ export default function Header() {
       logo.offsetWidth + (panel?.offsetWidth ?? 0) + burger.offsetWidth + 32;
     setIsCompact(needed > container.clientWidth);
   }, []);
+
+  // Bildirimleri LocalStorage'dan yükle
+  useEffect(() => {
+    const loadNotifications = () => {
+      const saved = localStorage.getItem("app_notifications");
+      if (saved) {
+        try {
+          // En yeniler en üstte olacak şekilde ters çeviriyoruz
+          setNotifications(JSON.parse(saved).reverse());
+        } catch (e) {}
+      }
+    };
+
+    loadNotifications();
+
+    // AuthContext'ten (veya başka yerden) yeni bildirim geldiğinde listeyi güncellemesi için event dinleyici
+    window.addEventListener("new_notification", loadNotifications);
+    return () =>
+      window.removeEventListener("new_notification", loadNotifications);
+  }, []);
+
+  // Bildirimleri Temizle
+  const clearNotifications = () => {
+    localStorage.removeItem("app_notifications");
+    setNotifications([]);
+  };
 
   useEffect(() => {
     checkOverflow();
@@ -967,6 +997,105 @@ export default function Header() {
                           </svg>
                           {t("contactUs") || "İletişime Geç"}
                         </button>
+                        {/* ===== YENİ EKLENEN BİLDİRİMLER SEKMESİ BAŞLANGIÇ ===== */}
+                        <div className="w-full h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
+
+                        <button
+                          onClick={() => toggleAccordion("notifications")}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm font-semibold mt-1 ${expandedAccordion === "notifications" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <svg
+                                className={`w-5 h-5 shrink-0 ${expandedAccordion === "notifications" ? "" : "text-gray-500"}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="2"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                                />
+                              </svg>
+                              {/* Okunmamış bildirim varsa kırmızı nokta */}
+                              {notifications.length > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-gray-900"></span>
+                                </span>
+                              )}
+                            </div>
+                            {t("notifications") || "Bildirimler"}
+                            <span className="text-xs font-normal text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full ml-1">
+                              {notifications.length}
+                            </span>
+                          </div>
+                          <svg
+                            className={`w-4 h-4 transition-transform duration-300 ${expandedAccordion === "notifications" ? "rotate-180" : "text-gray-400"}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+                        {/* Bildirimlerin Listelendiği Açılır Kapanır Alan */}
+                        {expandedAccordion === "notifications" && (
+                          <div className="flex flex-col gap-2 px-1 py-2 mx-2 my-1 border-l-2 border-emerald-100 dark:border-emerald-800/50 animate-in fade-in slide-in-from-top-2 max-h-64 overflow-y-auto scrollbar-hide">
+                            {notifications.length === 0 ? (
+                              <p className="text-xs text-center text-gray-400 py-3 italic">
+                                {t("noNotifications") ||
+                                  "Henüz bildiriminiz yok."}
+                              </p>
+                            ) : (
+                              <>
+                                <div className="flex justify-end px-2 mb-1">
+                                  <button
+                                    onClick={clearNotifications}
+                                    className="text-[11px] text-red-500 hover:text-red-700 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded"
+                                  >
+                                    {t("clearAll") || "Tümünü Temizle"}
+                                  </button>
+                                </div>
+                                {notifications.map((notif, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex flex-col bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-2.5 rounded-xl shadow-sm ml-2"
+                                  >
+                                    <div className="flex justify-between items-start mb-1">
+                                      <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight">
+                                        {notif.title}
+                                      </h4>
+                                      <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
+                                        {notif.time}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                                      {notif.body}
+                                    </p>
+                                    {notif.url && (
+                                      <Link
+                                        href={notif.url}
+                                        onClick={closeMenu}
+                                        className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-2 hover:underline self-start"
+                                      >
+                                         {t("show") || "Görüntüle"}
+                                      </Link>
+                                    )}
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {/* ===== YENİ EKLENEN BİLDİRİMLER SEKMESİ BİTİŞ ===== */}
 
                         {role === "ROLE_ADMIN" && (
                           <Link
