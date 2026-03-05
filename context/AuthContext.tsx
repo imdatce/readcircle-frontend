@@ -197,19 +197,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 1. Cihaz Türüne Göre FCM Token Al
       if (Capacitor.isNativePlatform()) {
-        console.log("📱 Cihaz: NATIVE (Android/iOS). Yerel izin isteniyor...");
-        const permission = await FirebaseMessaging.requestPermissions();
+         const permission = await FirebaseMessaging.requestPermissions();
 
         if (permission.receive === "granted") {
           const { token } = await FirebaseMessaging.getToken();
           fcmToken = token;
-          console.log("🔑 Native FCM Token Alındı:", fcmToken);
-        } else {
-          console.log("❌ Native bildirim izni reddedildi.");
-        }
+         }  
       } else {
-        console.log("🌐 Cihaz: WEB. Web push izni isteniyor...");
-        const messagingInstance = await fetchMessaging();
+         const messagingInstance = await fetchMessaging();
 
         if (messagingInstance) {
           const permission = await Notification.requestPermission();
@@ -218,15 +213,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               vapidKey:
                 "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
             });
-            console.log("🔑 Web FCM Token Alındı:", fcmToken);
-          } else {
-            console.log("❌ Web bildirim izni reddedildi.");
-          }
-        } else {
-          console.log(
-            "⚠️ Web ortamında Firebase Messaging desteklenmiyor olabilir.",
-          );
-        }
+           } 
+         }
       }
 
       // 2. Token Varsa Backend'e Gönder
@@ -234,9 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const authToken = localStorage.getItem("token");
 
         if (!authToken) {
-          console.warn(
-            "⚠️ Kullanıcı giriş yapmamış, FCM Token backend'e gönderilemedi.",
-          );
+          
           return;
         }
 
@@ -253,26 +239,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         if (response.ok) {
-          console.log("✅ BAŞARILI: FCM Token veritabanına kaydedildi!");
-        } else {
+         } else {
           const errorText = await response.text();
-          console.error(
-            "❌ HATA: Token veritabanına yazılamadı! Sunucu cevabı:",
-            errorText,
-          );
+         
         }
       }
     } catch (error: any) {
-      console.error("💥 Bildirim kaydı sırasında hata oluştu:", error);
-    }
+     }
   }, []);
 
   // context/AuthContext.tsx dosyanızdaki useEffect içinde bulunan onMessage kısmı:
 
   useEffect(() => {
     if (typeof window !== "undefined" && messaging) {
-      console.log("✅ Firebase Ön Plan (Foreground) Dinleyicisi Başlatıldı!");
-
+ 
       const unsubscribe = onMessage(messaging, (payload) => {
         console.log("🔔 Bildirim Geldi: ", payload);
 

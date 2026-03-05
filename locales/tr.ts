@@ -901,6 +901,8 @@ export const tr = {
   ikindiDualariDesc: "İkindi vaktini bereketlendirmek için okunacak dualar",
   yatsiDualariDesc: "Günü huşu ile kapatmak için okunacak dualar",
   categoryTimePrayers: "Vakit Duaları",
+  enterManually: "Elle Gir",
+  autoFind: "Otomatik Bul",
   categorySalavats: "Salavat-ı Şerifeler",
 
   categoryKuran: "Kur'an & Hadis Duaları",

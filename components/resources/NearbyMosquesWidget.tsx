@@ -47,15 +47,17 @@ export default function NearbyMosquesWidget() {
         const userLon = position.coords.longitude;
 
         try {
-          // Çapı tam 10 km (10000 metre) yaptık.
+         // Çapı tam 10 km (10000 metre) yaptık.
           const radius = 10000;
           const query = `
             [out:json][timeout:25];
             (
               node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
               way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${userLat},${userLon});
-              node["amenity"="prayer_room"]["religion"="muslim"](around:${radius},${userLat},${userLon});
-              way["amenity"="prayer_room"]["religion"="muslim"](around:${radius},${userLat},${userLon});
+              node["amenity"="prayer_room"](around:${radius},${userLat},${userLon});
+              way["amenity"="prayer_room"](around:${radius},${userLat},${userLon});
+              node["building"="mosque"](around:${radius},${userLat},${userLon});
+              way["building"="mosque"](around:${radius},${userLat},${userLon});
             );
             out center;
           `;
@@ -243,7 +245,7 @@ export default function NearbyMosquesWidget() {
                 </div>
 
                 {/* DÜZELTİLMİŞ GOOGLE MAPS YOL TARİFİ LİNKİ */}
-                <a
+                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`}
                   target="_blank"
                   rel="noopener noreferrer"
