@@ -302,7 +302,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.dispatchEvent(new Event("new_notification"));
 
         // Ekrana da pop-up olarak çıkar (Mevcut kodunuz)
-        alert(`🔔 ${newNotification.title}\n${newNotification.body}`);
+        const userWantsToRead = window.confirm(
+          `🕌 ${newNotification.title}\n${newNotification.body}\n\nŞimdi sayfaya gitmek ister misiniz?`,
+        );
+        if (userWantsToRead && newNotification.url) {
+            // Kullanıcı "Tamam"a basarsa URL'ye yönlendir
+            window.location.href = newNotification.url;
+        }
       });
 
       return () => unsubscribe();

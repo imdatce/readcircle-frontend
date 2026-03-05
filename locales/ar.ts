@@ -65,6 +65,9 @@ export const ar = {
     aksamDualariDesc: "أدعية تُقرأ للدخول في الليل بطمأنينة",
     categoryTimePrayers: "أدعية أوقات الصلاة",
     categorySalavats: "الصلوات على النبي",
+    ogleDualariDesc: "أدعية تُقرأ لمواصلة اليوم بالبركة",
+    ikindiDualariDesc: "أدعية تُقرأ لمباركة وقت العصر",
+    yatsiDualariDesc: "أدعية تُقرأ لختم اليوم بخشوع وطمأنينة",
     categoryKuran: "أدعية من القرآن والحديث",
     categoryEsma: "أسماء الله الحسنى والشهداء",
 

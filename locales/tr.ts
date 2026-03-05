@@ -897,8 +897,12 @@ export const tr = {
   spiritualAgenda: "Manevi Ajandam",
   dailyPrayerTracker: "Günlük Namaz Takibi",
   missedPrayerTracker: "Kaza Namazı Takibi",
+  ogleDualariDesc: "Günü bereketle devam ettirmek için okunacak dualar",
+  ikindiDualariDesc: "İkindi vaktini bereketlendirmek için okunacak dualar",
+  yatsiDualariDesc: "Günü huşu ile kapatmak için okunacak dualar",
   categoryTimePrayers: "Vakit Duaları",
   categorySalavats: "Salavat-ı Şerifeler",
+
   categoryKuran: "Kur'an & Hadis Duaları",
   categoryEsma: "Esma & Şüheda",
   notifications: "Bildirimler",

@@ -64,6 +64,9 @@ export const fr = {
     categoryTimePrayers: "Invocations des Heures de Prière",
     categorySalavats: "Salawats (Bénédictions)",
     categoryKuran: "Prières du Coran & Hadith",
+    ogleDualariDesc: "Prières à lire pour continuer la journée avec bénédiction",
+    ikindiDualariDesc: "Prières à lire pour bénir l'après-midi",
+    yatsiDualariDesc: "Prières à lire pour clôturer la journée avec tranquillité",
     categoryEsma: "Noms Divins & Martyrs",
 
     // --- YATSI DUALARI ---

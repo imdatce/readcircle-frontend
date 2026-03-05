@@ -29,14 +29,14 @@ export default function PrayerTimesPage() {
             <PrayerTimesWidget />
           </div>
 
-          {/* 2. Yakındaki Camiler & Mescitler */}
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
-            <NearbyMosquesWidget />
-          </div>
-
           {/* 3. Kıble Pusulası */}
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
             <QiblaWidget />
+          </div>
+
+          {/* 2. Yakındaki Camiler & Mescitler */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both delay-300">
+            <NearbyMosquesWidget />
           </div>
 
           {/* 4. Dini Günler */}

@@ -486,6 +486,9 @@ export const ku = {
 
     // --- YATSI DUALARI ---
     yatsiDualariTitle: "Diayên Xeftanê",
+    ogleDualariDesc: "Diayên ku ji bo rojeke bi bereket dewam bike tên xwendin",
+    ikindiDualariDesc: "Diayên ku ji bo bereketkirina dema esrê tên xwendin",
+    yatsiDualariDesc: "Diayên ku ji bo bi aramî girtina rojê tên xwendin",
     categoryTimePrayers: "Diayên Demên Nimêjê",
     categorySalavats: "Selewat",
     categoryKuran: "Diayên Quran û Hedîsê",
