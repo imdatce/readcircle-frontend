@@ -10,8 +10,6 @@ export default function FirebaseForeground() {
     // Sadece tarayıcı ortamında ve messaging objesi varsa çalıştır
     if (typeof window !== "undefined" && messaging) {
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log("Uygulama açıkken (Foreground) mesaj geldi:", payload);
-
         // Kullanıcı bildirim izni vermişse tarayıcıda göster
         if (Notification.permission === "granted") {
           const notificationTitle =

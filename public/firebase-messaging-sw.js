@@ -10,15 +10,7 @@ firebase.initializeApp({
     appId: "1:286725551943:web:a6c1ab2fcbe4a1a36dfe62"
 });
 
-const messaging = firebase.messaging();
-
-// Arka plan mesajı geldiğinde sadece log atalım, 
-// Backend 'setNotification' gönderdiği için tarayıcı otomatik gösterecektir.
-messaging.onBackgroundMessage((payload) => {
-    console.log('[SW] Arka planda mesaj alındı: ', payload);
-});
-
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
     event.notification.close();
     // Veriyi 'data' içinden veya Firebase'in sakladığı 'FCM_MSG' içinden çekiyoruz
     const urlToOpen = event.notification.data?.click_url || '/';

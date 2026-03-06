@@ -197,14 +197,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 1. Cihaz Türüne Göre FCM Token Al
       if (Capacitor.isNativePlatform()) {
-         const permission = await FirebaseMessaging.requestPermissions();
+        const permission = await FirebaseMessaging.requestPermissions();
 
         if (permission.receive === "granted") {
           const { token } = await FirebaseMessaging.getToken();
           fcmToken = token;
-         }  
+        }
       } else {
-         const messagingInstance = await fetchMessaging();
+        const messagingInstance = await fetchMessaging();
 
         if (messagingInstance) {
           const permission = await Notification.requestPermission();
@@ -213,8 +213,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               vapidKey:
                 "BLeSjgUdjGkb7SdoIA-brUZ461OjDFeJxv_hTrUQkw8cs-7oU2RRDgQni8Q7Fcrsy6Em0gryoNHYcoCU4dzjvZg",
             });
-           } 
-         }
+          }
+        }
       }
 
       // 2. Token Varsa Backend'e Gönder
@@ -222,7 +222,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const authToken = localStorage.getItem("token");
 
         if (!authToken) {
-          
           return;
         }
 
@@ -239,23 +238,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         if (response.ok) {
-         } else {
+        } else {
           const errorText = await response.text();
-         
         }
       }
-    } catch (error: any) {
-     }
+    } catch (error: any) {}
   }, []);
 
   // context/AuthContext.tsx dosyanızdaki useEffect içinde bulunan onMessage kısmı:
 
   useEffect(() => {
     if (typeof window !== "undefined" && messaging) {
- 
       const unsubscribe = onMessage(messaging, (payload) => {
-        console.log("🔔 Bildirim Geldi: ", payload);
-
         // 1. Yeni bildirimi oluştur
         const newNotification = {
           title: payload.notification?.title || "Yeni Bildirim",
@@ -286,8 +280,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           `🕌 ${newNotification.title}\n${newNotification.body}\n\nŞimdi sayfaya gitmek ister misiniz?`,
         );
         if (userWantsToRead && newNotification.url) {
-            // Kullanıcı "Tamam"a basarsa URL'ye yönlendir
-            window.location.href = newNotification.url;
+          // Kullanıcı "Tamam"a basarsa URL'ye yönlendir
+          window.location.href = newNotification.url;
         }
       });
 
