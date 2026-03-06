@@ -107,7 +107,7 @@ async function fetchQuranTranslationPage(
   try {
     if (editionOrKey === "special_quranenc_kurmanji") {
       const structRes = await fetch(
-        `https://api.alquran.cloud/v1/page/${pageNumber}/quran-uthmani`,
+        `https://api.alquran.cloud/v1/page/${pageNumber}/quran-simple`,
       );
       const structData = await structRes.json();
       if (structData.code === 200 && structData.data?.ayahs) {
@@ -975,24 +975,26 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     }
   };
 
- const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null || touchStartY.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-    
-    // deltaX > 0 ise sola kaydırıldı, deltaX < 0 ise sağa kaydırıldı demektir
+
     const deltaX = touchStartX.current - touchEndX;
     const deltaY = touchStartY.current - touchEndY;
+
+    // Kur'an okurken veya Arapça sekmesindeyken sağdan sola mantığını etkinleştir
+    const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
 
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
       if (deltaX > 0) {
         // PARMAK SOLA KAYDIRILDI
-        // Normalde ileri gidilir ama Kur'an mantığında GERİ (önceki sayfa) gidilir
-        changePage(-1); 
+        // Latincede: Sonraki (+1) | Kur'anda: Önceki (-1)
+        changePage(isRtlReading ? -1 : 1);
       } else {
         // PARMAK SAĞA KAYDIRILDI
-        // Normalde geri gidilir ama Kur'an mantığında İLERİ (sonraki sayfa) gidilir
-        changePage(1); 
+        // Latincede: Önceki (-1) | Kur'anda: Sonraki (+1)
+        changePage(isRtlReading ? 1 : -1);
       }
     }
     touchStartX.current = null;
@@ -1011,19 +1013,28 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     const currentJuz =
       content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
 
+    // Kur'an modunda mıyız kontrolü
+    const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
+
     return (
       <div className="flex items-center justify-between gap-1 md:gap-3 w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-1.5 md:p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        {/* SOL BUTON (Kuran'da 'Sonraki', Normalde 'Önceki' olur) */}
         <button
-          onClick={() => changePage(-1)}
-          disabled={isFirstPage}
-          className="shrink-0 px-2.5 md:px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 md:gap-2 transition-all"
+          onClick={() => changePage(isRtlReading ? 1 : -1)}
+          disabled={isRtlReading ? isLastPage : isFirstPage}
+          className={`shrink-0 px-2.5 md:px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 md:gap-2 transition-all ${
+            isRtlReading
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20"
+              : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20"
+          }`}
         >
           <span>←</span>{" "}
           <span className="hidden sm:inline-block">
-            {t("previous") || "Önceki"}
+            {isRtlReading ? t("next") || "Sonraki" : t("previous") || "Önceki"}
           </span>
         </button>
 
+        {/* ORTA BİLGİ */}
         <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
           {content.type === "QURAN" && (
             <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
@@ -1037,20 +1048,24 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           </span>
         </span>
 
+        {/* SAĞ BUTON (Kuran'da 'Önceki', Normalde 'Sonraki' olur) */}
         <button
-          onClick={() => changePage(1)}
-          disabled={isLastPage}
-          className="shrink-0 px-2.5 md:px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 transition-all"
+          onClick={() => changePage(isRtlReading ? -1 : 1)}
+          disabled={isRtlReading ? isFirstPage : isLastPage}
+          className={`shrink-0 px-2.5 md:px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 transition-all ${
+            isRtlReading
+              ? "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20"
+              : "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20"
+          }`}
         >
           <span className="hidden sm:inline-block">
-            {t("next") || "Sonraki"}
+            {isRtlReading ? t("previous") || "Önceki" : t("next") || "Sonraki"}
           </span>{" "}
           <span>→</span>
         </button>
       </div>
     );
   };
-
   return (
     <div
       className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
@@ -1324,7 +1339,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         {originalData.map((ayah: any) => (
                           <React.Fragment key={ayah.number}>
                             <span
-                              className={`font-serif text-gray-900 dark:text-gray-100 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
+                              className={`font-quran text-gray-900 dark:text-gray-100 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
+                              style={{
+                                lineHeight: "normal",
+                              }} /* Fontun kendi yüksekliğini koruması için */
                             >
                               {ayah.text}
                             </span>
@@ -1372,7 +1390,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                                     </span>
                                   ) : (
                                     <span
-                                      className={`font-serif text-gray-800 dark:text-gray-100 transition-colors ${activeWordId === word.id ? "text-emerald-600 dark:text-emerald-400" : "lg:group-hover:text-emerald-600 dark:lg:group-hover:text-emerald-400"} ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
+                                      className={`font-quran text-gray-800 dark:text-gray-100 transition-colors ${activeWordId === word.id ? "text-emerald-600 dark:text-emerald-400" : "lg:group-hover:text-emerald-600 dark:lg:group-hover:text-emerald-400"} ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
                                     >
                                       {word.text_uthmani}
                                     </span>

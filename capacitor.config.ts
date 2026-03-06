@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'SURA',
   webDir: 'out',
   server: {
-    cleartext: true // iOS'un yerel ağdaki HTTP isteklerine izin vermesini sağlar
+    url: 'http://172.20.10.14:3000', // <-- Bulduğun IP adresi ve 3000 portu
+    cleartext: true
   }
 };
 

@@ -428,103 +428,180 @@ function PrayersContent() {
   const [logs, setLogs] = useState<PrayerLog[]>([]);
   const [updatingStr, setUpdatingStr] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<"farz" | "diger" | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<
+    "farz" | "diger" | null
+  >(null);
 
   // ÇÖZÜM: useMemo hook'unu early return'den (if (!user) return null) ÖNCEYE taşıdık.
-  const getMonthNames = useMemo(() => [
-    t("january"), t("february"), t("march"), t("april"), t("may"), t("june"),
-    t("july"), t("august"), t("september"), t("october"), t("november"), t("december")
-  ], [t]);
+  const getMonthNames = useMemo(
+    () => [
+      t("january"),
+      t("february"),
+      t("march"),
+      t("april"),
+      t("may"),
+      t("june"),
+      t("july"),
+      t("august"),
+      t("september"),
+      t("october"),
+      t("november"),
+      t("december"),
+    ],
+    [t],
+  );
 
-  const fetchMonthlyLogs = useCallback(async (year: number, month: number) => {
+  const fetchMonthlyLogs = useCallback(
+    async (year: number, month: number) => {
       if (!token) return;
       try {
         setLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/monthly?year=${year}&month=${month}`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/monthly?year=${year}&month=${month}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
         if (res.ok) setLogs(await res.json());
       } catch (e) {
         console.error("Fetch failed");
       } finally {
         setLoading(false);
       }
-    }, [token]);
+    },
+    [token],
+  );
 
   useEffect(() => {
     if (!token) return;
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/status`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/status`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
         if (res.ok) {
           const data = await res.json();
           setStatus(data);
           if (data.enabled) fetchMonthlyLogs(currentYear, currentMonth);
           else setLoading(false);
         }
-      } catch (e) { setLoading(false); }
+      } catch (e) {
+        setLoading(false);
+      }
     };
     fetchStatus();
   }, [token, currentYear, currentMonth, fetchMonthlyLogs]);
 
-  useEffect(() => { if (!user) router.push("/"); }, [user, router]);
-  
+  useEffect(() => {
+    if (!user) router.push("/");
+  }, [user, router]);
+
   // ERKEN DÖNÜŞ (Early Return) BURADA. Tüm hook'lar bunun üstünde olmalı!
   if (!user) return null;
 
-  const togglePrayer = async (dateStr: string, prayerKey: string, currentValue: boolean) => {
+  const togglePrayer = async (
+    dateStr: string,
+    prayerKey: string,
+    currentValue: boolean,
+  ) => {
     const updatingKey = `${dateStr}-${prayerKey}`;
     setUpdatingStr(updatingKey);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/update`, {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/update`,
+        {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ date: dateStr, prayer: prayerKey, status: !currentValue }),
-        });
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            date: dateStr,
+            prayer: prayerKey,
+            status: !currentValue,
+          }),
+        },
+      );
       if (res.ok) fetchMonthlyLogs(currentYear, currentMonth);
       else alert(t("updateFailed") || "Güncelleme başarısız!");
     } catch (e) {
       alert(t("connectionError") || "Bağlantı hatası!");
-    } finally { setUpdatingStr(null); }
+    } finally {
+      setUpdatingStr(null);
+    }
   };
 
   const daysCount = new Date(currentYear, currentMonth, 0).getDate();
-  const startDateStr = status?.startDate ? `${new Date(status.startDate).getFullYear()}-${String(new Date(status.startDate).getMonth() + 1).padStart(2, "0")}-${String(new Date(status.startDate).getDate()).padStart(2, "0")}` : null;
+  const startDateStr = status?.startDate
+    ? `${new Date(status.startDate).getFullYear()}-${String(new Date(status.startDate).getMonth() + 1).padStart(2, "0")}-${String(new Date(status.startDate).getDate()).padStart(2, "0")}`
+    : null;
 
-  const daysArray = Array.from({ length: daysCount }, (_, i) => i + 1).filter((day) => {
-    const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return startDateStr ? dateStr >= startDateStr : true;
-  });
+  const daysArray = Array.from({ length: daysCount }, (_, i) => i + 1).filter(
+    (day) => {
+      const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      return startDateStr ? dateStr >= startDateStr : true;
+    },
+  );
 
   const getLogForDay = (day: number) => {
     const dateStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const log = logs.find((l) => l.date === dateStr);
-    let farzCompleted = 0, otherCompleted = 0;
+    let farzCompleted = 0,
+      otherCompleted = 0;
     if (log) {
-      FARZ_PRAYERS.forEach((key) => { if ((log as any)[key]) farzCompleted++; });
-      OTHER_PRAYERS.forEach((key) => { if ((log as any)[key]) otherCompleted++; });
+      FARZ_PRAYERS.forEach((key) => {
+        if ((log as any)[key]) farzCompleted++;
+      });
+      OTHER_PRAYERS.forEach((key) => {
+        if ((log as any)[key]) otherCompleted++;
+      });
     }
     return { dateStr, log, farzCompleted, otherCompleted };
   };
 
-  let monthlyFarzTotal = 0, monthlyOtherTotal = 0;
+  let monthlyFarzTotal = 0,
+    monthlyOtherTotal = 0;
   logs.forEach((log) => {
-    FARZ_PRAYERS.forEach((key) => { if ((log as any)[key]) monthlyFarzTotal++; });
-    OTHER_PRAYERS.forEach((key) => { if ((log as any)[key]) monthlyOtherTotal++; });
+    FARZ_PRAYERS.forEach((key) => {
+      if ((log as any)[key]) monthlyFarzTotal++;
+    });
+    OTHER_PRAYERS.forEach((key) => {
+      if ((log as any)[key]) monthlyOtherTotal++;
+    });
   });
 
   if (loading && !status) return <PrayersLoading />;
-  
+
   if (status && !status.enabled && activeTab === "gunluk") {
     return (
       <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-6 px-4">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl w-fit mx-auto shadow-inner">
-            <button onClick={() => handleTabChange("gunluk")} className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase bg-white dark:bg-gray-700 text-teal-600 shadow-sm">{t("dailyPrayerTracking") || "Günlük Takip"}</button>
-            <button onClick={() => handleTabChange("kaza")} className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase text-gray-500">{t("kazaPrayerTracking") || "Kaza Takibi"}</button>
+            <button
+              onClick={() => handleTabChange("gunluk")}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase bg-white dark:bg-gray-700 text-teal-600 shadow-sm"
+            >
+              {t("dailyPrayerTracking") || "Günlük Takip"}
+            </button>
+            <button
+              onClick={() => handleTabChange("kaza")}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold transition-all uppercase text-gray-500"
+            >
+              {t("kazaPrayerTracking") || "Kaza Takibi"}
+            </button>
           </div>
-          <PrayersOnboarding t={t} onEnable={async () => {
-             await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/enable`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
-             window.location.reload();
-          }} />
+          <PrayersOnboarding
+            t={t}
+            onEnable={async () => {
+              await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/prayers/enable`,
+                {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+              window.location.reload();
+            }}
+          />
         </div>
       </div>
     );
@@ -534,12 +611,34 @@ function PrayersContent() {
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-gray-950 py-6 md:py-10 px-3 sm:px-4 md:px-8 transition-colors duration-500">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between bg-white dark:bg-gray-900 p-4 md:p-5 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
-          <button onClick={() => router.push("/")} className="p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-teal-600 rounded-xl transition-all shrink-0" title={t("backHome")}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          <button
+            onClick={() => router.push("/")}
+            className="p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-teal-600 rounded-xl transition-all shrink-0"
+            title={t("backHome")}
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </button>
           <div className="flex bg-gray-100 dark:bg-gray-800/80 p-1.5 rounded-2xl shadow-inner border border-gray-200/50">
-            <button onClick={() => handleTabChange("gunluk")} className={`px-4 sm:px-8 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-xs font-black transition-all uppercase tracking-widest ${activeTab === "gunluk" ? "bg-white dark:bg-gray-700 text-teal-600 shadow-md scale-[1.02]" : "text-gray-500 hover:text-gray-700"}`}>{t("dailyPrayerTracking") || "Günlük Takip"}</button>
-            <button onClick={() => handleTabChange("kaza")} className={`px-4 sm:px-8 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-xs font-black transition-all uppercase tracking-widest ${activeTab === "kaza" ? "bg-white dark:bg-gray-700 text-amber-600 shadow-md scale-[1.02]" : "text-gray-500 hover:text-gray-700"}`}>{t("kazaPrayerTracking") || "Kaza Takibi"}</button>
+            <button
+              onClick={() => handleTabChange("gunluk")}
+              className={`px-4 sm:px-8 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-xs font-black transition-all uppercase tracking-widest ${activeTab === "gunluk" ? "bg-white dark:bg-gray-700 text-teal-600 shadow-md scale-[1.02]" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {t("dailyPrayerTracking") || "Günlük Takip"}
+            </button>
+            <button
+              onClick={() => handleTabChange("kaza")}
+              className={`px-4 sm:px-8 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-xs font-black transition-all uppercase tracking-widest ${activeTab === "kaza" ? "bg-white dark:bg-gray-700 text-amber-600 shadow-md scale-[1.02]" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {t("kazaPrayerTracking") || "Kaza Takibi"}
+            </button>
           </div>
           <div className="w-10"></div>
         </div>
@@ -549,12 +648,32 @@ function PrayersContent() {
           <>
             <div className="flex justify-end mb-2">
               <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm w-full md:w-auto justify-center">
-                <select value={currentMonth} onChange={(e) => setCurrentMonth(Number(e.target.value))} title={t("selectMonth")} aria-label={t("selectMonth")} className="bg-transparent text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 py-1 px-3 outline-none cursor-pointer">
-                  {getMonthNames.map((m, i) => ( <option key={i} value={i + 1} className="dark:bg-gray-800">{m}</option> ))}
+                <select
+                  value={currentMonth}
+                  onChange={(e) => setCurrentMonth(Number(e.target.value))}
+                  title={t("selectMonth")}
+                  aria-label={t("selectMonth")}
+                  className="bg-transparent text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 py-1 px-3 outline-none cursor-pointer"
+                >
+                  {getMonthNames.map((m, i) => (
+                    <option key={i} value={i + 1} className="dark:bg-gray-800">
+                      {m}
+                    </option>
+                  ))}
                 </select>
                 <div className="w-px h-5 bg-gray-200 dark:bg-gray-700"></div>
-                <select value={currentYear} onChange={(e) => setCurrentYear(Number(e.target.value))} title={t("selectYear")} aria-label={t("selectYear")} className="bg-transparent text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 py-1 px-3 outline-none cursor-pointer">
-                  {[currentYear - 1, currentYear, currentYear + 1].map((y) => ( <option key={y} value={y} className="dark:bg-gray-800">{y}</option> ))}
+                <select
+                  value={currentYear}
+                  onChange={(e) => setCurrentYear(Number(e.target.value))}
+                  title={t("selectYear")}
+                  aria-label={t("selectYear")}
+                  className="bg-transparent text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 py-1 px-3 outline-none cursor-pointer"
+                >
+                  {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                    <option key={y} value={y} className="dark:bg-gray-800">
+                      {y}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -564,27 +683,97 @@ function PrayersContent() {
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-gray-50/50 dark:bg-gray-800/30 border-b border-gray-100 dark:border-gray-700">
-                      <th className="py-4 px-4 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase w-16 text-center">{t("dayLabel") || "GÜN"}</th>
-                      <th className="py-4 px-2 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center w-1/3">{t("farzPrayers") || "FARZ NAMAZLAR"}</th>
-                      <th className="py-4 px-2 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center w-1/3">{t("otherPrayers") || "DİĞER İBADETLER"}</th>
-                      <th className="py-4 px-4 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center">{t("summary") || "ÖZET"}</th>
+                      <th className="py-4 px-4 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase w-16 text-center">
+                        {t("dayLabel") || "GÜN"}
+                      </th>
+                      <th className="py-4 px-2 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center w-1/3">
+                        {t("farzPrayers") || "FARZ NAMAZLAR"}
+                      </th>
+                      <th className="py-4 px-2 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center w-1/3">
+                        {t("otherPrayers") || "DİĞER İBADETLER"}
+                      </th>
+                      <th className="py-4 px-4 font-black text-gray-400 text-[10px] md:text-xs tracking-widest uppercase text-center">
+                        {t("summary") || "ÖZET"}
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className={`divide-y divide-gray-50 dark:divide-gray-800 ${loading ? "opacity-40 grayscale pointer-events-none" : ""}`}>
+                  <tbody
+                    className={`divide-y divide-gray-50 dark:divide-gray-800 ${loading ? "opacity-40 grayscale pointer-events-none" : ""}`}
+                  >
                     {daysArray.length === 0 ? (
-                      <tr><td colSpan={4} className="py-16 px-4 text-center"><p className="text-gray-500 font-medium">{t("noRecordsForMonth") || "Kayıt bulunamadı."}</p></td></tr>
+                      <tr>
+                        <td colSpan={4} className="py-16 px-4 text-center">
+                          <p className="text-gray-500 font-medium">
+                            {t("noRecordsForMonth") || "Kayıt bulunamadı."}
+                          </p>
+                        </td>
+                      </tr>
                     ) : (
                       daysArray.map((day) => {
-                        const { dateStr, log, farzCompleted, otherCompleted } = getLogForDay(day);
-                        return ( <PrayerDayRow key={day} day={day} dateStr={dateStr} log={log} farzCompleted={farzCompleted} otherCompleted={otherCompleted} isToday={new Date().toISOString().split("T")[0] === dateStr} expandedDay={expandedDay} expandedCategory={expandedCategory} updatingStr={updatingStr} toggleExpand={(d: any, c: any) => { if(expandedDay===d && expandedCategory===c){setExpandedDay(null); setExpandedCategory(null);}else{setExpandedDay(d); setExpandedCategory(c);}}} togglePrayer={togglePrayer} t={t} /> );
+                        const { dateStr, log, farzCompleted, otherCompleted } =
+                          getLogForDay(day);
+                        return (
+                          <PrayerDayRow
+                            key={day}
+                            day={day}
+                            dateStr={dateStr}
+                            log={log}
+                            farzCompleted={farzCompleted}
+                            otherCompleted={otherCompleted}
+                            isToday={
+                              new Date().toISOString().split("T")[0] === dateStr
+                            }
+                            expandedDay={expandedDay}
+                            expandedCategory={expandedCategory}
+                            updatingStr={updatingStr}
+                            toggleExpand={(d: any, c: any) => {
+                              if (expandedDay === d && expandedCategory === c) {
+                                setExpandedDay(null);
+                                setExpandedCategory(null);
+                              } else {
+                                setExpandedDay(d);
+                                setExpandedCategory(c);
+                              }
+                            }}
+                            togglePrayer={togglePrayer}
+                            t={t}
+                          />
+                        );
                       })
                     )}
                     {daysArray.length > 0 && (
                       <tr className="bg-gray-100/60 dark:bg-gray-800/80 border-t-4 border-gray-200 dark:border-gray-700">
-                        <td className="py-6 px-2 text-center font-black text-xs md:text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest">{t("monthlyTotal") || "TOPLAM"}</td>
-                        <td className="py-6 px-1 text-center"><span className="text-teal-600 font-black text-xl md:text-3xl">{monthlyFarzTotal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold ml-1">/ {daysArray.length * 5}</span></td>
-                        <td className="py-6 px-1 text-center"><span className="text-purple-600 font-black text-xl md:text-3xl">{monthlyOtherTotal}</span><span className="text-gray-400 text-[10px] md:text-sm font-bold ml-1">/ {daysArray.length * 4}</span></td>
-                        <td className="py-6 px-2 text-center"><div className="flex flex-col items-center justify-center gap-1.5"><span className="text-[10px] font-black text-teal-700 bg-teal-200/50 px-2 py-1 rounded w-full max-w-[90px] truncate">{monthlyFarzTotal} {t("farzCompletedText") || "Farz Kılındı"}</span><span className="text-[10px] font-black text-purple-700 bg-purple-200/50 px-2 py-1 rounded w-full max-w-[90px] truncate">{monthlyOtherTotal} {t("otherCompletedText") || "Nafile Yapıldı"}</span></div></td>
+                        <td className="py-6 px-2 text-center font-black text-xs md:text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest">
+                          {t("monthlyTotal") || "TOPLAM"}
+                        </td>
+                        <td className="py-6 px-1 text-center">
+                          <span className="text-teal-600 font-black text-xl md:text-3xl">
+                            {monthlyFarzTotal}
+                          </span>
+                          <span className="text-gray-400 text-[10px] md:text-sm font-bold ml-1">
+                            / {daysArray.length * 5}
+                          </span>
+                        </td>
+                        <td className="py-6 px-1 text-center">
+                          <span className="text-purple-600 font-black text-xl md:text-3xl">
+                            {monthlyOtherTotal}
+                          </span>
+                          <span className="text-gray-400 text-[10px] md:text-sm font-bold ml-1">
+                            / {daysArray.length * 4}
+                          </span>
+                        </td>
+                        <td className="py-6 px-2 text-center">
+                          <div className="flex flex-col items-center justify-center gap-1.5">
+                            <span className="text-[10px] font-black text-teal-700 bg-teal-200/50 px-2 py-1 rounded w-full max-w-[90px] truncate">
+                              {monthlyFarzTotal}{" "}
+                              {t("farzCompletedText") || "Farz Kılındı"}
+                            </span>
+                            <span className="text-[10px] font-black text-purple-700 bg-purple-200/50 px-2 py-1 rounded w-full max-w-[90px] truncate">
+                              {monthlyOtherTotal}{" "}
+                              {t("otherCompletedText") || "Nafile Yapıldı"}
+                            </span>
+                          </div>
+                        </td>
                       </tr>
                     )}
                   </tbody>

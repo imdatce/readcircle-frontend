@@ -130,7 +130,12 @@ export default function EsmaUlHusnaPage() {
               >
                 <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 pointer-events-none"></div>
 
-                <span className="text-3xl font-arabic text-emerald-600 dark:text-emerald-400 mb-3 relative z-10 w-full text-center">
+                {/* BURASI GÜNCELLENDİ: font-arabic -> font-quran ve dir="rtl" eklendi */}
+                <span 
+                  className="text-4xl font-quran text-emerald-600 dark:text-emerald-400 mb-3 relative z-10 w-full text-center"
+                  style={{ lineHeight: "normal" }}
+                  dir="rtl"
+                >
                   {esma.arabic}
                 </span>
                 <span className="font-bold text-gray-800 dark:text-gray-100 relative z-10 text-lg w-full text-center">
@@ -175,7 +180,12 @@ export default function EsmaUlHusnaPage() {
               </svg>
             </button>
 
-            <h2 className="text-4xl font-arabic text-emerald-600 dark:text-emerald-400 mt-4 mb-2 text-center w-full">
+            {/* BURASI GÜNCELLENDİ: font-arabic -> font-quran, boyut büyütüldü ve dir="rtl" eklendi */}
+            <h2 
+              className="text-5xl font-quran text-emerald-600 dark:text-emerald-400 mt-4 mb-2 text-center w-full"
+              style={{ lineHeight: "normal" }}
+              dir="rtl"
+            >
               {selectedEsma.arabic}
             </h2>
             <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-2 text-center w-full">
