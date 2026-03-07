@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
+"use client";
+
 import React, {
   useState,
   useMemo,
@@ -531,7 +533,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (content.type === "QURAN") {
       let isMounted = true;
       setLoadingOriginal(true);
-       fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-simple`)
+      fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-simple`)
         .then((res) => res.json())
         .then((data) => {
           if (isMounted && data.code === 200 && data.data?.ayahs?.length > 0) {
@@ -1336,7 +1338,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                       </div>
                     ) : (
-                     <div className="text-justify text-center w-full max-w-4xl mx-auto leading-[2.25rem] md:leading-[3rem]" dir="rtl">
+                      <div
+                        className="text-justify text-center w-full max-w-4xl mx-auto leading-[2.25rem] md:leading-[3rem]"
+                        dir="rtl"
+                      >
                         {originalData.map((ayah: any) => (
                           <React.Fragment key={ayah.number}>
                             <span
@@ -1369,7 +1374,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                             key={verse.id}
                             className="flex flex-col bg-white/50 dark:bg-gray-800/30 rounded-[1.5rem] p-4 md:p-6 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
                           >
-                           <div className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-5 md:gap-y-6 leading-[2rem]" dir="rtl">
+                            <div
+                              className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-5 md:gap-y-6 leading-[2rem]"
+                              dir="rtl"
+                            >
                               {verse.words.map((word: any) => (
                                 <div
                                   key={word.id}
