@@ -132,19 +132,3 @@
   color: #8b4513 !important;
   /* SaddleBrown - Sepya ile çok daha şık durur */
 }
-
-@font-face {
-  font-family: 'QuranTurkish';
-  src: url('/fonts/pdsm.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-.font-quran {
-  /* Varsayılan temiz sistem fontlarını (Bilgisayar Hattı) kullan */
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
-
-  /* HİLE: "Mark-to-mark" hizalamasını kapatarak esreyi şeddenin altından koparıp harfe indirir */
-  font-feature-settings: "mkmk" 0;
-}

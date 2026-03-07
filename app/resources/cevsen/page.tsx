@@ -1336,10 +1336,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                       </div>
                     ) : (
-                      <div
-                        className="text-justify text-center w-full max-w-4xl mx-auto leading-[4.5rem] md:leading-[6rem]"
-                        dir="rtl"
-                      >
+                     <div className="text-justify text-center w-full max-w-4xl mx-auto leading-[2.25rem] md:leading-[3rem]" dir="rtl">
                         {originalData.map((ayah: any) => (
                           <React.Fragment key={ayah.number}>
                             <span
@@ -1372,10 +1369,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                             key={verse.id}
                             className="flex flex-col bg-white/50 dark:bg-gray-800/30 rounded-[1.5rem] p-4 md:p-6 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
                           >
-                            <div
-                              className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-10 md:gap-y-12 leading-[4rem]"
-                              dir="rtl"
-                            >
+                           <div className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-5 md:gap-y-6 leading-[2rem]" dir="rtl">
                               {verse.words.map((word: any) => (
                                 <div
                                   key={word.id}

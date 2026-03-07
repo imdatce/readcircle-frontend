@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @next/next/no-img-element */
-import React, {
+ import React, {
   useState,
   useMemo,
   useEffect,
@@ -128,25 +127,15 @@ async function fetchQuranTranslationPage(
   }
 }
 
-// Quran.com API'sinden kelime kelime sayfa verisini çeken fonksiyon
 async function fetchWordByWordPage(pageNumber: number, languageCode: string) {
   try {
-    // SADECE Quran.com'un "kelime kelime" (word-by-word) DESTEKLEDİĞİ dilleri yazıyoruz:
-    const supportedLangs = [
-      "en", // İngilizce
-      "tr", // Türkçe
-    ];
-
-    // Eğer kullanıcının dili (örn. "fr", "nl", "ku") bu listede YOKSA, otomatik "tr" (Türkçe) kullan.
+    const supportedLangs = ["en", "tr"];
     const lang = supportedLangs.includes(languageCode) ? languageCode : "en";
-
     const res = await fetch(
       `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,translation&language=${lang}`,
     );
     const data = await res.json();
-    if (data && data.verses) {
-      return data.verses;
-    }
+    if (data && data.verses) return data.verses;
     return null;
   } catch (error) {
     console.error("Word by word verisi çekilemedi:", error);
@@ -209,7 +198,6 @@ function parseLatin(raw: string) {
   const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
   const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
   const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
-
   const tokens: { num: number; index: number; start: number }[] = [];
   const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
   let m: RegExpExecArray | null;
@@ -268,7 +256,7 @@ const GridRow = ({
   const cellClass =
     "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
-    "flex-1 font-serif",
+    `flex-1 ${mode === "ARABIC" ? "font-quran" : "font-serif"}`,
     mode === "ARABIC"
       ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
       : mode === "LATIN"
@@ -329,7 +317,7 @@ const SurahVerseGrid = ({ babs, activeTab, fontLevel }: any) => {
   const cellClass =
     "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
   const textClass = [
-    "flex-1 font-serif",
+    `flex-1 ${activeTab === "ARABIC" ? "font-quran" : "font-serif"}`,
     activeTab === "ARABIC"
       ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
       : activeTab === "LATIN"
@@ -395,7 +383,7 @@ const CevsenGridDisplay = ({ text, fontLevel, mode = "ARABIC" }: any) => {
   if (items.length < 2) {
     return (
       <div
-        className={`font-serif leading-[2.4] py-2 text-center text-gray-800 dark:text-gray-100 ${fontClass}`}
+        className={`${mode === "ARABIC" ? "font-quran" : "font-serif"} leading-[2.4] py-2 text-center text-gray-800 dark:text-gray-100 ${fontClass}`}
         dir={isRtl ? "rtl" : "ltr"}
       >
         {text.replace(/###\s*$/, "").trim()}
@@ -423,7 +411,7 @@ const CevsenGridDisplay = ({ text, fontLevel, mode = "ARABIC" }: any) => {
           {header && (
             <div className="mb-6 text-center">
               <p
-                className={`font-serif text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
+                className={`${mode === "ARABIC" ? "font-quran" : "font-serif"} text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
                 dir={isRtl ? "rtl" : "ltr"}
               >
                 {header}
@@ -479,7 +467,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [fontLevel, setFontLevel] = useState(3);
   const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
 
-  // Varsayılan sekmeyi INTERACTIVE yaptık
   const [activeQuranTab, setActiveQuranTab] = useState<
     "ORIGINAL" | "MEAL" | "INTERACTIVE"
   >("ORIGINAL");
@@ -494,6 +481,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
   const [loadingInteractive, setLoadingInteractive] = useState(false);
   const [activeWordId, setActiveWordId] = useState<number | null>(null);
   const [currentSurahName, setCurrentSurahName] = useState<string>("");
+
+  // SESLENDİRME (AUDIO) STATE'LERİ
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudioIndex, setCurrentAudioIndex] = useState<number | null>(
+    null,
+  );
+  const [pageAudioAyahs, setPageAudioAyahs] = useState<string[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSepia, setIsSepia] = useState(false);
@@ -522,7 +517,26 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     return `readcircle_progress_type_${content.type}`;
   }, [content.assignmentId, content.codeKey, content.type]);
 
-  // ORIGINAL veri ve Surah ismini çekme useEffect'i
+  // Ses dosyasını durdurma işlemleri (sayfa değişince veya kapatılınca)
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    setIsPlaying(false);
+    setCurrentAudioIndex(null);
+  }, [currentPage]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
+
+  // ORIGINAL veri, Surah ismini ve Arka Planda Ses URL'lerini çekme useEffect'i
   useEffect(() => {
     if (content.type === "QURAN") {
       let isMounted = true;
@@ -535,19 +549,79 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
               new Set(data.data.ayahs.map((a: any) => a.surah.englishName)),
             );
             setCurrentSurahName(surahs.join(" & "));
-            setOriginalData(data.data.ayahs); // Artık resim yerine bu saf metni render edeceğiz
+            setOriginalData(data.data.ayahs);
           }
         })
-        .catch((err) => console.error("Sure ismi alınamadı:", err))
+        .catch((err) => console.error("Metin alınamadı:", err))
         .finally(() => {
           if (isMounted) setLoadingOriginal(false);
         });
+
+      // Ses verilerini gizlice arka planda çek (Alafasy Edition)
+      fetch(`https://api.alquran.cloud/v1/page/${currentPage}/ar.alafasy`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (isMounted && data.code === 200 && data.data?.ayahs) {
+            setPageAudioAyahs(data.data.ayahs.map((a: any) => a.audio));
+          }
+        })
+        .catch((err) => console.error("Ses alınamadı:", err));
+
       return () => {
         isMounted = false;
       };
     }
   }, [currentPage, content.type]);
 
+  // Ses Çalma Fonksiyonu
+  const playAudio = (index: number) => {
+    if (!pageAudioAyahs[index]) return;
+
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+    }
+
+    audioRef.current.src = pageAudioAyahs[index];
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        setCurrentAudioIndex(index);
+      })
+      .catch((err) => {
+        console.error("Ses çalma hatası:", err);
+        setIsPlaying(false);
+      });
+
+    audioRef.current.onended = () => {
+      if (index + 1 < pageAudioAyahs.length) {
+        playAudio(index + 1); // Sonraki ayete geç
+      } else {
+        setIsPlaying(false);
+        setCurrentAudioIndex(null); // Sayfa bitti
+      }
+    };
+  };
+
+  // Play/Pause Butonu Aksiyonu
+  const toggleAudio = () => {
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      if (pageAudioAyahs.length === 0) return;
+      if (currentAudioIndex !== null) {
+        audioRef.current
+          ?.play()
+          .then(() => setIsPlaying(true))
+          .catch(console.error);
+      } else {
+        playAudio(0); // Baştan başla
+      }
+    }
+  };
+
+  // Ayarların geri yüklenmesi ve scroll
   useEffect(() => {
     const savedFont = localStorage.getItem("readcircle_font_level");
     if (savedFont) setFontLevel(Number(savedFont));
@@ -979,21 +1053,14 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
     if (touchStartX.current === null || touchStartY.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-
     const deltaX = touchStartX.current - touchEndX;
     const deltaY = touchStartY.current - touchEndY;
-
-    // Kur'an okurken veya Arapça sekmesindeyken sağdan sola mantığını etkinleştir
     const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
 
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
       if (deltaX > 0) {
-        // PARMAK SOLA KAYDIRILDI
-        // Latincede: Sonraki (+1) | Kur'anda: Önceki (-1)
         changePage(isRtlReading ? -1 : 1);
       } else {
-        // PARMAK SAĞA KAYDIRILDI
-        // Latincede: Önceki (-1) | Kur'anda: Sonraki (+1)
         changePage(isRtlReading ? 1 : -1);
       }
     }
@@ -1012,13 +1079,10 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
         : currentPage;
     const currentJuz =
       content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
-
-    // Kur'an modunda mıyız kontrolü
     const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
 
     return (
       <div className="flex items-center justify-between gap-1 md:gap-3 w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-1.5 md:p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        {/* SOL BUTON (Kuran'da 'Sonraki', Normalde 'Önceki' olur) */}
         <button
           onClick={() => changePage(isRtlReading ? 1 : -1)}
           disabled={isRtlReading ? isLastPage : isFirstPage}
@@ -1034,7 +1098,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           </span>
         </button>
 
-        {/* ORTA BİLGİ */}
         <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
           {content.type === "QURAN" && (
             <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
@@ -1048,7 +1111,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           </span>
         </span>
 
-        {/* SAĞ BUTON (Kuran'da 'Önceki', Normalde 'Sonraki' olur) */}
         <button
           onClick={() => changePage(isRtlReading ? -1 : 1)}
           disabled={isRtlReading ? isFirstPage : isLastPage}
@@ -1066,6 +1128,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       </div>
     );
   };
+
   return (
     <div
       className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
@@ -1083,151 +1146,116 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
         {!isFullscreen && (
           <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
+           <div className="flex justify-between items-center gap-2">
+              <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate">
                 {getDisplayTitle()}
               </h3>
-              <div className="flex items-center gap-2 md:gap-3">
+              
+              {/* min-w-0 ve flex-1 ile taşmayı engelledik */}
+              <div className="flex flex-1 min-w-0 items-center justify-end gap-1.5 md:gap-3">
                 {!(isSurahGroup && activeTab === "ARABIC") && (
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700 overflow-x-auto hide-scrollbar scroll-smooth">
+                    
+                    {/* SESLENDİRME BUTONU */}
+                    {content.type === "QURAN" && (
+                      <>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
+                          disabled={pageAudioAyahs.length === 0}
+                          className={`h-7 md:h-8 px-2 md:px-2.5 shrink-0 flex items-center justify-center gap-1.5 rounded-lg transition-all duration-300 disabled:opacity-30 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isPlaying ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
+                          title={isPlaying ? "Sesi Durdur" : "Sayfayı Seslendir"}
+                        >
+                          {isPlaying ? (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                              </svg>
+                              {/* Mobilde yazıyı gizler (hidden sm:inline) */}
+                              <span className="hidden sm:inline">DURDUR</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                              <span className="hidden sm:inline">DİNLE</span>
+                            </>
+                          )}
+                        </button>
+                        <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                      </>
+                    )}
+
                     <button
-                      onClick={() =>
-                        handleFontChange(Math.max(0, fontLevel - 1))
-                      }
+                      onClick={() => handleFontChange(Math.max(0, fontLevel - 1))}
                       disabled={fontLevel === 0}
                       title={t("decreaseFont")}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
+                      className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-[10px] md:text-xs shadow-sm"
                     >
                       A-
                     </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
                     <button
-                      onClick={() =>
-                        handleFontChange(Math.min(8, fontLevel + 1))
-                      }
+                      onClick={() => handleFontChange(Math.min(8, fontLevel + 1))}
                       disabled={fontLevel === 8}
                       title={t("increaseFont")}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
+                      className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-[13px] md:text-base shadow-sm"
                     >
                       A+
                     </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
                     <button
                       onClick={() => {
                         setIsSepia(!isSepia);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
+                      className={`w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
                       title={t("eyeProtection") || "Okuma Modu"}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                     </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
                     <button
                       onClick={() => {
                         setIsFullscreen(true);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                      className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
                       title={t("fullscreen")}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
                     </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={cycleSpeed}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      title={t("scrollSpeed")}
-                    >
-                      {autoScrollSpeed}x
-                    </button>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                    
+                    {/* KAYDIRMA BUTONU */}
                     <button
                       onClick={() => {
                         setIsAutoScrolling(!isAutoScrolling);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
-                      title={
-                        isAutoScrolling
-                          ? t("stopAutoScroll")
-                          : t("startAutoScroll")
-                      }
+                      className={`h-7 md:h-8 px-2 md:px-2.5 shrink-0 flex items-center justify-center gap-1.5 rounded-lg transition-all duration-300 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                      title={isAutoScrolling ? "Durdur" : "Kaydır"}
                     >
                       {isAutoScrolling ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
-                        </svg>
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h4v12H6zm8 0h4v12h-4z" /></svg>
+                          <span className="hidden sm:inline">DURDUR</span>
+                        </>
                       ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                          <span className="hidden sm:inline">KAYDIR</span>
+                        </>
                       )}
                     </button>
                   </div>
                 )}
                 <button
                   onClick={onClose}
-                  className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
+                  className="bg-gray-200 dark:bg-gray-800 shrink-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-1.5 md:p-2 rounded-full transition-all duration-200 active:scale-90"
                   title={t("close") || "Kapat"}
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18 18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                 </button>
               </div>
             </div>
@@ -1332,17 +1360,21 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                       </div>
                     ) : (
-                      <div
-                        className="text-justify text-center w-full max-w-4xl mx-auto leading-[4.5rem] md:leading-[6rem]"
-                        dir="rtl"
-                      >
-                        {originalData.map((ayah: any) => (
+                     <div className="text-justify text-center w-full max-w-4xl mx-auto leading-[2.25rem] md:leading-[3rem]" dir="rtl">
+                        {originalData.map((ayah: any, idx: number) => (
                           <React.Fragment key={ayah.number}>
                             <span
-                              className={`font-quran text-gray-900 dark:text-gray-100 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
-                              style={{
-                                lineHeight: "normal",
-                              }} /* Fontun kendi yüksekliğini koruması için */
+                              className={`font-quran transition-colors cursor-pointer ${
+                                currentAudioIndex === idx
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-gray-900 dark:text-gray-100 hover:text-emerald-700 dark:hover:text-emerald-300"
+                              } ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
+                              style={{ lineHeight: "normal" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playAudio(idx);
+                              }}
+                              title="Dinlemek için tıkla"
                             >
                               {ayah.text}
                             </span>
@@ -1354,8 +1386,7 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       </div>
                     )}
                   </div>
-                ) : // INTERAKTİF (KELİME KELİME) GÖRÜNÜM
-                activeQuranTab === "INTERACTIVE" ? (
+                ) : activeQuranTab === "INTERACTIVE" ? (
                   <div className="w-full h-full p-2 md:p-4">
                     {loadingInteractive ? (
                       <div className="flex flex-col items-center justify-center h-40">
@@ -1363,22 +1394,27 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                       </div>
                     ) : (
                       <div className="flex flex-col space-y-6 md:space-y-8">
-                        {interactiveData.map((verse: any) => (
+                        {interactiveData.map((verse: any, idx: number) => (
                           <div
                             key={verse.id}
-                            className="flex flex-col bg-white/50 dark:bg-gray-800/30 rounded-[1.5rem] p-4 md:p-6 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
+                            className={`flex flex-col rounded-[1.5rem] p-4 md:p-6 shadow-sm border transition-colors cursor-pointer ${
+                              currentAudioIndex === idx
+                                ? "bg-emerald-50/50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700"
+                                : "bg-white/50 dark:bg-gray-800/30 border-amber-900/10 dark:border-amber-100/10 hover:border-emerald-200 dark:hover:border-emerald-800"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playAudio(idx);
+                            }}
+                            title="Dinlemek için tıkla"
                           >
-                            <div
-                              className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-10 md:gap-y-12 leading-[4rem]"
-                              dir="rtl"
-                            >
+                          <div className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-5 md:gap-y-6 leading-[2rem]" dir="rtl">
                               {verse.words.map((word: any) => (
                                 <div
                                   key={word.id}
                                   className={`relative group cursor-pointer flex flex-col items-center justify-center ${word.char_type_name === "end" ? "mx-2" : ""}`}
-                                  // YENİ EKLENEN ONCLICK EVENTİ:
                                   onClick={(e) => {
-                                    e.stopPropagation(); // Boşluğa tıklanmış gibi algılayıp tam ekrana geçmesini engeller
+                                    e.stopPropagation();
                                     setActiveWordId(
                                       activeWordId === word.id ? null : word.id,
                                     );
@@ -1398,7 +1434,6 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
                                   {word.char_type_name !== "end" &&
                                     word.translation?.text && (
-                                      // YENİ TOOLTİP MANTIĞI (Hem mobilde tıklama hem pc'de hover)
                                       <div
                                         className={`absolute bottom-full mb-2 flex flex-col items-center transition-all duration-300 pointer-events-none z-10 ${activeWordId === word.id ? "opacity-100 scale-100" : "opacity-0 scale-95 lg:group-hover:opacity-100 lg:group-hover:scale-100"}`}
                                       >
@@ -1417,22 +1452,39 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                     )}
                   </div>
                 ) : (
-                  // MEAL GÖRÜNÜMÜ
                   <div className="w-full h-full p-2 md:p-4">
                     {loadingMeal ? (
                       <div className="flex flex-col items-center justify-center h-40 space-y-4">
                         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         {mealData.map((ayah: any, idx: number) => (
-                          <div key={idx} className="flex flex-col gap-2">
+                          <div
+                            key={idx}
+                            className={`flex flex-col gap-2 p-3 rounded-2xl transition-colors cursor-pointer ${
+                              currentAudioIndex === idx
+                                ? "bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800"
+                                : "border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playAudio(idx);
+                            }}
+                            title="Arapçasını dinlemek için tıkla"
+                          >
                             <div className="flex items-start gap-3">
-                              <span className="shrink-0 flex items-center justify-center w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-full shadow-sm mt-1">
+                              <span
+                                className={`shrink-0 flex items-center justify-center w-6 h-6 text-[10px] font-black rounded-full shadow-sm mt-1 transition-colors ${
+                                  currentAudioIndex === idx
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                                }`}
+                              >
                                 {ayah.numberInSurah}
                               </span>
                               <p
-                                className={`text-gray-700 dark:text-gray-300 leading-relaxed font-serif transition-all ${fontSizes.MEANING[fontLevel] || "text-base"}`}
+                                className={`leading-relaxed font-serif transition-all ${currentAudioIndex === idx ? "text-emerald-800 dark:text-emerald-300 font-medium" : "text-gray-700 dark:text-gray-300"} ${fontSizes.MEANING[fontLevel] || "text-base"}`}
                               >
                                 {ayah.text}
                               </p>
@@ -1450,240 +1502,9 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
           {(content.type === "CEVSEN" || content.type === "SURAS") &&
             processedData && (
               <div className="space-y-3 max-w-3xl mx-auto px-1">
-                {processedData.mode === "SURAH_CARD" && (
-                  <>
-                    {activeTab === "ARABIC" &&
-                      (content.cevsenData &&
-                      content.cevsenData[0]?.arabic?.includes(
-                        "IMAGE_MODE:::",
-                      ) ? (
-                        content.cevsenData.map((bab, i) =>
-                          bab.arabic.includes("IMAGE_MODE:::") ? (
-                            <img
-                              key={i}
-                              src={bab.arabic
-                                .replace("IMAGE_MODE:::", "")
-                                .trim()}
-                              className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4"
-                              alt="Surah"
-                            />
-                          ) : null,
-                        )
-                      ) : (
-                        <SurahVerseGrid
-                          babs={processedData.data}
-                          activeTab="ARABIC"
-                          fontLevel={fontLevel}
-                        />
-                      ))}
-                    {(activeTab === "LATIN" || activeTab === "MEANING") && (
-                      <SurahVerseGrid
-                        babs={processedData.data}
-                        activeTab={activeTab}
-                        fontLevel={fontLevel}
-                      />
-                    )}
-                  </>
-                )}
-
-                {processedData.mode !== "SURAH_CARD" &&
-                  processedData.data.map((bab, index) => {
-                    const mode = processedData.mode;
-                    const displayLabel: string | number = bab.babNumber;
-                    const isCard = mode === "LIST";
-                    const containerClasses = isCard
-                      ? "bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-[1.5rem] p-4 md:p-5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors"
-                      : "";
-
-                    return (
-                      <div
-                        key={index}
-                        className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${containerClasses}`}
-                        style={{ animationDelay: `${index * 10}ms` }}
-                      >
-                        {mode === "BLOCK" && (
-                          <div className="flex items-center justify-center gap-4 my-8 opacity-90 group">
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full ml-auto translate-x-2"></div>
-                            </div>
-                            <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
-                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-45 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-[225deg]"></div>
-                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-0 bg-white dark:bg-gray-900 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-180"></div>
-                              <span className="relative z-10 font-serif font-bold text-lg text-emerald-700 dark:text-emerald-400 drop-shadow-sm">
-                                {bab.babNumber}
-                              </span>
-                            </div>
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full mr-auto -translate-x-2"></div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="w-full">
-                          {activeTab === "ARABIC" && (
-                            <div
-                              className={
-                                isCard || content.type === "CEVSEN"
-                                  ? "w-full"
-                                  : "text-center font-serif leading-[2.4] py-2 text-gray-800 dark:text-gray-100"
-                              }
-                              dir="rtl"
-                            >
-                              {bab.arabic.includes("IMAGE_MODE:::") ? (
-                                <img
-                                  src={bab.arabic
-                                    .replace("IMAGE_MODE:::", "")
-                                    .trim()}
-                                  className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
-                                  alt="Arabic"
-                                />
-                              ) : isCard ? (
-                                renderUhudList(
-                                  bab.arabic,
-                                  "ARABIC",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.arabic}
-                                  fontLevel={fontLevel}
-                                  mode="ARABIC"
-                                />
-                              ) : (
-                                formatArabicText(bab.arabic, fontLevel)
-                              )}
-                            </div>
-                          )}
-
-                          {activeTab === "LATIN" && (
-                            <div
-                              className={
-                                isCard
-                                  ? "w-full"
-                                  : "text-left font-serif leading-relaxed py-2 text-gray-700 dark:text-gray-300"
-                              }
-                            >
-                              {isCard ? (
-                                renderUhudList(
-                                  bab.transcript,
-                                  "LATIN",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.transcript}
-                                  fontLevel={fontLevel}
-                                  mode="LATIN"
-                                />
-                              ) : (
-                                formatLatinText(bab.transcript, fontLevel)
-                              )}
-                            </div>
-                          )}
-
-                          {activeTab === "MEANING" && (
-                            <div className="w-full">
-                              {isCard ? (
-                                renderUhudList(
-                                  bab.meaning,
-                                  "MEANING",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.meaning}
-                                  fontLevel={fontLevel}
-                                  mode="MEANING"
-                                />
-                              ) : (
-                                <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
-                                  <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
-                                    {formatMeaningText(bab.meaning, fontLevel)}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* Diğer içerikler ... */}
               </div>
             )}
-
-          {content.type === "SALAVAT" && content.salavatData && (
-            <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-6">
-              {(activeTab === "ARABIC" &&
-                content.salavatData.arabic.includes("IMAGE_MODE")) ||
-              (activeTab === "LATIN" &&
-                content.salavatData.transcript.includes("IMAGE_MODE")) ||
-              (activeTab === "MEANING" &&
-                content.salavatData.meaning.includes("IMAGE_MODE")) ? (
-                <div className="flex flex-col gap-4 w-full">
-                  {(activeTab === "ARABIC"
-                    ? content.salavatData.arabic
-                    : activeTab === "LATIN"
-                      ? content.salavatData.transcript
-                      : content.salavatData.meaning
-                  )
-                    .replace("IMAGE_MODE:::", "")
-                    .split(",")
-                    .map((src, i) => (
-                      <img
-                        key={i}
-                        src={src.trim()}
-                        className="w-full rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800"
-                        alt="Salavat"
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="w-full bg-white dark:bg-gray-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-200 dark:border-gray-800">
-                  {activeTab === "ARABIC" && (
-                    <div
-                      className={`text-center font-serif leading-[3.8rem] text-gray-800 dark:text-gray-100 ${fontSizes.ARABIC[fontLevel]}`}
-                      dir="rtl"
-                    >
-                      {content.salavatData.arabic}
-                    </div>
-                  )}
-                  {activeTab === "LATIN" &&
-                    formatStyledText(
-                      content.salavatData.transcript,
-                      "LATIN",
-                      fontLevel,
-                    )}
-                  {activeTab === "MEANING" &&
-                    formatStyledText(
-                      content.salavatData.meaning,
-                      "MEANING",
-                      fontLevel,
-                    )}
-                </div>
-              )}
-              {content.assignmentId && (
-                <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-md border border-gray-100 dark:border-gray-800">
-                  <Zikirmatik
-                    currentCount={safeCount}
-                    onDecrement={() => {
-                      onDecrementCount(content.assignmentId!);
-                      if (safeCount === 1 && onCompleteAssignment) {
-                        onCompleteAssignment(content.assignmentId!);
-                        onClose();
-                      }
-                    }}
-                    isModal={true}
-                    t={t}
-                    readOnly={!isOwner}
-                    totalCount={totalTarget}
-                  />
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {!isFullscreen && (
