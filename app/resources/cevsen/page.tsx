@@ -1,165 +1,156 @@
-"use client";
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
 
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-  useCallback,
-} from "react";
-import { CevsenBab, ViewMode, DistributionSession } from "@/types";
-import Zikirmatik from "@/components/common/Zikirmatik";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  formatArabicText,
-  formatLatinText,
-  formatMeaningText,
-  formatStyledText,
-  renderUhudList,
-  fontSizes,
-} from "@/utils/text-formatter";
 
-export interface ReadingModalContent {
-  title: string;
-  type: "SIMPLE" | "CEVSEN" | "SALAVAT" | "QURAN" | "SURAS";
-  simpleItems?: string[];
-  cevsenData?: CevsenBab[];
-  salavatData?: { arabic: string; transcript: string; meaning: string };
-  isArabic?: boolean;
-  startUnit?: number;
-  codeKey?: string;
-  endUnit?: number;
-  currentUnit?: number;
-  assignmentId?: number;
-  ignoreSavedProgress?: boolean;
-}
+// === TİPLER VE GEREKSİNİMLER ===
+type TabType = "ARABIC" | "LATIN" | "MEANING";
 
-interface ReadingModalProps {
-  content: ReadingModalContent;
-  onClose: () => void;
-  onUpdateContent: (newContent: ReadingModalContent | null) => void;
-  session?: DistributionSession;
-  userName: string | null;
-  localCounts: Record<number, number>;
-  onDecrementCount: (id: number) => void;
-  t: (key: string) => string;
-  onCompleteAssignment?: (id: number) => void;
-}
-
-const EDITION_MAPPING: Record<string, string> = {
-  tr: "tr.diyanet",
-  en: "en.sahih",
-  fr: "fr.hamidullah",
-  de: "de.abullaimr",
-  ru: "ru.kuliev",
-  id: "id.indonesian",
-  az: "az.mammadaliyev",
-  ar: "ar.jalalayn",
-  ku: "special_quranenc_kurmanji",
-  kmr: "special_quranenc_kurmanji",
-  nl: "nl.keyzer",
-  default: "en.sahih",
+const fontSizes = {
+  ARABIC: [
+    "text-xl",
+    "text-2xl",
+    "text-3xl",
+    "text-4xl",
+    "text-5xl",
+    "text-6xl",
+    "text-7xl",
+  ],
+  LATIN: [
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "text-2xl",
+    "text-3xl",
+    "text-4xl",
+  ],
+  MEANING: [
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "text-2xl",
+    "text-3xl",
+  ],
 };
 
-async function fetchKurdishForPage(structureData: any) {
-  try {
-    const surahsOnPage = new Set<number>();
-    structureData.forEach((ayah: any) => surahsOnPage.add(ayah.surah.number));
-    const quranEncPromises = Array.from(surahsOnPage).map((surahNo) =>
-      fetch(
-        `https://quranenc.com/api/v1/translation/sura/kurmanji_ismail/${surahNo}`,
-      )
-        .then(async (res) => {
-          if (!res.ok) throw new Error(`QuranEnc API error: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => ({ surahNo, result: data.result as any[] })),
-    );
-    const translations = await Promise.all(quranEncPromises);
-    const translationMap: { [key: string]: string } = {};
-    translations.forEach(({ surahNo, result }) => {
-      if (Array.isArray(result)) {
-        result.forEach((item: any) => {
-          const key = `${String(surahNo)}:${String(item.aya)}`;
-          translationMap[key] = item.translation;
-        });
-      }
-    });
-    const mergedData = structureData.map((ayah: any) => {
-      const key = `${String(ayah.surah.number)}:${String(ayah.numberInSurah)}`;
-      return {
-        ...ayah,
-        text: translationMap[key] || `[Translation not found] ${ayah.text}`,
-      };
-    });
-    return { ayahs: mergedData };
-  } catch (error) {
-    console.error("Kurdish API Error:", error);
-    return null;
-  }
-}
-
-async function fetchQuranTranslationPage(
-  pageNumber: number,
-  editionOrKey: string,
-) {
-  try {
-    if (editionOrKey === "special_quranenc_kurmanji") {
-      const structRes = await fetch(
-        `https://api.alquran.cloud/v1/page/${pageNumber}/quran-simple`,
-      );
-      const structData = await structRes.json();
-      if (structData.code === 200 && structData.data?.ayahs) {
-        return await fetchKurdishForPage(structData.data.ayahs);
-      }
-      return null;
-    }
-    const res = await fetch(
-      `https://api.alquran.cloud/v1/page/${pageNumber}/${editionOrKey}`,
-    );
-    const data = await res.json();
-    if (data.code === 200 && data.data?.ayahs)
-      return { ayahs: data.data.ayahs };
-    return null;
-  } catch (error) {
-    console.error("Could not fetch translation:", error);
-    return null;
-  }
-}
-
-// Quran.com API'sinden kelime kelime sayfa verisini çeken fonksiyon
-async function fetchWordByWordPage(pageNumber: number, languageCode: string) {
-  try {
-    // SADECE Quran.com'un "kelime kelime" (word-by-word) DESTEKLEDİĞİ dilleri yazıyoruz:
-    const supportedLangs = [
-      "en", // İngilizce
-      "tr", // Türkçe
-    ];
-
-    // Eğer kullanıcının dili (örn. "fr", "nl", "ku") bu listede YOKSA, otomatik "tr" (Türkçe) kullan.
-    const lang = supportedLangs.includes(languageCode) ? languageCode : "en";
-
-    const res = await fetch(
-      `https://api.quran.com/api/v4/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,translation&language=${lang}`,
-    );
-    const data = await res.json();
-    if (data && data.verses) {
-      return data.verses;
-    }
-    return null;
-  } catch (error) {
-    console.error("Word by word verisi çekilemedi:", error);
-    return null;
-  }
-}
-
 const SUBHANEKE_RE =
-  /s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh/i;
+  /(s[üu]bh[âa]neke|سُبْحَانَكَ|سبحانك|glory|praise|noksan|münezzeh|sübhânsın|seni her türlü|seni bütün|seni tenzih|sen aczden)/i;
 
-const Medal = ({ number }: { number: number }) => (
+// === 1. ARAPÇA PARSER ===
+function parseArabic(raw: string) {
+  const text = raw.replace(/###\s*$/, "").trim();
+  const parts = text
+    .split(/[\u0660-\u0669]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  if (parts.length < 2) return { header: "", items: [text], subhaneke: "" };
+
+  const subhaneke = SUBHANEKE_RE.test(parts[parts.length - 1])
+    ? parts.pop()!
+    : "";
+
+  let header = "";
+  const items = [...parts];
+
+  if (items[0]?.includes("بِسْمِ") || items[0]?.includes("اَللّٰهُمَّ")) {
+    const lastYaIdx = items[0].lastIndexOf("يَا");
+    if (lastYaIdx > 10) {
+      header = items[0].slice(0, lastYaIdx).trim();
+      items[0] = items[0].slice(lastYaIdx).trim();
+    }
+  }
+
+  return { header, items, subhaneke };
+}
+
+// === 2. LATİNCE PARSER ===
+function parseLatin(raw: string) {
+  const text = raw.replace(/###\s*$/, "").trim();
+  const match = text.match(SUBHANEKE_RE);
+  let subhaneke = "";
+  let mainText = text;
+
+  if (match && match.index !== undefined) {
+    subhaneke = text.slice(match.index).trim();
+    mainText = text.slice(0, match.index).trim();
+  }
+
+  const parts = mainText
+    .split(/\s+\d{1,2}[\.\-\)\s]+(?=[A-ZÂÎÛÜÖ])/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  let header = "";
+  if (parts.length > 10) header = parts.shift() || "";
+
+  return { header, items: parts, subhaneke };
+}
+
+// === 3. TÜRKÇE & MEAL PARSER ===
+function parseMeaning(raw: string) {
+  const lines = raw
+    .replace(/###\s*$/, "")
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "");
+  let subhaneke = "";
+
+  const subhIdx = lines.findIndex((l) => SUBHANEKE_RE.test(l));
+  if (subhIdx >= 0) {
+    subhaneke = lines.splice(subhIdx).join(" ");
+  }
+
+  const items = lines
+    .map((l) =>
+      l.replace(/^[\(\[\{]?[\d\u0660-\u0669]+[\)\]\}\.\-\s]+/, "").trim(),
+    )
+    .filter((l) => l.length > 0);
+
+  return { header: "", items, subhaneke };
+}
+
+// === 3. TÜRKÇE & MEAL PARSER ===
+function parseMeaningEn(raw: string) {
+  const lines = raw
+    .replace(/###\s*$/, "")
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "");
+  let Praise = "";
+
+  const subhIdx = lines.findIndex((l) => SUBHANEKE_RE.test(l));
+  if (subhIdx >= 0) {
+    Praise = lines.splice(subhIdx).join(" ");
+  }
+
+  const items = lines
+    .map((l) =>
+      l.replace(/^[\(\[\{]?[\d\u0660-\u0669]+[\)\]\}\.\-\s]+/, "").trim(),
+    )
+    .filter((l) => l.length > 0);
+
+  return { header: "", items, Praise };
+}
+const toArabicNumeral = (num: number) => {
+  const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  return num
+    .toString()
+    .split("")
+    .map((digit) => arabicNumbers[parseInt(digit)])
+    .join("");
+};
+
+// === UI BİLEŞENLERİ ===
+const Medal = ({ number, isArabic }: { number: number; isArabic: boolean }) => (
   <span className="relative flex items-center justify-center shrink-0 w-9 h-9 md:w-11 md:h-11">
     <svg
       className="absolute inset-0 w-full h-full text-amber-700/80 dark:text-amber-500/80 drop-shadow"
@@ -178,82 +169,14 @@ const Medal = ({ number }: { number: number }) => (
         strokeWidth="1.5"
       />
     </svg>
-    <span className="relative z-10 text-white font-bold text-[11px] md:text-sm drop-shadow font-sans leading-none">
-      {number}
+    <span className="relative z-10 text-white font-bold text-[11px] md:text-sm drop-shadow font-sans leading-none mt-px">
+      {isArabic ? toArabicNumeral(number) : number}
     </span>
   </span>
 );
 
-function parseArabic(raw: string) {
-  const text = raw.replace(/###\s*$/, "").trim();
-  const parts = text
-    .split(/[\u0660-\u0669]+/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-  if (parts.length < 2) return { header: "", items: [text], subhaneke: "" };
-  const subhaneke = SUBHANEKE_RE.test(parts[parts.length - 1])
-    ? parts.pop()!
-    : "";
-  let header = "";
-  const items = [...parts];
-  if (items[0]?.includes("بِسْمِ") || items[0]?.includes("اَللّٰهُمَّ")) {
-    const lastYaIdx = items[0].lastIndexOf("يَا");
-    if (lastYaIdx > 10) {
-      header = items[0].slice(0, lastYaIdx).trim();
-      items[0] = items[0].slice(lastYaIdx).trim();
-    }
-  }
-  return { header, items, subhaneke };
-}
-
-function parseLatin(raw: string) {
-  const text = raw.replace(/###\s*$/, "").trim();
-  const subhIdx = text.search(/\ss[üu]bh[âa]neke/i);
-  const mainText = subhIdx > 0 ? text.slice(0, subhIdx).trim() : text;
-  const subhaneke = subhIdx > 0 ? text.slice(subhIdx).trim() : "";
-
-  const tokens: { num: number; index: number; start: number }[] = [];
-  const re = /(?:^|(?<=\s))(\d{1,2})(?=\s+[A-ZÂÎÛÜÖa-zâîûüöğışçĞİŞÇ])/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = re.exec(mainText)) !== null) {
-    tokens.push({
-      num: parseInt(m[1]),
-      index: m.index,
-      start: m.index + m[0].length,
-    });
-  }
-
-  if (tokens.length === 0) return { header: mainText, items: [], subhaneke };
-
-  const header = mainText.slice(0, tokens[0].index).trim();
-  const items: string[] = tokens.map((tok, i) => {
-    const end = i + 1 < tokens.length ? tokens[i + 1].index : mainText.length;
-    return mainText.slice(tok.start, end).trim();
-  });
-
-  return { header, items, subhaneke };
-}
-
-function parseMeaning(raw: string) {
-  const text = raw.replace(/###\s*$/, "").trim();
-  let paragraphs = text
-    .split(/\n{2,}/)
-    .map((p) => p.replace(/\n/g, " ").trim())
-    .filter((p) => p.length > 0);
-  if (paragraphs.length < 3) {
-    paragraphs = text
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-  }
-  const subhIdx = paragraphs.findIndex((p) => SUBHANEKE_RE.test(p));
-  const subhaneke = subhIdx >= 0 ? paragraphs.splice(subhIdx).join(" ") : "";
-  return { header: "", items: paragraphs, subhaneke };
-}
-
 const DecoStar = () => (
-  <span className="text-amber-400/30 text-xs select-none opacity-0 group-hover:opacity-100 transition-opacity">
+  <span className="text-amber-400/30 text-xs select-none opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0">
     ✦
   </span>
 );
@@ -269,26 +192,25 @@ const GridRow = ({
 }: any) => {
   const cellClass =
     "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
-
-  // ARAPÇA MODUNDA font-quran, DİĞERLERİNDE font-serif KULLANILACAK
   const textClass = [
-    `flex-1 ${mode === "ARABIC" ? "font-quran" : "font-serif"}`,
+    "flex-1 font-serif",
     mode === "ARABIC"
       ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
       : mode === "LATIN"
         ? `leading-loose text-gray-800 dark:text-gray-200 ${fontClass}`
         : `leading-relaxed text-gray-700 dark:text-gray-300 ${fontClass}`,
   ].join(" ");
+
   return (
     <React.Fragment>
       <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
-        <Medal number={rightNum} />
+        <Medal number={rightNum} isArabic={isRtl} />
         <span className={textClass}>{right}</span>
         <DecoStar />
       </div>
       {left ? (
         <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
-          <Medal number={leftNum} />
+          <Medal number={leftNum} isArabic={isRtl} />
           <span className={textClass}>{left}</span>
           <DecoStar />
         </div>
@@ -299,369 +221,138 @@ const GridRow = ({
   );
 };
 
-const SurahVerseGrid = ({ babs, activeTab, fontLevel }: any) => {
-  const isRtl = activeTab === "ARABIC";
-  const fontClass =
-    activeTab === "ARABIC"
-      ? fontSizes.ARABIC[fontLevel]
-      : activeTab === "LATIN"
-        ? fontSizes.LATIN[fontLevel]
-        : fontSizes.MEANING[fontLevel];
-  const items = babs
-    .map((b: any) =>
-      activeTab === "ARABIC"
-        ? b.arabic
-        : activeTab === "LATIN"
-          ? b.transcript
-          : b.meaning,
-    )
-    .filter((t: any) => t?.trim().length > 0);
-  const parsed = items.map((item: any, idx: number) => {
-    const cleaned = item.replace(/^"+|"+$/g, "").trim();
-    const m = cleaned.match(/^(\d+)[-.:]\s*([\s\S]*)/);
-    const rawText = m ? m[2].trim() : cleaned;
-    return {
-      num: m ? parseInt(m[1]) : idx + 1,
-      text: rawText.replace(/^"+|"+$/g, "").trim(),
-    };
+// ================================================================
+// ANA SAYFA BİLEŞENİ
+// ================================================================
+export default function CevsenPage() {
+  const { t, language } = useLanguage();
+  const [activeTab, setActiveTab] = useState<TabType>("ARABIC");
+
+  const [texts, setTexts] = useState<Record<TabType, string>>({
+    ARABIC: "",
+    LATIN: "",
+    MEANING: "",
   });
-
-  const rows: Array<any> = [];
-  for (let i = 0; i < parsed.length; i += 2) {
-    rows.push([parsed[i], parsed[i + 1] ?? null]);
-  }
-  const cellClass =
-    "flex items-center gap-3 py-2 px-2 border-b border-amber-900/10 dark:border-amber-100/10 hover:bg-amber-50/60 dark:hover:bg-amber-900/15 rounded-xl transition-colors group";
-
-  // ARAPÇA MODUNDA font-quran KULLANILACAK
-  const textClass = [
-    `flex-1 ${activeTab === "ARABIC" ? "font-quran" : "font-serif"}`,
-    activeTab === "ARABIC"
-      ? `leading-[2.3] text-gray-900 dark:text-gray-100 ${fontClass}`
-      : activeTab === "LATIN"
-        ? `leading-loose text-gray-800 dark:text-gray-200 ${fontClass}`
-        : `leading-relaxed text-gray-700 dark:text-gray-300 ${fontClass}`,
-  ].join(" ");
-
-  return (
-    <div
-      className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-2xl max-w-5xl mx-auto my-4 overflow-hidden"
-      dir={isRtl ? "rtl" : "ltr"}
-    >
-      <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8">
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
-          }}
-        />
-        <div className="relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-            {rows.map((row, i) => (
-              <React.Fragment key={i}>
-                <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
-                  <Medal number={row[0].num} />
-                  <span className={textClass}>{row[0].text}</span>
-                  <DecoStar />
-                </div>
-                {row[1] ? (
-                  <div className={cellClass} dir={isRtl ? "rtl" : "ltr"}>
-                    <Medal number={row[1].num} />
-                    <span className={textClass}>{row[1].text}</span>
-                    <DecoStar />
-                  </div>
-                ) : (
-                  <div />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CevsenGridDisplay = ({ text, fontLevel, mode = "ARABIC" }: any) => {
-  const parsed = useMemo(() => {
-    if (mode === "ARABIC") return parseArabic(text);
-    if (mode === "LATIN") return parseLatin(text);
-    return parseMeaning(text);
-  }, [text, mode]);
-
-  const { header, items, subhaneke } = parsed;
-  const isRtl = mode === "ARABIC";
-  const fontClass =
-    mode === "ARABIC"
-      ? fontSizes.ARABIC[fontLevel]
-      : mode === "LATIN"
-        ? fontSizes.LATIN[fontLevel]
-        : fontSizes.MEANING[fontLevel];
-
-  if (items.length < 2) {
-    return (
-      <div
-        className={`${mode === "ARABIC" ? "font-quran" : "font-serif"} leading-[2.4] py-2 text-center text-gray-800 dark:text-gray-100 ${fontClass}`}
-        dir={isRtl ? "rtl" : "ltr"}
-      >
-        {text.replace(/###\s*$/, "").trim()}
-      </div>
-    );
-  }
-
-  const rows: Array<[string, string | null]> = [];
-  for (let i = 0; i < items.length; i += 2)
-    rows.push([items[i], items[i + 1] ?? null]);
-
-  return (
-    <div
-      className="relative bg-[#fdf9f2] dark:bg-[#0f1117] rounded-[2rem] shadow-2xl max-w-5xl mx-auto my-4 overflow-hidden"
-      dir={isRtl ? "rtl" : "ltr"}
-    >
-      <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8">
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
-          }}
-        />
-        <div className="relative z-10">
-          {header && (
-            <div className="mb-6 text-center">
-              <p
-                className={`${mode === "ARABIC" ? "font-quran" : "font-serif"} text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
-                dir={isRtl ? "rtl" : "ltr"}
-              >
-                {header}
-              </p>
-              <div className="mx-auto mt-3 w-48 h-[2px] bg-gradient-to-r from-transparent via-amber-700/40 dark:via-amber-500/40 to-transparent rounded-full" />
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-            {rows.map((row, i) => (
-              <GridRow
-                key={i}
-                right={row[0]}
-                left={row[1]}
-                rightNum={i * 2 + 1}
-                leftNum={i * 2 + 2}
-                fontClass={fontClass}
-                isRtl={isRtl}
-                mode={mode}
-              />
-            ))}
-          </div>
-          {subhaneke && (
-            <div className="mt-8 pt-6 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#fdf9f2] dark:bg-[#0f1117] px-3 text-red-700/30 dark:text-red-500/35 text-xl select-none">
-                ۞
-              </span>
-              <p
-                className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${mode === "ARABIC" ? fontClass : mode === "LATIN" ? `italic ${fontSizes.LATIN[fontLevel]}` : fontSizes.MEANING[fontLevel]}`}
-                dir={isRtl ? "rtl" : "ltr"}
-              >
-                {subhaneke}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ReadingModal: React.FC<ReadingModalProps> = ({
-  content,
-  onClose,
-  onUpdateContent,
-  session,
-  userName,
-  localCounts,
-  onDecrementCount,
-  t,
-  onCompleteAssignment,
-}) => {
-  const { language } = useLanguage();
+  const [loading, setLoading] = useState(false);
   const [fontLevel, setFontLevel] = useState(3);
-  const [activeTab, setActiveTab] = useState<ViewMode>("ARABIC");
 
-  // Varsayılan sekmeyi INTERACTIVE yaptık
-  const [activeQuranTab, setActiveQuranTab] = useState<
-    "ORIGINAL" | "MEAL" | "INTERACTIVE"
-  >("ORIGINAL");
-
-  const [originalData, setOriginalData] = useState<any[]>([]);
-  const [loadingOriginal, setLoadingOriginal] = useState(true);
-
-  const [mealData, setMealData] = useState<any[]>([]);
-  const [loadingMeal, setLoadingMeal] = useState(false);
-
-  const [interactiveData, setInteractiveData] = useState<any[]>([]);
-  const [loadingInteractive, setLoadingInteractive] = useState(false);
-  const [activeWordId, setActiveWordId] = useState<number | null>(null);
-  const [currentSurahName, setCurrentSurahName] = useState<string>("");
-
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // === YENİ ÖZELLİK STATELERİ ===
   const [isSepia, setIsSepia] = useState(false);
-
-  const [isRestoring, setIsRestoring] = useState(true);
-  const latestScrollY = useRef<number>(0);
-
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(1);
-
-  const currentPage = content.currentUnit || content.startUnit || 1;
+  const [barVisible, setBarVisible] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const safeStart = content.startUnit || currentPage;
-  const safeEnd = content.endUnit || currentPage;
-  const totalPages = safeEnd - safeStart + 1;
-  const currentPageIdx = currentPage - safeStart;
-  const initialProgress =
-    totalPages > 1 ? (currentPageIdx * 100) / totalPages : 0;
-
-  const storageKey = useMemo(() => {
-    if (content.assignmentId)
-      return `readcircle_progress_assign_${content.assignmentId}`;
-    if (content.codeKey) return `readcircle_progress_code_${content.codeKey}`;
-    return `readcircle_progress_type_${content.type}`;
-  }, [content.assignmentId, content.codeKey, content.type]);
-
-  // ORIGINAL veri ve Surah ismini çekme useEffect'i
-  useEffect(() => {
-    if (content.type === "QURAN") {
-      let isMounted = true;
-      setLoadingOriginal(true);
-      fetch(`https://api.alquran.cloud/v1/page/${currentPage}/quran-simple`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (isMounted && data.code === 200 && data.data?.ayahs?.length > 0) {
-            const surahs = Array.from(
-              new Set(data.data.ayahs.map((a: any) => a.surah.englishName)),
-            );
-            setCurrentSurahName(surahs.join(" & "));
-            setOriginalData(data.data.ayahs); // Artık resim yerine bu saf metni render edeceğiz
-          }
-        })
-        .catch((err) => console.error("Sure ismi alınamadı:", err))
-        .finally(() => {
-          if (isMounted) setLoadingOriginal(false);
-        });
-      return () => {
-        isMounted = false;
-      };
-    }
-  }, [currentPage, content.type]);
-
-  useEffect(() => {
-    const savedFont = localStorage.getItem("readcircle_font_level");
-    if (savedFont) setFontLevel(Number(savedFont));
-    setIsRestoring(true);
-    try {
-      const savedProgress = localStorage.getItem(storageKey);
-      if (savedProgress && !content.ignoreSavedProgress) {
-        const { unit, scrollY } = JSON.parse(savedProgress);
-        const validUnit = Math.max(
-          content.startUnit || 1,
-          Math.min(unit, content.endUnit || 604),
-        );
-        if (validUnit !== (content.currentUnit || content.startUnit || 1)) {
-          onUpdateContent({ ...content, currentUnit: validUnit });
-        }
-        setTimeout(() => {
-          if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollTop = scrollY;
-            latestScrollY.current = scrollY;
-            const { scrollHeight, clientHeight } = scrollContainerRef.current;
-            updateProgressBar(scrollY, scrollHeight - clientHeight);
-          }
-          setIsRestoring(false);
-        }, 200);
-      } else {
-        setIsRestoring(false);
-      }
-    } catch (e) {
-      setIsRestoring(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
-
-  const handleFontChange = (newLevel: number) => {
-    setFontLevel(newLevel);
-    localStorage.setItem("readcircle_font_level", newLevel.toString());
-  };
-
-  const updateProgressBar = useCallback(
-    (scrollTop: number, maxScroll: number) => {
-      if (!progressBarRef.current) return;
-      const scrollPct =
-        maxScroll <= 0
-          ? 100
-          : Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100));
-      const unifiedPct =
-        totalPages > 1
-          ? (currentPageIdx * 100 + scrollPct) / totalPages
-          : scrollPct;
-      progressBarRef.current.style.transform = `scaleX(${unifiedPct / 100})`;
-    },
-    [totalPages, currentPageIdx],
+  // Sekmeler dil değiştiğinde güncellenecek şekilde useMemo içine alındı
+  const TABS: { id: TabType; label: string }[] = useMemo(
+    () => [
+      { id: "ARABIC", label: t("tabArabic") || "Arapça" },
+      { id: "LATIN", label: t("tabLatin") || "Okunuşu" },
+      { id: "MEANING", label: t("tabMeaning") || "Türkçe" },
+    ],
+    [t],
   );
 
-  const handleScroll = () => {
-    if (isAutoScrolling) return;
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        scrollContainerRef.current;
-      latestScrollY.current = scrollTop;
-      updateProgressBar(scrollTop, scrollHeight - clientHeight);
-    }
-  };
+  // Wake Lock API
+  const wakeLockRef = useRef<any>(null);
 
   useEffect(() => {
-    if (isRestoring) return;
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 0;
-      latestScrollY.current = 0;
-      const { scrollHeight, clientHeight } = scrollContainerRef.current;
-      updateProgressBar(0, scrollHeight - clientHeight);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (isRestoring) return;
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        scrollContainerRef.current;
-      updateProgressBar(scrollTop, scrollHeight - clientHeight);
-    }
-  }, [activeTab, activeQuranTab, isFullscreen, updateProgressBar, isRestoring]);
-
-  useEffect(() => {
-    if (isRestoring) return;
-    const saveProgress = () => {
-      const payload = JSON.stringify({
-        unit: currentPage,
-        scrollY: latestScrollY.current,
-      });
-      localStorage.setItem(storageKey, payload);
+    const requestWakeLock = async () => {
+      try {
+        // SADECE sayfa aktif/görünür ise ekranı uyanık tutmayı iste
+        if ("wakeLock" in navigator && document.visibilityState === "visible") {
+          wakeLockRef.current = await (navigator as any).wakeLock.request(
+            "screen",
+          );
+        }
+      } catch (err: any) {
+        // NotAllowedError hatasını konsola basmayı engelleyebilir veya gizleyebilirsiniz
+        if (err.name !== "NotAllowedError") {
+          console.error(`Wake Lock hatası:`, err);
+        }
+      }
     };
-    const interval = setInterval(saveProgress, 2000);
+
+    const releaseWakeLock = () => {
+      if (wakeLockRef.current !== null) {
+        wakeLockRef.current.release().then(() => {
+          wakeLockRef.current = null;
+        });
+      }
+    };
+
+    // Sayfa okuma moduna geçtiğinde iste
+    requestWakeLock();
+
+    // Kullanıcı sekmeyi değiştirirse kilidi bırak, geri gelirse tekrar iste
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
-      clearInterval(interval);
-      saveProgress();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
     };
-  }, [storageKey, currentPage, isRestoring]);
+  }, []); // Buradaki bağımlılık dizisi sizin dosyanıza göre (view, isReading vb.) değişebilir
 
   useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el || !isAutoScrolling) return;
+    const fetchCevsenData = async () => {
+      setLoading(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+      // Seçili dile göre meal dosyasının ismini belirliyoruz
+      let meaningFileName = "cevsen_tr.txt";
+      if (language === "en") {
+        meaningFileName = "cevsen_en.txt";
+      }
+
+      const urls: Record<TabType, string> = {
+        ARABIC: `${apiUrl}/cevsen.txt`,
+        LATIN: `${apiUrl}/cevsen_latin.txt`,
+        MEANING: `${apiUrl}/${meaningFileName}`, // Dinamik hale getirdik
+      };
+
+      try {
+        const fetchedTexts = { ...texts };
+        await Promise.all(
+          (Object.keys(urls) as TabType[]).map(async (key) => {
+            try {
+              const res = await fetch(urls[key as TabType]);
+              if (res.ok) fetchedTexts[key as TabType] = await res.text();
+            } catch (err) {}
+          }),
+        );
+        setTexts(fetchedTexts);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCevsenData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
+  // Oto-Kaydırma
+  useEffect(() => {
+    if (!isAutoScrolling) return;
 
     let animationFrameId: number;
     let lastTime: number | null = null;
-    let exactScrollY = el.scrollTop;
-    const maxScroll = el.scrollHeight - el.clientHeight;
+    const scroller = isFullscreen ? scrollContainerRef.current : window;
+    if (!scroller) return;
+
+    let exactScrollY =
+      isFullscreen && scrollContainerRef.current
+        ? scrollContainerRef.current.scrollTop
+        : window.scrollY;
     const baseSpeed = 40;
 
     const scrollStep = (timestamp: number) => {
@@ -672,29 +363,59 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       if (deltaTime > 0 && deltaTime < 100) {
         const moveBy = (baseSpeed * autoScrollSpeed * deltaTime) / 1000;
         exactScrollY += moveBy;
+
+        const maxScroll =
+          isFullscreen && scrollContainerRef.current
+            ? scrollContainerRef.current.scrollHeight -
+              scrollContainerRef.current.clientHeight
+            : document.documentElement.scrollHeight - window.innerHeight;
+
         if (exactScrollY >= maxScroll - 1) {
-          el.scrollTop = maxScroll;
-          latestScrollY.current = maxScroll;
-          updateProgressBar(maxScroll, maxScroll);
+          if (isFullscreen && scrollContainerRef.current)
+            scrollContainerRef.current.scrollTo({
+              top: maxScroll,
+              behavior: "auto",
+            });
+          else window.scrollTo({ top: maxScroll, behavior: "auto" });
           setIsAutoScrolling(false);
           return;
         }
-        el.scrollTop = exactScrollY;
-        latestScrollY.current = exactScrollY;
-        updateProgressBar(exactScrollY, maxScroll);
+
+        if (isFullscreen && scrollContainerRef.current)
+          scrollContainerRef.current.scrollTo({
+            top: exactScrollY,
+            behavior: "auto",
+          });
+        else window.scrollTo({ top: exactScrollY, behavior: "auto" });
       }
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
     animationFrameId = requestAnimationFrame(scrollStep);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [
-    isAutoScrolling,
-    autoScrollSpeed,
-    currentPageIdx,
-    totalPages,
-    updateProgressBar,
-  ]);
+  }, [isAutoScrolling, autoScrollSpeed, isFullscreen]);
+
+  // Manuel kaydırmada oto-kaydırmayı durdur
+  useEffect(() => {
+    const handleInteraction = (e: Event) => {
+      if (isAutoScrolling) {
+        if (e.target instanceof Element && e.target.closest("button, a, input"))
+          return;
+        if (e.type === "wheel" && Math.abs((e as WheelEvent).deltaY) > 10)
+          setIsAutoScrolling(false);
+        else if (e.type === "touchstart" || e.type === "touchmove")
+          setIsAutoScrolling(false);
+      }
+    };
+    window.addEventListener("wheel", handleInteraction, { passive: true });
+    window.addEventListener("touchstart", handleInteraction, { passive: true });
+    window.addEventListener("touchmove", handleInteraction, { passive: true });
+    return () => {
+      window.removeEventListener("wheel", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("touchmove", handleInteraction);
+    };
+  }, [isAutoScrolling]);
 
   const cycleSpeed = () => {
     const speeds = [0.5, 1, 1.5, 2, 3];
@@ -704,1007 +425,350 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
       navigator.vibrate(15);
   };
 
-  const wakeLockRef = useRef<any>(null);
-  useEffect(() => {
-    const requestWakeLock = async () => {
-      try {
-        if ("wakeLock" in navigator)
-          wakeLockRef.current = await (navigator as any).wakeLock.request(
-            "screen",
-          );
-      } catch (err) {}
-    };
-    const releaseWakeLock = () => {
-      if (wakeLockRef.current !== null) {
-        wakeLockRef.current.release().then(() => {
-          wakeLockRef.current = null;
-        });
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") requestWakeLock();
-    };
+  const getAllBabs = (fullText: string) => {
+    if (!fullText) return [];
 
-    requestWakeLock();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    // Metin içinde ### varsa, doğrudan en temiz yöntem olarak ondan bölelim
+    if (fullText.includes("###")) {
+      return fullText
+        .split(/###/g)
+        .map((chunk) => chunk.trim())
+        .filter((chunk) => chunk !== "");
+    }
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      releaseWakeLock();
-    };
-  }, []);
-
-  // Meal ve İnteraktif veriyi çekme
-  useEffect(() => {
-    if (content.type === "QURAN") {
-      if (activeQuranTab === "MEAL") {
-        setLoadingMeal(true);
-        setMealData([]);
-        const targetEdition =
-          EDITION_MAPPING[language] || EDITION_MAPPING["default"];
-        fetchQuranTranslationPage(currentPage, targetEdition)
-          .then((result) => {
-            if (result) setMealData(result.ayahs);
-          })
-          .finally(() => setLoadingMeal(false));
-      } else if (activeQuranTab === "INTERACTIVE") {
-        setLoadingInteractive(true);
-        setInteractiveData([]);
-        fetchWordByWordPage(currentPage, language)
-          .then((verses) => {
-            if (verses) setInteractiveData(verses);
-          })
-          .finally(() => setLoadingInteractive(false));
+    const lines = fullText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l !== "");
+    const chunks: string[] = [];
+    let currentChunk: string[] = [];
+    for (const line of lines) {
+      if (
+        line.length <= 25 &&
+        /^[\-\=\*\s]*((b[aâ]b|bölüm|chapter|الباب)?\s*[\d\u0660-\u0669]+)[\.\-\=\*\s]*$/i.test(
+          line,
+        )
+      )
+        continue;
+      currentChunk.push(line);
+      if (SUBHANEKE_RE.test(line)) {
+        chunks.push(currentChunk.join("\n"));
+        currentChunk = [];
       }
     }
-  }, [currentPage, activeQuranTab, content.type, language]);
-
-  const getDisplayTitle = () => {
-    if (!content.codeKey) return content.title;
-    const translated = t(`resource_${content.codeKey}`);
-    return translated === `resource_${content.codeKey}`
-      ? content.title
-      : translated;
+    if (currentChunk.length > 0) chunks.push(currentChunk.join("\n"));
+    return chunks;
   };
 
-  const processedData = useMemo(() => {
-    if (
-      (content.type !== "CEVSEN" && content.type !== "SURAS") ||
-      !content.cevsenData
-    )
-      return null;
+  const renderBabCard = (rawText: string, babNumber: number) => {
+    let parsed;
+    if (activeTab === "ARABIC") parsed = parseArabic(rawText);
+    else if (activeTab === "LATIN") parsed = parseLatin(rawText);
+    else parsed = parseMeaning(rawText);
 
-    const codeKey = (content.codeKey || "").toUpperCase();
-    const isBedirGroup = ["BEDIR", "UHUD", "TEVHIDNAME"].includes(codeKey);
-    const isSurahGroup =
-      content.type === "SURAS" ||
-      [
-        "FATIHA",
-        "YASIN",
-        "FETIH",
-        "WAQIA",
-        "AYETELKURSU",
-        "IHLAS",
-        "FELAK",
-        "NAS",
-      ].includes(codeKey);
+    const { header, items, subhaneke } = parsed;
+    const isRtl = activeTab === "ARABIC";
+    const fontClass =
+      activeTab === "ARABIC"
+        ? fontSizes.ARABIC[fontLevel]
+        : activeTab === "LATIN"
+          ? fontSizes.LATIN[fontLevel]
+          : fontSizes.MEANING[fontLevel];
 
-    if (isBedirGroup) {
-      const rawArabic = content.cevsenData.map((b) => b.arabic).join("\n");
-      const rawLatin = content.cevsenData.map((b) => b.transcript).join("\n");
-      const rawMeaning = content.cevsenData.map((b) => b.meaning).join("\n");
-
-      const splitRegex = /###|\r\n|\r|\n/g;
-      const arabicLines = rawArabic
-        .split(splitRegex)
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-      const latinLines = rawLatin
-        .split(splitRegex)
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-      const meaningLines = rawMeaning
-        .split(splitRegex)
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-
-      const totalLen = Math.max(
-        arabicLines.length,
-        latinLines.length,
-        meaningLines.length,
-      );
-      const masterList: CevsenBab[] = [];
-
-      for (let i = 0; i < totalLen; i++) {
-        masterList.push({
-          babNumber: i + 1,
-          arabic: arabicLines[i] || "",
-          transcript: latinLines[i] || "",
-          meaning: meaningLines[i] || "",
-        });
-      }
-
-      if (content.startUnit && content.endUnit) {
-        const rangeCount = content.endUnit - content.startUnit + 1;
-        const slicedData: CevsenBab[] = [];
-        for (let i = 0; i < rangeCount; i++) {
-          const targetIndex = (content.startUnit - 1 + i) % totalLen;
-          if (masterList[targetIndex])
-            slicedData.push({ ...masterList[targetIndex] });
-        }
-        return { mode: "LIST", data: slicedData, isSurah: false };
-      }
-      return { mode: "LIST", data: masterList, isSurah: false };
-    }
-
-    if (isSurahGroup) {
-      const newData: CevsenBab[] = [];
-      let counter = 1;
-      content.cevsenData.forEach((bab) => {
-        const latinLines = bab.transcript
-          ? bab.transcript.split("\n").filter((l) => l.trim().length > 0)
-          : [];
-        const meaningLines = bab.meaning
-          ? bab.meaning.split("\n").filter((l) => l.trim().length > 0)
-          : [];
-        const maxLen = Math.max(latinLines.length, meaningLines.length);
-        if (maxLen > 0) {
-          for (let i = 0; i < maxLen; i++) {
-            newData.push({
-              babNumber: counter++,
-              arabic: "",
-              transcript: latinLines[i] || "",
-              meaning: meaningLines[i] || "",
-            });
-          }
-        }
-      });
-      return {
-        mode: "SURAH_CARD",
-        data: newData.length > 0 ? newData : content.cevsenData,
-        isSurah: true,
-      };
-    }
-
-    return { mode: "BLOCK", data: content.cevsenData, isSurah: false };
-  }, [content]);
-
-  const changePage = async (offset: number) => {
-    const current = content.currentUnit || content.startUnit || 1;
-    const min = content.startUnit || 1;
-    const max = content.endUnit || 604;
-    const next = Math.min(Math.max(current + offset, min), max);
-
-    if (next !== current) {
-      onUpdateContent({ ...content, currentUnit: next });
-      if (typeof navigator !== "undefined" && navigator.vibrate)
-        navigator.vibrate(30);
-
-      if (offset > 0 && content.type === "QURAN") {
-        try {
-          const todayStr = new Date().toISOString().split("T")[0];
-          const savedDataStr = localStorage.getItem("hatim_progress_today");
-          let currentCount = 0;
-          if (savedDataStr) {
-            const parsed = JSON.parse(savedDataStr);
-            if (parsed.date === todayStr) currentCount = parsed.count;
-          }
-          localStorage.setItem(
-            "hatim_progress_today",
-            JSON.stringify({ date: todayStr, count: currentCount + 1 }),
-          );
-          window.dispatchEvent(new Event("hatim_progress_updated"));
-
-          const token = localStorage.getItem("token");
-          if (token) {
-            await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/quran-progress/read-page`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            );
-          }
-        } catch (err) {
-          console.error("İlerleme kaydedilemedi:", err);
-        }
-      }
-    }
-  };
-
-  const currentAssignment = content.assignmentId
-    ? session?.assignments.find((a) => a.id === content.assignmentId)
-    : undefined;
-  const isOwner =
-    currentAssignment && currentAssignment.assignedToName === userName;
-  const totalTarget = currentAssignment
-    ? currentAssignment.endUnit - currentAssignment.startUnit + 1
-    : 0;
-  const safeCount = content.assignmentId
-    ? (localCounts[content.assignmentId] ?? totalTarget)
-    : 0;
-
-  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleContentClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest("button, a, input")) return;
-    if (activeWordId) setActiveWordId(null);
-    if (content.assignmentId && isOwner) {
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-        if (safeCount > 0) {
-          onDecrementCount(content.assignmentId);
-          if (typeof navigator !== "undefined" && navigator.vibrate)
-            navigator.vibrate(50);
-          if (safeCount === 1 && onCompleteAssignment) {
-            onCompleteAssignment(content.assignmentId);
-            onClose();
-          }
-        }
-      } else {
-        clickTimeoutRef.current = setTimeout(() => {
-          setIsFullscreen((prev) => !prev);
-          clickTimeoutRef.current = null;
-        }, 250);
-      }
-    } else {
-      setIsFullscreen((prev) => !prev);
-    }
-  };
-
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (
-      !isAutoScrolling ||
-      touchStartX.current === null ||
-      touchStartY.current === null
-    )
-      return;
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    if (
-      Math.abs(currentX - touchStartX.current) > 10 ||
-      Math.abs(currentY - touchStartY.current) > 10
-    ) {
-      setIsAutoScrolling(false);
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-
-    const deltaX = touchStartX.current - touchEndX;
-    const deltaY = touchStartY.current - touchEndY;
-
-    // Kur'an okurken veya Arapça sekmesindeyken sağdan sola mantığını etkinleştir
-    const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
-
-    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 0) {
-        // PARMAK SOLA KAYDIRILDI
-        // Latincede: Sonraki (+1) | Kur'anda: Önceki (-1)
-        changePage(isRtlReading ? -1 : 1);
-      } else {
-        // PARMAK SAĞA KAYDIRILDI
-        // Latincede: Önceki (-1) | Kur'anda: Sonraki (+1)
-        changePage(isRtlReading ? 1 : -1);
-      }
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
-
-  const isFirstPage = currentPage === (content.startUnit || 1);
-  const isLastPage = currentPage === (content.endUnit || 604);
-  const isSurahGroup = processedData?.isSurah || false;
-
-  const PaginationBar = () => {
-    const displayCurrentPage =
-      content.type === "QURAN" && currentPage > 1
-        ? currentPage - 1
-        : currentPage;
-    const currentJuz =
-      content.type === "QURAN" ? Math.ceil(displayCurrentPage / 20) : 0;
-
-    // Kur'an modunda mıyız kontrolü
-    const isRtlReading = content.type === "QURAN" || activeTab === "ARABIC";
+    const rows: Array<[string, string | null]> = [];
+    for (let i = 0; i < items.length; i += 2)
+      rows.push([items[i], items[i + 1] ?? null]);
 
     return (
-      <div className="flex items-center justify-between gap-1 md:gap-3 w-full my-3 shrink-0 bg-white dark:bg-gray-900 p-1.5 md:p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        {/* SOL BUTON (Kuran'da 'Sonraki', Normalde 'Önceki' olur) */}
-        <button
-          onClick={() => changePage(isRtlReading ? 1 : -1)}
-          disabled={isRtlReading ? isLastPage : isFirstPage}
-          className={`shrink-0 px-2.5 md:px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 md:gap-2 transition-all ${
-            isRtlReading
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20"
-              : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20"
-          }`}
-        >
-          <span>←</span>{" "}
-          <span className="hidden sm:inline-block">
-            {isRtlReading ? t("next") || "Sonraki" : t("previous") || "Önceki"}
-          </span>
-        </button>
+      <div
+        key={babNumber}
+        className="mb-16 scroll-mt-24"
+        id={`bab-${babNumber}`}
+      >
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="h-[2px] bg-gradient-to-r from-transparent to-amber-300 dark:to-amber-700 w-16 md:w-32 rounded-full"></div>
+          <h2 className="font-serif text-xl md:text-3xl font-black text-amber-700 dark:text-amber-500 tracking-widest drop-shadow-sm">
+            {t("babWord") || "BÂB"} {babNumber}
+          </h2>
+          <div className="h-[2px] bg-gradient-to-l from-transparent to-amber-300 dark:to-amber-700 w-16 md:w-32 rounded-full"></div>
+        </div>
 
-        {/* ORTA BİLGİ */}
-        <span className="flex-1 min-w-0 px-1 font-black text-[10px] md:text-xs text-gray-800 dark:text-white uppercase tracking-wider md:tracking-[0.2em] flex flex-col items-center leading-tight text-center">
-          {content.type === "QURAN" && (
-            <span className="text-[8px] md:text-[10px] text-emerald-600 dark:text-emerald-400 opacity-90 mb-0.5 truncate w-full">
-              {(t("juzWord") || "Cüz").toUpperCase()} {currentJuz}{" "}
-              {currentSurahName && <span className="mx-1 opacity-50">•</span>}{" "}
-              {currentSurahName}
-            </span>
-          )}
-          <span className="truncate w-full">
-            {t("pageWord") || "Sayfa"} {displayCurrentPage}
-          </span>
-        </span>
-
-        {/* SAĞ BUTON (Kuran'da 'Önceki', Normalde 'Sonraki' olur) */}
-        <button
-          onClick={() => changePage(isRtlReading ? -1 : 1)}
-          disabled={isRtlReading ? isFirstPage : isLastPage}
-          className={`shrink-0 px-2.5 md:px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest flex items-center gap-1 transition-all ${
-            isRtlReading
-              ? "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-20"
-              : "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 disabled:opacity-20"
-          }`}
+        <div
+          className={`relative rounded-[2rem] shadow-2xl max-w-5xl mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500 transition-colors ${isSepia ? "bg-[#fdf9f2]" : "bg-[#fdf9f2] dark:bg-[#0f1117]"}`}
+          dir={isRtl ? "rtl" : "ltr"}
         >
-          <span className="hidden sm:inline-block">
-            {isRtlReading ? t("previous") || "Önceki" : t("next") || "Sonraki"}
-          </span>{" "}
-          <span>→</span>
-        </button>
+          <div className="m-3 rounded-[1.5rem] border-[6px] border-double border-amber-800/25 dark:border-amber-600/25 p-4 md:p-8 relative z-10">
+            <div
+              className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.03]"
+              style={{
+                backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(180,120,40,0.15) 20px, rgba(180,120,40,0.15) 21px)`,
+              }}
+            />
+            <div className="relative z-10">
+              {header && (
+                <div className="mb-6 text-center">
+                  <p
+                    className={`font-serif text-amber-900 dark:text-amber-400 leading-[2.4] ${fontClass}`}
+                    dir={isRtl ? "rtl" : "ltr"}
+                  >
+                    {header}
+                  </p>
+                  <div className="mx-auto mt-3 w-48 h-[2px] bg-gradient-to-r from-transparent via-amber-700/40 dark:via-amber-500/40 to-transparent rounded-full" />
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                {rows.map((row, i) => (
+                  <GridRow
+                    key={i}
+                    right={row[0]}
+                    left={row[1]}
+                    rightNum={i * 2 + 1}
+                    leftNum={i * 2 + 2}
+                    fontClass={fontClass}
+                    isRtl={isRtl}
+                    mode={activeTab}
+                  />
+                ))}
+              </div>
+              {subhaneke && (
+                <div className="mt-8 pt-6 border-t-2 border-dashed border-red-700/20 dark:border-red-500/25 text-center relative">
+                  <span
+                    className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 text-red-700/30 dark:text-red-500/35 text-xl select-none transition-colors ${isSepia ? "bg-[#fdf9f2]" : "bg-[#fdf9f2] dark:bg-[#0f1117]"}`}
+                  >
+                    ۞
+                  </span>
+                  <p
+                    className={`font-serif font-black leading-[2.6] tracking-wide text-red-700 dark:text-red-500 ${activeTab === "ARABIC" ? fontClass : activeTab === "LATIN" ? `italic ${fontSizes.LATIN[fontLevel]}` : fontSizes.MEANING[fontLevel]}`}
+                    dir={isRtl ? "rtl" : "ltr"}
+                  >
+                    {subhaneke}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
+
+  const allBabs = getAllBabs(texts[activeTab]);
+  const lastScrollY = React.useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY < 80) setBarVisible(true);
+      else if (currentY > lastScrollY.current + 8) setBarVisible(false);
+      else if (currentY < lastScrollY.current - 8) setBarVisible(true);
+      lastScrollY.current = currentY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const isHeaderVisible = barVisible && !isFullscreen;
+
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 ${isFullscreen ? "p-0" : "p-2 md:p-4"}`}
+      ref={scrollContainerRef}
+      onClick={handleContentClick}
+      className={`font-sans transition-colors duration-500 px-2 sm:px-6 lg:px-8 ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isFullscreen ? "fixed inset-0 z-[9999] overflow-y-auto py-8" : "min-h-screen py-8"} ${isSepia ? "sepia-theme bg-[#F4ECD8]" : "bg-[#F8FAFC] dark:bg-gray-950"}`}
     >
-      <div
-        className={`relative w-full max-w-4xl overflow-hidden flex flex-col transition-all duration-500 ${isSepia ? "sepia-theme !bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "h-screen max-h-screen rounded-none border-none" : "max-h-[95vh] rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 dark:border-gray-800 shadow-2xl"}`}
-      >
-        <div className="absolute top-0 left-0 w-full h-[3px] bg-black/5 dark:bg-white/5 z-[60]">
-          <div
-            ref={progressBarRef}
-            className="h-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)] origin-left"
-            style={{ transform: `scaleX(${initialProgress / 100})` }}
-          />
-        </div>
-
-        {!isFullscreen && (
-          <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate mr-2">
-                {getDisplayTitle()}
-              </h3>
-              <div className="flex items-center gap-2 md:gap-3">
-                {!(isSurahGroup && activeTab === "ARABIC") && (
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() =>
-                        handleFontChange(Math.max(0, fontLevel - 1))
-                      }
-                      disabled={fontLevel === 0}
-                      title={t("decreaseFont")}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
-                    >
-                      A-
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={() =>
-                        handleFontChange(Math.min(8, fontLevel + 1))
-                      }
-                      disabled={fontLevel === 8}
-                      title={t("increaseFont")}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
-                    >
-                      A+
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={() => {
-                        setIsSepia(!isSepia);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
-                      }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
-                      title={t("eyeProtection") || "Okuma Modu"}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={() => {
-                        setIsFullscreen(true);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-                      title={t("fullscreen")}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                      </svg>
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                    <button
-                      onClick={cycleSpeed}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      title={t("scrollSpeed")}
-                    >
-                      {autoScrollSpeed}x
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsAutoScrolling(!isAutoScrolling);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
-                      }}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
-                      title={
-                        isAutoScrolling
-                          ? t("stopAutoScroll")
-                          : t("startAutoScroll")
-                      }
-                    >
-                      {isAutoScrolling ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                )}
-                <button
-                  onClick={onClose}
-                  className="bg-gray-200 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-2 rounded-full transition-all duration-200 active:scale-90"
-                  title={t("close") || "Kapat"}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18 18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {content.type === "QURAN" && (
-              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto hide-scrollbar">
-                <button
-                  onClick={() => setActiveQuranTab("ORIGINAL")}
-                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "ORIGINAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
-                >
-                  {t("tabOriginal") || "Orijinal Metin"}
-                </button>
-                <button
-                  onClick={() => setActiveQuranTab("INTERACTIVE")}
-                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "INTERACTIVE" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
-                >
-                  {t("Interactive") || "İnteraktif"}
-                </button>
-                <button
-                  onClick={() => setActiveQuranTab("MEAL")}
-                  className={`flex-1 min-w-[80px] py-2 px-2 text-[10px] md:text-xs font-bold rounded-lg transition-all uppercase tracking-wider ${activeQuranTab === "MEAL" ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400"}`}
-                >
-                  {t("Meaning") || "Meal"}
-                </button>
-              </div>
-            )}
-
-            {content.type !== "SIMPLE" && content.type !== "QURAN" && (
-              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                {(["ARABIC", "LATIN", "MEANING"] as const).map((tab) => {
-                  if (
-                    tab === "MEANING" &&
-                    (content.codeKey === "BEDIR" || content.codeKey === "UHUD")
-                  )
-                    return null;
-                  if (tab === "LATIN" && content.codeKey === "TEVHIDNAME")
-                    return null;
-                  if (content.codeKey === "OZELSALAVAT" && tab === "LATIN")
-                    return null;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2 rounded-lg text-[10px] md:text-xs font-black transition-all duration-300 uppercase tracking-widest ${activeTab === tab ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-md transform scale-[1.02]" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}
-                    >
-                      {t(`tab${tab.charAt(0) + tab.slice(1).toLowerCase()}`) ||
-                        tab}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
+      <div className="max-w-5xl mx-auto space-y-6">
         <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          onWheel={(e) => {
-            if (isAutoScrolling && Math.abs(e.deltaY) > 10)
-              setIsAutoScrolling(false);
-          }}
-          className={`flex-1 overflow-y-auto cursor-pointer overscroll-none ${!isAutoScrolling ? "scroll-smooth" : "scroll-auto"} ${isSepia ? "!bg-[#F4ECD8]" : "bg-gray-100 dark:bg-black"} ${isFullscreen ? "p-6 md:p-10" : "p-4 md:p-6"}`}
-          style={{
-            willChange: "scroll-position",
-            WebkitOverflowScrolling: "touch",
-          }}
-          onClick={handleContentClick}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          className={`flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl p-4 sm:p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 sticky top-4 z-50 transition-all duration-300 ${isHeaderVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6 pointer-events-none"}`}
         >
-          {content.type === "SIMPLE" && content.simpleItems && (
-            <div className="space-y-3 max-w-2xl mx-auto">
-              {content.simpleItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 items-center"
+          <div className="flex items-center gap-4">
+            <Link
+              href="/resources"
+              className="p-3 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 shrink-0"
+              title={t("backToResources") || "Kütüphaneye Dön"}
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none flex items-center gap-3">
+              {t("cevsenTitle") || "Cevşen-i Kebir"}
+            </h1>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shrink-0">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 ${activeTab === tab.id ? "bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}
                 >
-                  <span className="w-8 h-8 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-black rounded-full text-xs">
-                    {index + 1}
-                  </span>
-                  <span className="text-lg font-medium text-gray-700 dark:text-gray-200">
-                    {item}
-                  </span>
-                </div>
+                  {tab.label}
+                </button>
               ))}
             </div>
-          )}
 
-          {content.type === "QURAN" && (
-            <div className="flex flex-col items-center min-h-full max-w-2xl mx-auto pb-4">
-              {!isFullscreen && <PaginationBar />}
-              <div
-                className={`flex-1 w-full rounded-[2rem] p-2 md:p-4 border shadow-sm min-h-[50vh] relative transition-colors ${isSepia ? "bg-[#F4ECD8] border-[#E6D5B8]" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"}`}
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl shrink-0">
+              <button
+                onClick={() => setFontLevel((prev) => Math.max(0, prev - 1))}
+                disabled={fontLevel === 0}
+                title={t("decreaseFont") || "Yazıyı Küçült"}
+                className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-xs shadow-sm"
               >
-                {/* YENİ Orijinal Metin (Text-Based) GÖRÜNÜMÜ */}
-                {activeQuranTab === "ORIGINAL" ? (
-                  <div className="w-full h-full p-4 md:p-8 flex flex-col items-center">
-                    {loadingOriginal ? (
-                      <div className="flex flex-col items-center justify-center h-40">
-                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                      </div>
-                    ) : (
-                      <div
-                        className="text-justify text-center w-full max-w-4xl mx-auto leading-[2.25rem] md:leading-[3rem]"
-                        dir="rtl"
-                      >
-                        {originalData.map((ayah: any) => (
-                          <React.Fragment key={ayah.number}>
-                            <span
-                              className={`font-quran text-gray-900 dark:text-gray-100 transition-colors ${fontSizes.ARABIC[fontLevel] || "text-3xl"}`}
-                              style={{
-                                lineHeight: "normal",
-                              }} /* Fontun kendi yüksekliğini koruması için */
-                            >
-                              {ayah.text}
-                            </span>
-                            <span className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-amber-500/30 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs md:text-sm font-black shadow-sm mx-2 align-middle">
-                              {ayah.numberInSurah}
-                            </span>
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : // INTERAKTİF (KELİME KELİME) GÖRÜNÜM
-                activeQuranTab === "INTERACTIVE" ? (
-                  <div className="w-full h-full p-2 md:p-4">
-                    {loadingInteractive ? (
-                      <div className="flex flex-col items-center justify-center h-40">
-                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col space-y-6 md:space-y-8">
-                        {interactiveData.map((verse: any) => (
-                          <div
-                            key={verse.id}
-                            className="flex flex-col bg-white/50 dark:bg-gray-800/30 rounded-[1.5rem] p-4 md:p-6 shadow-sm border border-amber-900/10 dark:border-amber-100/10"
-                          >
-                            <div
-                              className="flex flex-wrap justify-start gap-x-3 md:gap-x-4 gap-y-5 md:gap-y-6 leading-[2rem]"
-                              dir="rtl"
-                            >
-                              {verse.words.map((word: any) => (
-                                <div
-                                  key={word.id}
-                                  className={`relative group cursor-pointer flex flex-col items-center justify-center ${word.char_type_name === "end" ? "mx-2" : ""}`}
-                                  // YENİ EKLENEN ONCLICK EVENTİ:
-                                  onClick={(e) => {
-                                    e.stopPropagation(); // Boşluğa tıklanmış gibi algılayıp tam ekrana geçmesini engeller
-                                    setActiveWordId(
-                                      activeWordId === word.id ? null : word.id,
-                                    );
-                                  }}
-                                >
-                                  {word.char_type_name === "end" ? (
-                                    <span className="flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-full border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm md:text-base font-black shadow-sm mx-1">
-                                      {word.text_uthmani}
-                                    </span>
-                                  ) : (
-                                    <span
-                                      className={`font-quran text-gray-800 dark:text-gray-100 transition-colors ${activeWordId === word.id ? "text-emerald-600 dark:text-emerald-400" : "lg:group-hover:text-emerald-600 dark:lg:group-hover:text-emerald-400"} ${fontSizes.ARABIC[fontLevel] || "text-2xl"}`}
-                                    >
-                                      {word.text_uthmani}
-                                    </span>
-                                  )}
-
-                                  {word.char_type_name !== "end" &&
-                                    word.translation?.text && (
-                                      // YENİ TOOLTİP MANTIĞI (Hem mobilde tıklama hem pc'de hover)
-                                      <div
-                                        className={`absolute bottom-full mb-2 flex flex-col items-center transition-all duration-300 pointer-events-none z-10 ${activeWordId === word.id ? "opacity-100 scale-100" : "opacity-0 scale-95 lg:group-hover:opacity-100 lg:group-hover:scale-100"}`}
-                                      >
-                                        <div className="bg-gray-800 dark:bg-gray-700 text-white text-[10px] md:text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap font-sans font-medium">
-                                          {word.translation.text}
-                                        </div>
-                                        <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-800 dark:border-t-gray-700"></div>
-                                      </div>
-                                    )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                A-
+              </button>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <button
+                onClick={() => setFontLevel((prev) => Math.min(6, prev + 1))}
+                disabled={fontLevel === 6}
+                title={t("increaseFont") || "Yazıyı Büyüt"}
+                className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-base shadow-sm"
+              >
+                A+
+              </button>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <button
+                onClick={() => {
+                  setIsSepia(!isSepia);
+                  if (typeof navigator !== "undefined" && navigator.vibrate)
+                    navigator.vibrate(20);
+                }}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
+                title={t("eyeProtection") || "Okuma Modu (Sepya)"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <button
+                onClick={cycleSpeed}
+                className="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[10px] hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                title={t("scrollSpeed") || "Kaydırma Hızı"}
+              >
+                {autoScrollSpeed}x
+              </button>
+              <button
+                onClick={() => {
+                  setIsAutoScrolling((prev) => !prev);
+                  if (typeof navigator !== "undefined" && navigator.vibrate)
+                    navigator.vibrate(20);
+                }}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                title={
+                  isAutoScrolling
+                    ? t("stopAutoScroll") || "Durdur"
+                    : t("startAutoScroll") || "Oynat"
+                }
+              >
+                {isAutoScrolling ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
+                  </svg>
                 ) : (
-                  // MEAL GÖRÜNÜMÜ
-                  <div className="w-full h-full p-2 md:p-4">
-                    {loadingMeal ? (
-                      <div className="flex flex-col items-center justify-center h-40 space-y-4">
-                        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {mealData.map((ayah: any, idx: number) => (
-                          <div key={idx} className="flex flex-col gap-2">
-                            <div className="flex items-start gap-3">
-                              <span className="shrink-0 flex items-center justify-center w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-full shadow-sm mt-1">
-                                {ayah.numberInSurah}
-                              </span>
-                              <p
-                                className={`text-gray-700 dark:text-gray-300 leading-relaxed font-serif transition-all ${fontSizes.MEANING[fontLevel] || "text-base"}`}
-                              >
-                                {ayah.text}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 )}
-              </div>
+              </button>
+              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <button
+                onClick={() => {
+                  setIsFullscreen(!isFullscreen);
+                  if (typeof navigator !== "undefined" && navigator.vibrate)
+                    navigator.vibrate(20);
+                }}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 ${isFullscreen ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"}`}
+                title={t("fullscreen") || "Tam Ekran"}
+              >
+                {isFullscreen ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                  </svg>
+                )}
+              </button>
             </div>
-          )}
+          </div>
+        </div>
 
-          {(content.type === "CEVSEN" || content.type === "SURAS") &&
-            processedData && (
-              <div className="space-y-3 max-w-3xl mx-auto px-1">
-                {processedData.mode === "SURAH_CARD" && (
-                  <>
-                    {activeTab === "ARABIC" &&
-                      (content.cevsenData &&
-                      content.cevsenData[0]?.arabic?.includes(
-                        "IMAGE_MODE:::",
-                      ) ? (
-                        content.cevsenData.map((bab, i) =>
-                          bab.arabic.includes("IMAGE_MODE:::") ? (
-                            <img
-                              key={i}
-                              src={bab.arabic
-                                .replace("IMAGE_MODE:::", "")
-                                .trim()}
-                              className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-4"
-                              alt="Surah"
-                            />
-                          ) : null,
-                        )
-                      ) : (
-                        <SurahVerseGrid
-                          babs={processedData.data}
-                          activeTab="ARABIC"
-                          fontLevel={fontLevel}
-                        />
-                      ))}
-                    {(activeTab === "LATIN" || activeTab === "MEANING") && (
-                      <SurahVerseGrid
-                        babs={processedData.data}
-                        activeTab={activeTab}
-                        fontLevel={fontLevel}
-                      />
-                    )}
-                  </>
-                )}
-
-                {processedData.mode !== "SURAH_CARD" &&
-                  processedData.data.map((bab, index) => {
-                    const mode = processedData.mode;
-                    const displayLabel: string | number = bab.babNumber;
-                    const isCard = mode === "LIST";
-                    const containerClasses = isCard
-                      ? "bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-[1.5rem] p-4 md:p-5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors"
-                      : "";
-
-                    return (
-                      <div
-                        key={index}
-                        className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${containerClasses}`}
-                        style={{ animationDelay: `${index * 10}ms` }}
-                      >
-                        {mode === "BLOCK" && (
-                          <div className="flex items-center justify-center gap-4 my-8 opacity-90 group">
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full ml-auto translate-x-2"></div>
-                            </div>
-                            <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
-                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-45 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-[225deg]"></div>
-                              <div className="absolute w-9 h-9 border border-emerald-600/20 dark:border-emerald-400/20 rotate-0 bg-white dark:bg-gray-900 rounded-sm shadow-sm transition-transform duration-500 group-hover:rotate-180"></div>
-                              <span className="relative z-10 font-serif font-bold text-lg text-emerald-700 dark:text-emerald-400 drop-shadow-sm">
-                                {bab.babNumber}
-                              </span>
-                            </div>
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent dark:via-emerald-500/40">
-                              <div className="w-1 h-1 bg-emerald-400/60 rounded-full mr-auto -translate-x-2"></div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="w-full">
-                          {activeTab === "ARABIC" && (
-                            <div
-                              className={
-                                isCard || content.type === "CEVSEN"
-                                  ? "w-full"
-                                  : "text-center font-quran leading-[2.4] py-2 text-gray-800 dark:text-gray-100"
-                              }
-                              dir="rtl"
-                            >
-                              {bab.arabic.includes("IMAGE_MODE:::") ? (
-                                <img
-                                  src={bab.arabic
-                                    .replace("IMAGE_MODE:::", "")
-                                    .trim()}
-                                  className="w-full rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800"
-                                  alt="Arabic"
-                                />
-                              ) : isCard ? (
-                                renderUhudList(
-                                  bab.arabic,
-                                  "ARABIC",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.arabic}
-                                  fontLevel={fontLevel}
-                                  mode="ARABIC"
-                                />
-                              ) : (
-                                formatArabicText(bab.arabic, fontLevel)
-                              )}
-                            </div>
-                          )}
-
-                          {activeTab === "LATIN" && (
-                            <div
-                              className={
-                                isCard
-                                  ? "w-full"
-                                  : "text-left font-serif leading-relaxed py-2 text-gray-700 dark:text-gray-300"
-                              }
-                            >
-                              {isCard ? (
-                                renderUhudList(
-                                  bab.transcript,
-                                  "LATIN",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.transcript}
-                                  fontLevel={fontLevel}
-                                  mode="LATIN"
-                                />
-                              ) : (
-                                formatLatinText(bab.transcript, fontLevel)
-                              )}
-                            </div>
-                          )}
-
-                          {activeTab === "MEANING" && (
-                            <div className="w-full">
-                              {isCard ? (
-                                renderUhudList(
-                                  bab.meaning,
-                                  "MEANING",
-                                  fontLevel,
-                                  displayLabel,
-                                )
-                              ) : content.type === "CEVSEN" ? (
-                                <CevsenGridDisplay
-                                  text={bab.meaning}
-                                  fontLevel={fontLevel}
-                                  mode="MEANING"
-                                />
-                              ) : (
-                                <div className="bg-emerald-50/40 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
-                                  <div className="text-gray-700 dark:text-gray-300 italic font-medium leading-relaxed text-sm">
-                                    {formatMeaningText(bab.meaning, fontLevel)}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+        <div className="bg-transparent relative overflow-hidden">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-amber-500 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="font-bold animate-pulse tracking-widest uppercase text-sm">
+                {t("compilingTexts") || "Metinler Derleniyor..."}
+              </p>
+            </div>
+          ) : (
+            <div className="w-full pb-20">
+              {allBabs.map((babText, index) =>
+                renderBabCard(babText, index + 1),
+              )}
+              <div className="mt-10 text-center opacity-50">
+                <p className="text-sm font-bold text-gray-400 tracking-[0.3em] uppercase">
+                  {t("endOfCevsen") || "Cevşen-i Kebir'in Sonu"}
+                </p>
               </div>
-            )}
-
-          {content.type === "SALAVAT" && content.salavatData && (
-            <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-6">
-              {(activeTab === "ARABIC" &&
-                content.salavatData.arabic.includes("IMAGE_MODE")) ||
-              (activeTab === "LATIN" &&
-                content.salavatData.transcript.includes("IMAGE_MODE")) ||
-              (activeTab === "MEANING" &&
-                content.salavatData.meaning.includes("IMAGE_MODE")) ? (
-                <div className="flex flex-col gap-4 w-full">
-                  {(activeTab === "ARABIC"
-                    ? content.salavatData.arabic
-                    : activeTab === "LATIN"
-                      ? content.salavatData.transcript
-                      : content.salavatData.meaning
-                  )
-                    .replace("IMAGE_MODE:::", "")
-                    .split(",")
-                    .map((src, i) => (
-                      <img
-                        key={i}
-                        src={src.trim()}
-                        className="w-full rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800"
-                        alt="Salavat"
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="w-full bg-white dark:bg-gray-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-200 dark:border-gray-800">
-                  {activeTab === "ARABIC" && (
-                    <div
-                      className={`text-center font-quran leading-[3.8rem] text-gray-800 dark:text-gray-100 ${fontSizes.ARABIC[fontLevel]}`}
-                      dir="rtl"
-                    >
-                      {content.salavatData.arabic}
-                    </div>
-                  )}
-                  {activeTab === "LATIN" &&
-                    formatStyledText(
-                      content.salavatData.transcript,
-                      "LATIN",
-                      fontLevel,
-                    )}
-                  {activeTab === "MEANING" &&
-                    formatStyledText(
-                      content.salavatData.meaning,
-                      "MEANING",
-                      fontLevel,
-                    )}
-                </div>
-              )}
-              {content.assignmentId && (
-                <div className="w-full flex flex-col items-center bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-md border border-gray-100 dark:border-gray-800">
-                  <Zikirmatik
-                    currentCount={safeCount}
-                    onDecrement={() => {
-                      onDecrementCount(content.assignmentId!);
-                      if (safeCount === 1 && onCompleteAssignment) {
-                        onCompleteAssignment(content.assignmentId!);
-                        onClose();
-                      }
-                    }}
-                    isModal={true}
-                    t={t}
-                    readOnly={!isOwner}
-                    totalCount={totalTarget}
-                  />
-                </div>
-              )}
             </div>
           )}
         </div>
-
-        {!isFullscreen && (
-          <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0 z-20 animate-in slide-in-from-bottom-4">
-            <button
-              onClick={onClose}
-              className="w-full py-4 bg-gray-900 dark:bg-gray-800 text-white rounded-2xl hover:bg-black dark:hover:bg-gray-700 transition-all font-black uppercase tracking-[0.2em] text-xs shadow-lg active:scale-[0.98]"
-            >
-              {t("close") || "Kapat"}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
-};
-
-export default ReadingModal;
+}
