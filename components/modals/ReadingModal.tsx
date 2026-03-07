@@ -1146,172 +1146,105 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
 
         {!isFullscreen && (
           <div className="p-4 md:p-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex flex-col gap-3 shrink-0 shadow-sm z-20 animate-in slide-in-from-top-4">
-            <div className="flex justify-between items-center gap-2">
+         <div className="flex justify-between items-center gap-2">
               <h3 className="font-black text-base md:text-xl tracking-tight text-gray-800 dark:text-white truncate">
                 {getDisplayTitle()}
               </h3>
-
-              {/* min-w-0 ve flex-1 ile taşmayı engelledik */}
-              <div className="flex flex-1 min-w-0 items-center justify-end gap-1.5 md:gap-3">
+              
+              {/* flex-1 ve min-w-0 taşmayı engeller. */}
+              <div className="flex flex-1 min-w-0 items-center justify-end gap-1 md:gap-3">
                 {!(isSurahGroup && activeTab === "ARABIC") && (
+                  // overflow-x-auto eklendi: Ekrana sığmazsa yatay kaydırma çıkar.
                   <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700 overflow-x-auto hide-scrollbar scroll-smooth">
+                    
                     {/* SESLENDİRME BUTONU */}
                     {content.type === "QURAN" && (
                       <>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleAudio();
-                          }}
+                          onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
                           disabled={pageAudioAyahs.length === 0}
-                          className={`h-7 md:h-8 px-2 md:px-2.5 shrink-0 flex items-center justify-center gap-1.5 rounded-lg transition-all duration-300 disabled:opacity-30 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isPlaying ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
-                          title={
-                            isPlaying ? "Sesi Durdur" : "Sayfayı Seslendir"
-                          }
+                          className={`h-7 md:h-8 px-1.5 md:px-2 shrink-0 flex items-center justify-center gap-1 rounded-lg transition-all duration-300 disabled:opacity-30 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isPlaying ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
+                          title={isPlaying ? "Sesi Durdur" : "Sayfayı Seslendir"}
                         >
                           {isPlaying ? (
                             <>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-3.5 h-3.5"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                              >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                               </svg>
-                              {/* Mobilde yazıyı gizler (hidden sm:inline) */}
-                              <span className="hidden sm:inline">DURDUR</span>
+                              <span>DURDUR</span>
                             </>
                           ) : (
                             <>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-3.5 h-3.5"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                              >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M8 5v14l11-7z" />
                               </svg>
-                              <span className="hidden sm:inline">DİNLE</span>
+                              <span>DİNLE</span>
                             </>
                           )}
                         </button>
-                        <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                        <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
                       </>
                     )}
 
                     <button
-                      onClick={() =>
-                        handleFontChange(Math.max(0, fontLevel - 1))
-                      }
+                      onClick={() => handleFontChange(Math.max(0, fontLevel - 1))}
                       disabled={fontLevel === 0}
                       title={t("decreaseFont")}
                       className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-[10px] md:text-xs shadow-sm"
                     >
                       A-
                     </button>
-                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
                     <button
-                      onClick={() =>
-                        handleFontChange(Math.min(8, fontLevel + 1))
-                      }
+                      onClick={() => handleFontChange(Math.min(8, fontLevel + 1))}
                       disabled={fontLevel === 8}
                       title={t("increaseFont")}
                       className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg disabled:opacity-30 transition font-serif font-bold text-gray-600 dark:text-gray-300 text-[13px] md:text-base shadow-sm"
                     >
                       A+
                     </button>
-                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
                     <button
                       onClick={() => {
                         setIsSepia(!isSepia);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
                       className={`w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg transition-all duration-300 ${isSepia ? "bg-[#432C0A]/10 text-[#432C0A] shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-amber-600 dark:text-amber-500 hover:text-amber-800"}`}
                       title={t("eyeProtection") || "Okuma Modu"}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                     </button>
-                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
                     <button
                       onClick={() => {
                         setIsFullscreen(true);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
                       className="w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
                       title={t("fullscreen")}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-3.5 h-3.5 md:w-4 md:h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
                     </button>
-                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5 md:mx-1"></div>
-
+                    <div className="w-px h-4 shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
+                    
                     {/* KAYDIRMA BUTONU */}
                     <button
                       onClick={() => {
                         setIsAutoScrolling(!isAutoScrolling);
-                        if (
-                          typeof navigator !== "undefined" &&
-                          navigator.vibrate
-                        )
-                          navigator.vibrate(20);
+                        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(20);
                       }}
-                      className={`h-7 md:h-8 px-2 md:px-2.5 shrink-0 flex items-center justify-center gap-1.5 rounded-lg transition-all duration-300 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                      className={`h-7 md:h-8 px-1.5 md:px-2 shrink-0 flex items-center justify-center gap-1 rounded-lg transition-all duration-300 font-black text-[9px] md:text-[10px] uppercase tracking-wider ${isAutoScrolling ? "bg-blue-600/15 text-blue-600 dark:text-blue-400 shadow-inner" : "hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"}`}
                       title={isAutoScrolling ? "Durdur" : "Kaydır"}
                     >
                       {isAutoScrolling ? (
                         <>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-3.5 h-3.5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M6 6h4v12H6zm8 0h4v12h-4z" />
-                          </svg>
-                          <span className="hidden sm:inline">DURDUR</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h4v12H6zm8 0h4v12h-4z" /></svg>
+                          <span>DURDUR</span>
                         </>
                       ) : (
                         <>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-3.5 h-3.5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                          <span className="hidden sm:inline">KAYDIR</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                          <span>KAYDIR</span>
                         </>
                       )}
                     </button>
@@ -1319,26 +1252,13 @@ const ReadingModal: React.FC<ReadingModalProps> = ({
                 )}
                 <button
                   onClick={onClose}
-                  className="bg-gray-200 dark:bg-gray-800 shrink-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-1.5 md:p-2 rounded-full transition-all duration-200 active:scale-90"
+                  className="bg-gray-200 dark:bg-gray-800 shrink-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-500 dark:text-gray-400 p-1.5 md:p-2 rounded-full transition-all duration-200 active:scale-90 ml-1"
                   title={t("close") || "Kapat"}
                 >
-                  <svg
-                    className="w-4 h-4 md:w-5 md:h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18 18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                 </button>
               </div>
             </div>
-
             {content.type === "QURAN" && (
               <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto hide-scrollbar">
                 <button
